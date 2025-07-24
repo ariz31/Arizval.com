@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Exponents and Scientific Notation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'exponents_and_scientific_notation';
+
+            const mindMapInfo = {
+                exponents_and_scientific_notation: { 
+                    title: "Exponents & Scientific Notation", 
+                    content: "<p>This mind map covers the rules of exponents and their application in simplifying expressions and using scientific notation to represent very large or very small numbers.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
+                },
+                exponent_rules: {
+                    title: "Exponent Rules",
+                    content: "<h3>Exponent Rules</h3><p>These are the fundamental rules for manipulating expressions with exponents. An exponent indicates how many times to multiply a base number by itself. In $x^n$, $x$ is the base and $n$ is the exponent.</p>"
+                },
+                product_rule: {
+                    title: "Product Rule",
+                    content: "<h3>Product Rule</h3><p>When multiplying two powers with the same base, add their exponents.</p>$$a^m \\cdot a^n = a^{m+n}$$<p>Example: $x^3 \\cdot x^5 = x^{3+5} = x^8$</p>"
+                },
+                quotient_rule: {
+                    title: "Quotient Rule",
+                    content: "<h3>Quotient Rule</h3><p>When dividing two powers with the same base, subtract the exponent of the denominator from the exponent of the numerator.</p>$$\\frac{a^m}{a^n} = a^{m-n}$$<p>Example: $\\frac{y^7}{y^2} = y^{7-2} = y^5$</p>"
+                },
+                power_rule: {
+                    title: "Power Rule",
+                    content: "<h3>Power Rule</h3><p>To raise a power to another power, multiply the exponents.</p>$$(a^m)^n = a^{m \\cdot n}$$<p>Example: $(b^4)^3 = b^{4 \\cdot 3} = b^{12}$</p>"
+                },
+                zero_exponent_rule: {
+                    title: "Zero Exponent Rule",
+                    content: "<h3>Zero Exponent Rule</h3><p>Any non-zero base raised to the power of zero is equal to 1.</p>$$a^0 = 1 \\quad (\\text{for } a \\neq 0)$$<p>Example: $5^0 = 1$</p>"
+                },
+                negative_exponent_rule: {
+                    title: "Negative Exponent Rule",
+                    content: "<h3>Negative Exponent Rule</h3><p>A base raised to a negative exponent is equal to the reciprocal of the base raised to the positive exponent.</p>$$a^{-n} = \\frac{1}{a^n}$$<p>Example: $x^{-4} = \\frac{1}{x^4}$</p>"
+                },
+                power_of_a_product: {
+                    title: "Power of a Product",
+                    content: "<h3>Power of a Product Rule</h3><p>To raise a product to a power, raise each factor in the product to that power.</p>$$(ab)^n = a^n b^n$$<p>Example: $(2y)^3 = 2^3 y^3 = 8y^3$</p>"
+                },
+                power_of_a_quotient: {
+                    title: "Power of a Quotient",
+                    content: "<h3>Power of a Quotient Rule</h3><p>To raise a quotient to a power, raise both the numerator and the denominator to that power.</p>$$(\\frac{a}{b})^n = \\frac{a^n}{b^n}$$<p>Example: $(\\frac{x}{3})^2 = \\frac{x^2}{3^2} = \\frac{x^2}{9}$</p>"
+                },
+                simplifying_expressions: {
+                    title: "Simplifying Expressions",
+                    content: "<h3>Simplifying Exponential Expressions</h3><p>To simplify an exponential expression means to rewrite it with no negative exponents and with each base appearing only once. This often involves applying multiple exponent rules.</p>"
+                },
+                combining_rules: {
+                    title: "Combining Rules",
+                    content: "<h3>Combining Rules</h3><p>Simplification often requires using several rules in sequence. The goal is to eliminate parentheses, negative exponents, and combine terms with the same base.</p><p>A simplified expression has:</p><ul class='list-disc list-inside'><li>Each base appears only once.</li><li>No powers of powers.</li><li>No negative exponents.</li><li>No zero exponents.</li></ul>"
+                },
+                simplification_example: {
+                    title: "Simplification Example",
+                    content: "<h3>Simplification Example</h3><p>Simplify the expression: $(\\frac{2x^2y^{-3}}{x^5y^2})^{-2}$</p><ol class='list-decimal list-inside space-y-2'><li><b>Power of a Quotient:</b> Distribute the outer exponent -2. <br>$$(\\frac{2x^2y^{-3}}{x^5y^2})^{-2} = \\frac{(2x^2y^{-3})^{-2}}{(x^5y^2)^{-2}}$$</li><li><b>Power of a Product:</b> Apply the exponent to each factor. <br>$$\\frac{2^{-2}(x^2)^{-2}(y^{-3})^{-2}}{(x^5)^{-2}(y^2)^{-2}} = \\frac{2^{-2}x^{-4}y^6}{x^{-10}y^{-4}}$$</li><li><b>Quotient Rule:</b> Subtract exponents for common bases. <br>$$2^{-2}x^{-4 - (-10)}y^{6 - (-4)} = 2^{-2}x^6y^{10}$$</li><li><b>Negative Exponent Rule:</b> Move $2^{-2}$ to the denominator. <br>$$\\frac{x^6y^{10}}{2^2} = \\frac{x^6y^{10}}{4}$$</li></ol>"
+                },
+                scientific_notation: {
+                    title: "Scientific Notation",
+                    content: "<h3>Scientific Notation</h3><p>A way of writing very large or very small numbers in a compact form. It is widely used in science and engineering.</p>"
+                },
+                scientific_notation_definition: {
+                    title: "Definition",
+                    content: "<h3>Definition</h3><p>A number is written in scientific notation when it is expressed in the form:</p>$$a \\times 10^n$$<p>where $1 \\le |a| < 10$ and $n$ is an integer.</p><ul class='list-disc list-inside'><li>If $n$ is positive, the number is large.</li><li>If $n$ is negative, the number is small (between -1 and 1).</li></ul>"
+                },
+                converting_to_scientific: {
+                    title: "To Scientific Notation",
+                    content: "<h3>Converting to Scientific Notation</h3><p>1. Move the decimal point to create a number $a$ such that $1 \\le |a| < 10$.</p><p>2. The number of places the decimal point was moved is the exponent $n$.</p><ul class='list-disc list-inside'><li>If the original number was large ($>10$), $n$ is positive.</li><li>If the original number was small ($<1$), $n$ is negative.</li></ul><p>Example: $47,300,000 = 4.73 \\times 10^7$</p><p>Example: $0.00052 = 5.2 \\times 10^{-4}$</p>"
+                },
+                converting_from_scientific: {
+                    title: "From Scientific Notation",
+                    content: "<h3>Converting from Scientific Notation</h3><p>1. Look at the exponent $n$ on the 10.</p><p>2. Move the decimal point $n$ places.</p><ul class='list-disc list-inside'><li>If $n$ is positive, move the decimal to the right.</li><li>If $n$ is negative, move the decimal to the left.</li></ul><p>Example: $3.1 \\times 10^5 = 310,000$</p><p>Example: $8.9 \\times 10^{-6} = 0.0000089$</p>"
+                },
+                operations_scientific_notation: {
+                    title: "Operations",
+                    content: "<h3>Operations with Scientific Notation</h3><p><b>Multiplication:</b> Multiply the coefficients and add the exponents.</p>$$(a \\times 10^n)(b \\times 10^m) = (a \\times b) \\times 10^{n+m}$$<p><b>Division:</b> Divide the coefficients and subtract the exponents.</p>$$\\frac{a \\times 10^n}{b \\times 10^m} = (\\frac{a}{b}) \\times 10^{n-m}$$<p>After performing the operation, you may need to adjust the result to keep it in proper scientific notation.</p>"
+                }
+            };
+
+            const structure = {
+                exponent_rules: ['product_rule', 'quotient_rule', 'power_rule', 'zero_exponent_rule', 'negative_exponent_rule', 'power_of_a_product', 'power_of_a_quotient'],
+                simplifying_expressions: ['combining_rules', 'simplification_example'],
+                scientific_notation: ['scientific_notation_definition', 'converting_to_scientific', 'converting_from_scientific', 'operations_scientific_notation']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>

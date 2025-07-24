@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Interactive Mind Map: Fundamental Properties and Axioms in Algebra</title>
+    <title>Interactive Mind Map: Factoring Polynomials</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -131,7 +131,7 @@
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="modal-title"></h2>
-                <button id="close-modal" class="text-3xl text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">&times;</button>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
             </div>
             <div id="modal-body"></div>
         </div>
@@ -140,98 +140,72 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // ========= DYNAMIC CONTENT SECTION START =========
-            const ROOT_NODE_ID = 'algebra_properties';
+            const ROOT_NODE_ID = 'factoring_polynomials';
 
             const mindMapInfo = {
-                algebra_properties: { 
-                    title: "Algebraic Properties & Axioms", 
-                    content: "<p>These are the fundamental rules and axioms that govern algebra, particularly for real numbers. They form the logical foundation upon which all algebraic manipulation is built.</p><h3>How to Use:</h3><ul><li>Click a category (e.g., 'Field Axioms') to expand/collapse its concepts.</li><li>Click this main node to expand/collapse all categories.</li><li>Click a specific concept for a detailed definition and example.</li><li>Pan by dragging the background and zoom with your scroll wheel or pinch gesture.</li></ul>" 
+                factoring_polynomials: { 
+                    title: "Factoring Polynomials", 
+                    content: "<p>Factoring is the process of breaking down a polynomial into a product of simpler polynomials (its factors). It is a critical skill in algebra used for simplifying expressions, solving polynomial equations, and finding roots.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
                 },
-                field_axioms: {
-                    title: "Field Axioms",
-                    content: "<p>The field axioms define a 'field', a fundamental algebraic structure. The set of real numbers, along with the operations of addition and multiplication, forms a field. These axioms are the bedrock properties for arithmetic and algebra.</p>"
+                basic_techniques: {
+                    title: "Basic Techniques",
+                    content: "<p>These are the foundational methods for factoring and should always be considered first. They include finding the Greatest Common Factor and Factoring by Grouping.</p>"
                 },
-                properties_of_equality: {
-                    title: "Properties of Equality",
-                    content: "<p>These properties define how the equals sign ($=$) behaves. They ensure that equality is a logically consistent relationship, allowing us to manipulate equations and solve for variables.</p>"
+                greatest_common_factor: {
+                    title: "Greatest Common Factor (GCF)",
+                    content: "<p>The first step in any factoring problem is to pull out the GCF. The GCF is the largest monomial that divides each term of the polynomial.</p><h3>Formula:</h3>$$a \\cdot b + a \\cdot c = a(b+c)$$<h3>Example:</h3><p>For $6x^3y^3 + 45x^2y^2 + 21xy$, the GCF is $3xy$. Factoring it out gives:</p>$$3xy(2x^2y^2 + 15xy + 7)$$<h3>Additional Example:</h3><p>For $8a^4b - 12a^3b^2 + 4a^2b^3$, the GCF is $4a^2b$. Factoring it out gives:</p>$$4a^2b(2a^2 - 3ab + b^2)$$<p>The remaining trinomial can be factored further to $4a^2b(2a-b)(a-b)$.</p>"
                 },
-                commutative_addition: {
-                    title: "Commutative (Addition)",
-                    content: "<p>The order in which two numbers are added does not change the result.</p><h3>General Form:</h3>$$a + b = b + a$$<h3>Example:</h3><p>$5 + 3 = 8$</p><p>$3 + 5 = 8$</p>"
+                factoring_by_grouping: {
+                    title: "Factoring by Grouping",
+                    content: "<p>This method is typically used for polynomials with four terms. The terms are grouped into pairs, and the GCF is factored out from each pair.</p><h3>Process:</h3><ol class='list-decimal list-inside'><li>Group the first two terms and the last two terms.</li><li>Factor out the GCF from each group.</li><li>If the remaining binomial factors are the same, factor out this common binomial.</li></ol><h3>Example:</h3><p>Factor $x^3 + x^2 - 9x - 9$.</p><p>1. Group: $(x^3 + x^2) + (-9x - 9)$</p><p>2. Factor GCFs: $x^2(x+1) - 9(x+1)$</p><p>3. Factor out common binomial: $(x+1)(x^2-9) = (x+1)(x-3)(x+3)$</p><h3>Additional Example:</h3><p>Factor $2y^3 + 8y^2 + 3y + 12$.</p><p>1. Group: $(2y^3 + 8y^2) + (3y + 12)$</p><p>2. Factor GCFs: $2y^2(y+4) + 3(y+4)$</p><p>3. Factor out common binomial: $(2y^2+3)(y+4)$</p>"
                 },
-                commutative_multiplication: {
-                    title: "Commutative (Multiplication)",
-                    content: "<p>The order in which two numbers are multiplied does not change the result.</p><h3>General Form:</h3>$$a \\cdot b = b \\cdot a$$<h3>Example:</h3><p>$4 \\times 7 = 28$</p><p>$7 \\times 4 = 28$</p>"
+                factoring_trinomials: {
+                    title: "Factoring Trinomials",
+                    content: "<p>Trinomials are polynomials with three terms, often in the form $ax^2 + bx + c$. The method depends on whether the leading coefficient 'a' is 1 or not.</p>"
                 },
-                associative_addition: {
-                    title: "Associative (Addition)",
-                    content: "<p>When three or more numbers are added, the grouping of the numbers does not affect the sum.</p><h3>General Form:</h3>$$(a + b) + c = a + (b + c)$$<h3>Example:</h3><p>$(2 + 3) + 4 = 5 + 4 = 9$</p><p>$2 + (3 + 4) = 2 + 7 = 9$</p>"
+                trinomial_leading_coefficient_1: {
+                    title: "Trinomials (a=1)",
+                    content: "<p>For trinomials of the form $x^2 + bx + c$, the goal is to find two integers that multiply to $c$ and add up to $b$.</p><h3>Example:</h3><p>Factor $x^2 + 5x + 6$. We need two numbers that multiply to 6 and add to 5. These numbers are 2 and 3.</p><p>The factored form is $(x+2)(x+3)$.</p><h3>Additional Example:</h3><p>Factor $x^2 - 8x + 15$. We need two numbers that multiply to 15 and add to -8. These numbers are -3 and -5.</p><p>The factored form is $(x-3)(x-5)$.</p>"
                 },
-                associative_multiplication: {
-                    title: "Associative (Multiplication)",
-                    content: "<p>When three or more numbers are multiplied, the grouping of the numbers does not affect the product.</p><h3>General Form:</h3>$$(a \\cdot b) \\cdot c = a \\cdot (b \\cdot c)$$<h3>Example:</h3><p>$(2 \\times 3) \\times 4 = 6 \\times 4 = 24$</p><p>$2 \\times (3 \\times 4) = 2 \\times 12 = 24$</p>"
+                trinomial_leading_coefficient_not_1: {
+                    title: "Trinomials (a≠1)",
+                    content: "<p>For trinomials of the form $ax^2 + bx + c$, one common method is the 'ac method' or factoring by grouping.</p><h3>Process (AC Method):</h3><ol class='list-decimal list-inside'><li>Find the product $ac$.</li><li>Find two integers that multiply to $ac$ and add to $b$.</li><li>Rewrite the middle term $bx$ using these two numbers.</li><li>Factor the resulting four-term polynomial by grouping.</li></ol><h3>Example:</h3><p>Factor $2x^2 + 5x + 3$. $ac=6$. Numbers are 2 and 3. Rewrite: $2x^2 + 2x + 3x + 3$. Group: $2x(x+1) + 3(x+1)$.</p><p>The factored form is $(2x+3)(x+1)$.</p><h3>Additional Example:</h3><p>Factor $6x^2 - 5x - 4$. $ac=-24$. Numbers are -8 and 3. Rewrite: $6x^2 - 8x + 3x - 4$. Group: $2x(3x-4) + 1(3x-4)$.</p><p>The factored form is $(2x+1)(3x-4)$.</p>"
                 },
-                distributive_property: {
-                    title: "Distributive Property",
-                    content: "<p>This property links addition and multiplication. It states that multiplying a sum by a number is the same as multiplying each addend by the number and then adding the products.</p><h3>General Form:</h3>$$a \\cdot (b + c) = a \\cdot b + a \\cdot c$$<h3>Example:</h3><p>$5 \\cdot (3 + 2) = 5 \\cdot 5 = 25$</p><p>$(5 \\cdot 3) + (5 \\cdot 2) = 15 + 10 = 25$</p>"
+                special_forms: {
+                    title: "Factoring Special Forms",
+                    content: "<p>Recognizing special factoring patterns can greatly simplify the process. These include perfect square trinomials, the difference of squares, and the sum/difference of cubes.</p>"
                 },
-                additive_identity: {
-                    title: "Additive Identity",
-                    content: "<p>There exists a unique number, zero (0), such that when it is added to any number, the result is the original number.</p><h3>General Form:</h3>$$a + 0 = a$$<h3>Example:</h3><p>$17 + 0 = 17$</p>"
+                perfect_square_trinomials: {
+                    title: "Perfect Square Trinomials",
+                    content: "<p>A trinomial is a perfect square if its first and last terms are perfect squares and the middle term is twice the product of their square roots.</p><h3>Formulas:</h3>$$a^2 + 2ab + b^2 = (a+b)^2$$$$a^2 - 2ab + b^2 = (a-b)^2$$<h3>Example:</h3><p>Factor $9x^2 - 12x + 4$. This is $(3x)^2 - 2(3x)(2) + 2^2$.</p><p>The factored form is $(3x-2)^2$.</p><h3>Additional Example:</h3><p>Factor $25y^2 + 20y + 4$. This is $(5y)^2 + 2(5y)(2) + 2^2$.</p><p>The factored form is $(5y+2)^2$.</p>"
                 },
-                multiplicative_identity: {
-                    title: "Multiplicative Identity",
-                    content: "<p>There exists a unique number, one (1), such that when any number is multiplied by it, the result is the original number.</p><h3>General Form:</h3>$$a \\cdot 1 = a$$<h3>Example:</h3><p>$-8 \\cdot 1 = -8$</p>"
+                difference_of_squares: {
+                    title: "Difference of Squares",
+                    content: "<p>A binomial in which two perfect squares are being subtracted.</p><h3>Formula:</h3>$$a^2 - b^2 = (a-b)(a+b)$$<h3>Example:</h3><p>Factor $25x^2 - 49$. This is $(5x)^2 - 7^2$.</p><p>The factored form is $(5x-7)(5x+7)$.</p><h3>Additional Example:</h3><p>Factor $16y^4 - 81$. This is $(4y^2)^2 - 9^2$.</p><p>Factored: $(4y^2-9)(4y^2+9)$.</p><p>The first factor is another difference of squares, so we factor again: $(2y-3)(2y+3)(4y^2+9)$.</p>"
                 },
-                additive_inverse: {
-                    title: "Additive Inverse",
-                    content: "<p>For every number $a$, there exists an opposite number, $-a$, such that their sum is the additive identity (0).</p><h3>General Form:</h3>$$a + (-a) = 0$$<h3>Example:</h3><p>$9 + (-9) = 0$</p>"
+                sum_of_cubes: {
+                    title: "Sum of Cubes",
+                    content: "<p>A binomial in which two perfect cubes are being added.</p><h3>Formula:</h3>$$a^3 + b^3 = (a+b)(a^2 - ab + b^2)$$<h3>Example:</h3><p>Factor $x^3 + 8$. This is $x^3 + 2^3$.</p><p>The factored form is $(x+2)(x^2 - 2x + 4)$.</p><h3>Additional Example:</h3><p>Factor $64m^3 + 27$. This is $(4m)^3 + 3^3$.</p><p>The factored form is $(4m+3)(16m^2 - 12m + 9)$.</p>"
                 },
-                multiplicative_inverse: {
-                    title: "Multiplicative Inverse",
-                    content: "<p>For every non-zero number $a$, there exists a reciprocal, $1/a$, such that their product is the multiplicative identity (1).</p><h3>General Form:</h3>$$a \\cdot \\frac{1}{a} = 1 \\quad (a \\neq 0)$$<h3>Example:</h3><p>$4 \\cdot \\frac{1}{4} = 1$</p>"
+                difference_of_cubes: {
+                    title: "Difference of Cubes",
+                    content: "<p>A binomial in which two perfect cubes are being subtracted.</p><h3>Formula:</h3>$$a^3 - b^3 = (a-b)(a^2 + ab + b^2)$$<h3>Example:</h3><p>Factor $27y^3 - 1$. This is $(3y)^3 - 1^3$.</p><p>The factored form is $(3y-1)(9y^2 + 3y + 1)$.</p><h3>Additional Example:</h3><p>Factor $8z^6 - 125$. This is $(2z^2)^3 - 5^3$.</p><p>The factored form is $(2z^2-5)(4z^4 + 10z^2 + 25)$.</p>"
                 },
-                reflexive_property: {
-                    title: "Reflexive Property",
-                    content: "<p>Any quantity is equal to itself.</p><h3>General Form:</h3>$$a = a$$<h3>Example:</h3><p>$5 = 5$</p><p>$x + 2 = x + 2$</p>"
+                advanced_techniques: {
+                    title: "Advanced Techniques",
+                    content: "<p>These methods extend factoring principles to more complex expressions, such as those involving fractional or negative exponents.</p>"
                 },
-                symmetric_property: {
-                    title: "Symmetric Property",
-                    content: "<p>If one quantity is equal to a second quantity, then the second quantity is equal to the first.</p><h3>General Form:</h3>$$ \\text{If } a = b, \\text{ then } b = a $$<h3>Example:</h3><p>If $x = 7$, then $7 = x$.</p>"
-                },
-                transitive_property: {
-                    title: "Transitive Property",
-                    content: "<p>If a first quantity is equal to a second, and the second is equal to a third, then the first quantity is equal to the third.</p><h3>General Form:</h3>$$ \\text{If } a = b \\text{ and } b = c, \\text{ then } a = c $$<h3>Example:</h3><p>If $x = y$ and $y = 3$, then $x = 3$.</p>"
-                },
-                addition_property_of_equality: {
-                    title: "Addition Property",
-                    content: "<p>If you add the same quantity to both sides of an equation, the two sides remain equal.</p><h3>General Form:</h3>$$ \\text{If } a = b, \\text{ then } a + c = b + c $$<h3>Example:</h3><p>Given $x - 5 = 10$, we can add 5 to both sides: $(x-5)+5 = 10+5$, which simplifies to $x=15$.</p>"
-                },
-                multiplication_property_of_equality: {
-                    title: "Multiplication Property",
-                    content: "<p>If you multiply both sides of an equation by the same non-zero quantity, the two sides remain equal.</p><h3>General Form:</h3>$$ \\text{If } a = b, \\text{ then } a \\cdot c = b \\cdot c $$<h3>Example:</h3><p>Given $\\frac{x}{3} = 6$, we can multiply both sides by 3: $(\\frac{x}{3}) \\cdot 3 = 6 \\cdot 3$, which simplifies to $x=18$.</p>"
+                fractional_or_negative_exponents: {
+                    title: "Fractional/Negative Exponents",
+                    content: "<p>The process is the same as finding a GCF: factor out the variable with the lowest exponent.</p><h3>Example (Fractional):</h3><p>Factor $x^{\\frac{3}{2}} - x^{\\frac{1}{2}}$. The GCF is $x^{\\frac{1}{2}}$.</p><p>Factored form: $x^{\\frac{1}{2}}(x-1)$.</p><h3>Example (Negative):</h3><p>Factor $3x^{-1} + 6x^{-2}$. The GCF is $3x^{-2}$.</p><p>Factored form: $3x^{-2}(x+2)$.</p><h3>Additional Examples:</h3><p>Factor $2y^{\\frac{1}{4}} + 4y^{\\frac{5}{4}}$. GCF is $2y^{\\frac{1}{4}}$.</p><p>Factored form: $2y^{\\frac{1}{4}}(1 + 2y)$.</p><p>Factor $12z^{-3} - 18z^{-5}$. GCF is $6z^{-5}$.</p><p>Factored form: $6z^{-5}(2z^2 - 3)$.</p>"
                 }
             };
 
             const structure = {
-                field_axioms: [
-                    'commutative_addition', 
-                    'commutative_multiplication', 
-                    'associative_addition', 
-                    'associative_multiplication',
-                    'distributive_property',
-                    'additive_identity',
-                    'multiplicative_identity',
-                    'additive_inverse',
-                    'multiplicative_inverse'
-                ],
-                properties_of_equality: [
-                    'reflexive_property',
-                    'symmetric_property',
-                    'transitive_property',
-                    'addition_property_of_equality',
-                    'multiplication_property_of_equality'
-                ]
+                basic_techniques: ['greatest_common_factor', 'factoring_by_grouping'],
+                factoring_trinomials: ['trinomial_leading_coefficient_1', 'trinomial_leading_coefficient_not_1'],
+                special_forms: ['perfect_square_trinomials', 'difference_of_squares', 'sum_of_cubes', 'difference_of_cubes'],
+                advanced_techniques: ['fractional_or_negative_exponents']
             };
             // ========= DYNAMIC CONTENT SECTION END =========
 

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Polynomials</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'polynomials';
+
+            const mindMapInfo = {
+                polynomials: { 
+                    title: "Polynomials", 
+                    content: "<p>A polynomial is an expression consisting of variables and coefficients, involving only the operations of addition, subtraction, multiplication, and non-negative integer exponents of variables.</p><p>This mind map explores the fundamental properties of polynomials and the basic operations performed on them.</p><h3>How to Use:</h3><ul><li>Click a category to expand or collapse its sub-topics.</li><li>Click the central 'Polynomials' node to expand or collapse all categories.</li><li>Click any end-point topic to see a detailed explanation.</li><li>Pan by clicking and dragging the background.</li><li>Zoom using your mouse wheel or trackpad.</li></ul>" 
+                },
+                identifying_polynomials: { 
+                    title: "Identifying Polynomials", 
+                    content: "<p>Understanding the components of a polynomial, like its degree and leading coefficient, is the first step. These properties help classify polynomials and predict their behavior, such as their end behavior on a graph.</p>"
+                },
+                definition_of_a_polynomial: { 
+                    title: "Definition of a Polynomial", 
+                    content: "<h3>Definition</h3><p>A polynomial in one variable, $x$, is an expression of the form: $$a_n x^n + a_{n-1} x^{n-1} + \\dots + a_2 x^2 + a_1 x + a_0$$ where $a_0, a_1, \\dots, a_n$ are real numbers called <b>coefficients</b> and $n$ is a non-negative integer. Each part, $a_k x^k$, is called a <b>term</b>.</p>"
+                },
+                standard_form: {
+                    title: "Standard Form",
+                    content: "<h3>Standard Form</h3><p>The <b>standard form</b> of a polynomial is writing its terms in order of descending degree (highest exponent to lowest).</p><h3>Example:</h3><p>The polynomial $5x^2 - 9 + 2x^4$ in standard form is:</p>$$2x^4 + 5x^2 - 9$$"
+                },
+                degree_of_a_polynomial: { 
+                    title: "Degree of a Polynomial", 
+                    content: "<h3>Degree</h3><p>The <b>degree</b> of a polynomial is the highest exponent of its variable when written in standard form. The degree of a constant is 0.</p><h3>Example:</h3><p>In the polynomial $3x^4 + 2x^2 - 5$, the terms have degrees 4, 2, and 0. The degree of the entire polynomial is <b>4</b>.</p><h3>Additional Example</h3><p>For $7x - 10x^5 + x^2$, first write in standard form: $-10x^5 + x^2 + 7x$. The degree is <b>5</b>.</p>"
+                },
+                leading_coefficient: { 
+                    title: "Leading Coefficient", 
+                    content: "<h3>Leading Term & Coefficient</h3><p>The <b>leading term</b> is the term with the highest degree in a polynomial. The <b>leading coefficient</b> is the coefficient of that term.</p><h3>Example:</h3><p>For the polynomial $8x^3 - 2x^2 + x - 1$, the leading term is $8x^3$ and the leading coefficient is <b>8</b>.</p><h3>Additional Example</h3><p>Find the leading coefficient of $4 - 9x^2 + 5x^6$.<br>First, write in standard form: $5x^6 - 9x^2 + 4$.<br>The leading term is $5x^6$, so the leading coefficient is <b>5</b>.</p>"
+                },
+                add_subtract_polynomials: { 
+                    title: "Adding & Subtracting", 
+                    content: "<p>Adding and subtracting polynomials involves identifying and combining 'like terms'. This process simplifies multiple polynomials into a single polynomial expression.</p>"
+                },
+                combining_like_terms: { 
+                    title: "Combining Like Terms", 
+                    content: "<h3>Like Terms</h3><p>Like terms are terms that have the exact same variables raised to the exact same powers. To combine them, you simply add or subtract their coefficients.</p><h3>Examples:</h3><ul><li>$3x^2$ and $-5x^2$ are like terms. Their sum is $(3-5)x^2 = -2x^2$.</li><li>$4xy$ and $2x^2y$ are <b>not</b> like terms because the exponents of $x$ are different.</li></ul>"
+                },
+                adding_polynomials_example: { 
+                    title: "Adding Polynomials", 
+                    content: "<h3>Process</h3><p>To add polynomials, remove the parentheses and group like terms together. Then, add the coefficients of the like terms.</p><h3>Example</h3><p>Add $(3x^2 + 2x - 1)$ and $(5x^2 - 7x + 4)$:</p>$$ (3x^2 + 2x - 1) + (5x^2 - 7x + 4) $$<p>Group like terms:</p>$$ (3x^2 + 5x^2) + (2x - 7x) + (-1 + 4) $$<p>Combine:</p>$$ 8x^2 - 5x + 3 $$<h3>Additional Example</h3><p>Add $(x^3 - 4x + 10)$ and $(-6x^3 + 2x^2 + 5x)$:</p>$$ (x^3 - 6x^3) + (2x^2) + (-4x + 5x) + (10) $$ $$ = -5x^3 + 2x^2 + x + 10 $$"
+                },
+                subtracting_polynomials_example: { 
+                    title: "Subtracting Polynomials", 
+                    content: "<h3>Process</h3><p>To subtract polynomials, distribute the negative sign to every term in the second polynomial. This changes the sign of each term. Then, combine like terms as you would in addition.</p><h3>Example</h3><p>Subtract $(4x^2 - x + 6)$ from $(9x^2 + 3x - 2)$:</p>$$ (9x^2 + 3x - 2) - (4x^2 - x + 6) $$<p>Distribute the negative:</p>$$ 9x^2 + 3x - 2 - 4x^2 + x - 6 $$<p>Group and combine like terms:</p>$$ (9x^2 - 4x^2) + (3x + x) + (-2 - 6) $$$$ = 5x^2 + 4x - 8 $$<h3>Additional Example</h3><p>Subtract $(10x^2 - 3x + 5)$ from $(2x^2 - x - 8)$:</p>$$ (2x^2 - x - 8) - (10x^2 - 3x + 5) $$ $$ = 2x^2 - x - 8 - 10x^2 + 3x - 5 $$ $$ = (2x^2 - 10x^2) + (-x + 3x) + (-8 - 5) $$ $$ = -8x^2 + 2x - 13 $$"
+                },
+                multiply_polynomials: { 
+                    title: "Multiplying Polynomials", 
+                    content: "<p>Multiplication of polynomials relies on the distributive property and the rules of exponents. Every term in the first polynomial must be multiplied by every term in the second.</p>"
+                },
+                distributive_property: { 
+                    title: "Distributive Property", 
+                    content: "<h3>The Core Principle</h3><p>The distributive property states that $a(b+c) = ab + ac$. This is the foundation for all polynomial multiplication. When multiplying two polynomials, you distribute each term from the first polynomial to every term in the second one.</p>"
+                },
+                multiplying_monomials: {
+                    title: "Multiplying Monomials",
+                    content: "<h3>Monomial x Monomial</h3><p>To multiply monomials (single-term polynomials), you multiply their coefficients and add the exponents of identical variables.</p><h3>Rule: $ (ax^m)(bx^n) = (a \\cdot b)x^{m+n} $</h3><h3>Example:</h3><p>$(4x^3)(5x^2) = (4 \\cdot 5)x^{3+2} = 20x^5$</p>"
+                },
+                monomial_by_polynomial: {
+                    title: "Monomial by Polynomial",
+                    content: "<h3>Monomial x Polynomial</h3><p>Use the distributive property to multiply the single monomial by each term of the polynomial.</p><h3>Example:</h3><p>Multiply $2x$ by $(3x^2 - 5x + 1)$: $$ 2x(3x^2 - 5x + 1) $$ $$ = (2x)(3x^2) + (2x)(-5x) + (2x)(1) $$ $$ = 6x^3 - 10x^2 + 2x $$"
+                },
+                polynomial_by_polynomial: {
+                    title: "Polynomial by Polynomial",
+                    content: "<h3>Polynomial x Polynomial</h3><p>Multiply each term of the first polynomial by each term of the second polynomial, then combine any like terms.</p><h3>Example:</h3><p>Multiply $(x+2)$ by $(x^2 - 3x + 4)$: $$ (x+2)(x^2 - 3x + 4) $$<p>Distribute $x$ and then distribute $2$:</p>$$ x(x^2 - 3x + 4) + 2(x^2 - 3x + 4) $$ $$ = (x^3 - 3x^2 + 4x) + (2x^2 - 6x + 8) $$<p>Combine like terms:</p>$$ x^3 - x^2 - 2x + 8 $$<h3>Additional Example (Trinomial x Trinomial)</h3><p>Multiply $(x^2+2x-1)(x^2-x+3)$:</p>$$ x^2(x^2-x+3) + 2x(x^2-x+3) - 1(x^2-x+3) $$ $$ = (x^4-x^3+3x^2) + (2x^3-2x^2+6x) - (x^2-x+3) $$ $$ = x^4 - x^3 + 2x^3 + 3x^2 - 2x^2 - x^2 + 6x + x - 3 $$ $$ = x^4 + x^3 + 5x - 3 $$"
+                },
+                foil_method: { 
+                    title: "FOIL Method", 
+                    content: "<p>FOIL is a mnemonic for a specific, common case of polynomial multiplication: multiplying two binomials (polynomials with two terms). It ensures all four products are computed.</p>"
+                },
+                what_is_foil: { 
+                    title: "What is FOIL?", 
+                    content: "<h3>FOIL Acronym</h3><p>FOIL helps remember the steps for multiplying two binomials $(a+b)(c+d)$.</p><ul><li><b>F</b>irst: Multiply the first terms in each binomial ($ac$).</li><li><b>O</b>uter: Multiply the two outermost terms ($ad$).</li><li><b>I</b>nner: Multiply the two innermost terms ($bc$).</li><li><b>L</b>ast: Multiply the last terms in each binomial ($bd$).</li></ul><p>The result is the sum: $ac + ad + bc + bd$.</p>"
+                },
+                foil_example: { 
+                    title: "FOIL Example", 
+                    content: "<h3>Example</h3><p>Use FOIL to multiply $(x+3)(2x-5)$.</p><ul><li><b>F</b>irst: $(x)(2x) = 2x^2$</li><li><b>O</b>uter: $(x)(-5) = -5x$</li><li><b>I</b>nner: $(3)(2x) = 6x$</li><li><b>L</b>ast: $(3)(-5) = -15$</li></ul><p>Combine the terms:</p>$$ 2x^2 - 5x + 6x - 15 = 2x^2 + x - 15 $$<h3>Additional Example</h3><p>Multiply $(4x-y)(2x+3y)$:</p><ul><li><b>F</b>: $(4x)(2x) = 8x^2$</li><li><b>O</b>: $(4x)(3y) = 12xy$</li><li><b>I</b>: $(-y)(2x) = -2xy$</li><li><b>L</b>: $(-y)(3y) = -3y^2$</li></ul><p>Combine:</p>$$ 8x^2 + 12xy - 2xy - 3y^2 = 8x^2 + 10xy - 3y^2 $$"
+                },
+                perfect_square_trinomial: {
+                    title: "Perfect Square Trinomial",
+                    content: "<h3>Special Product: Squaring a Binomial</h3><p>A perfect square trinomial is the result of squaring a binomial. Recognizing this pattern can save time.</p><h3>Formulas:</h3>$$ (a+b)^2 = a^2 + 2ab + b^2 $$$$ (a-b)^2 = a^2 - 2ab + b^2 $$<h3>Example (Sum):</h3><p> $(x+4)^2 = x^2 + 2(x)(4) + 4^2 = x^2 + 8x + 16$</p><h3>Example (Difference):</h3><p> $(3x-5)^2 = (3x)^2 - 2(3x)(5) + 5^2 = 9x^2 - 30x + 25$</p>"
+                },
+                difference_of_squares: {
+                    title: "Difference of Squares",
+                    content: "<h3>Special Product: Conjugates</h3><p>The product of a sum and difference of the same two terms (called conjugates) results in a difference of two squares.</p><h3>Formula:</h3>$$ (a+b)(a-b) = a^2 - b^2 $$<h3>Example:</h3><p> $(2x+3)(2x-3) = (2x)^2 - 3^2 = 4x^2 - 9$</p><h3>Additional Example:</h3><p> $(x^2+5y)(x^2-5y) = (x^2)^2 - (5y)^2 = x^4 - 25y^2$</p>"
+                },
+                multivariable_polynomials: { 
+                    title: "Multivariable Polynomials", 
+                    content: "<p>Polynomials can contain more than one variable. The principles of operations remain the same, but calculating the degree of a term is slightly different.</p>"
+                },
+                multivariable_definition: {
+                    title: "Definition & Degree",
+                    content: "<h3>Polynomials with Several Variables</h3><p>These polynomials consist of terms with products of different variables.</p><h3>Degree of a Term</h3><p>The <b>degree of a term</b> is the sum of the exponents of all its variables.</p><h3>Degree of the Polynomial</h3><p>The degree of the polynomial is the highest degree of any of its individual terms.</p><h3>Example:</h3><p>In $5x^3y^2 + 2xy^2 - 7y$:<ul><li>Degree of $5x^3y^2$ is $3+2=5$.</li><li>Degree of $2xy^2$ is $1+2=3$.</li><li>Degree of $-7y$ is $1$.</li></ul>The degree of the polynomial is <b>5</b>.</p>"
+                },
+                multivariable_add_subtract: {
+                    title: "Adding & Subtracting",
+                    content: "<h3>Combining Like Terms</h3><p>Adding and subtracting multivariable polynomials works just like with single variables: combine like terms. Like terms must have the same variables with the same corresponding exponents.</p><h3>Example (Addition):</h3><p>Add $(3x^2y - 2xy + 5)$ and $(xy - y^2 + 2)$.</p>$$ (3x^2y) + (-2xy + xy) + (-y^2) + (5+2) $$ $$ = 3x^2y - xy - y^2 + 7 $$<h3>Example (Subtraction):</h3><p>Subtract $(4ab^2 + 2a - 3b)$ from $(6ab^2 + a + 5b)$:</p>$$ (6ab^2 + a + 5b) - (4ab^2 + 2a - 3b) $$ $$ = 6ab^2 + a + 5b - 4ab^2 - 2a + 3b $$ $$ = (6ab^2 - 4ab^2) + (a - 2a) + (5b + 3b) $$ $$ = 2ab^2 - a + 8b $$"
+                },
+                multivariable_multiply: {
+                    title: "Multiplying",
+                    content: "<h3>Multiplication</h3><p>Multiplication also follows the distributive property. Multiply coefficients and add exponents for each variable separately.</p><h3>Example (Binomial x Binomial):</h3><p>Multiply $(x+y)$ by $(x-2y)$: $$ (x+y)(x-2y) $$ $$ = x(x) + x(-2y) + y(x) + y(-2y) $$ $$ = x^2 - 2xy + xy - 2y^2 $$<p>Combine like terms:</p>$$ = x^2 - xy - 2y^2 $$<h3>Example (Monomial x Polynomial):</h3><p>Multiply $3x^2y$ by $(4x^2 - 2xy + 5y^2)$:</p>$$ 3x^2y(4x^2 - 2xy + 5y^2) $$ $$ = (3x^2y)(4x^2) - (3x^2y)(2xy) + (3x^2y)(5y^2) $$ $$ = 12x^{2+2}y - 6x^{2+1}y^{1+1} + 15x^2y^{1+2} $$ $$ = 12x^4y - 6x^3y^2 + 15x^2y^3 $$"
+                }
+            };
+
+            const structure = {
+                identifying_polynomials: ['definition_of_a_polynomial', 'standard_form', 'degree_of_a_polynomial', 'leading_coefficient'],
+                add_subtract_polynomials: ['combining_like_terms', 'adding_polynomials_example', 'subtracting_polynomials_example'],
+                multiply_polynomials: ['distributive_property', 'multiplying_monomials', 'monomial_by_polynomial', 'polynomial_by_polynomial'],
+                foil_method: ['what_is_foil', 'foil_example', 'perfect_square_trinomial', 'difference_of_squares'],
+                multivariable_polynomials: ['multivariable_definition', 'multivariable_add_subtract', 'multivariable_multiply']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>

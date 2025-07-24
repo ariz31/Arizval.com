@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Models and Applications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'models_and_applications';
+
+            const mindMapInfo = {
+                models_and_applications: { 
+                    title: "Models and Applications", 
+                    content: "<p>This section focuses on translating real-world scenarios into mathematical equations (models) to find solutions. We will explore how to set up linear equations and apply established formulas to solve a variety of problems.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
+                },
+                linear_equation_setup: {
+                    title: "Setting Up Linear Equations",
+                    content: "<p>Many real-world problems can be modeled by linear equations. The key is to accurately translate the verbal description into a mathematical statement.</p>"
+                },
+                problem_solving_strategy: {
+                    title: "Problem-Solving Strategy",
+                    content: "<p>A systematic approach is crucial for setting up and solving word problems.</p><ol class='list-decimal list-inside'><li><b>Read and Understand:</b> Identify what you are asked to find.</li><li><b>Assign a Variable:</b> Let a variable (e.g., $x$) represent the unknown quantity.</li><li><b>Write an Equation:</b> Translate the words into a mathematical equation involving the variable.</li><li><b>Solve the Equation:</b> Use algebraic techniques to find the value of the variable.</li><li><b>Check and Interpret:</b> Ensure the answer is reasonable and answer the question in a complete sentence.</li></ol>"
+                },
+                numeric_and_consecutive_integer_problems: {
+                    title: "Numeric & Integer Problems",
+                    content: "<p>These problems involve relationships between numbers.</p><h3>Example 1:</h3><p><i>'The sum of twice a number and 7 is 19. Find the number.'</i></p><p>Let $x$ be the number. Equation: $2x + 7 = 19$.</p><p>Solving: $2x = 12 \\implies x = 6$. The number is 6.</p><h3>Example 2 (Consecutive Integers):</h3><p><i>'The sum of two consecutive integers is 41. Find the integers.'</i></p><p>Let the integers be $x$ and $x+1$.</p><p>Equation: $x + (x+1) = 41 \\implies 2x + 1 = 41 \\implies 2x = 40 \\implies x = 20$.</p><p>The integers are 20 and 21.</p><h3>Example 3 (Consecutive Even Integers):</h3><p><i>'The sum of three consecutive even integers is 96. Find the integers.'</i></p><p>Let the integers be $x$, $x+2$, and $x+4$.</p><p>Equation: $x + (x+2) + (x+4) = 96 \\implies 3x + 6 = 96 \\implies 3x = 90 \\implies x = 30$.</p><p>The integers are 30, 32, and 34.</p>"
+                },
+                percent_and_money_problems: {
+                    title: "Percent & Money Problems",
+                    content: "<p>These problems often involve calculating discounts, taxes, or dealing with different denominations of money.</p><h3>Example 1 (Discount):</h3><p><i>'A shirt is on sale for 25% off. The sale price is $30. What was the original price?'</i></p><p>Let $p$ be the original price. Equation: $p - 0.25p = 30 \\implies 0.75p = 30$.</p><p>Solving: $p = \\frac{30}{0.75} = 40$. The original price was $40.</p><h3>Example 2 (Money):</h3><p><i>'John has $2.25 in dimes and quarters. He has twice as many dimes as quarters. How many of each does he have?'</i></p><p>Let $q$ be the number of quarters. Then he has $2q$ dimes.</p><p>Value equation: $0.25q + 0.10(2q) = 2.25 \\implies 0.45q = 2.25 \\implies q = 5$.</p><p>He has 5 quarters and 10 dimes.</p><h3>Example 3 (Sales Tax):</h3><p><i>'The price of a computer is $800. If the sales tax is 8%, what is the total cost?'</i></p><p>Let $C$ be the total cost. The tax is $0.08 \\times 800 = 64$.</p><p>Equation: $C = 800 + 64$.</p><p>Solving: $C = 864$. The total cost is $864.</p>"
+                },
+                mixture_problems: {
+                    title: "Mixture Problems",
+                    content: "<p>Mixture problems involve combining two or more things with different characteristics (like price or concentration).</p><h3>Example 1 (Concentration):</h3><p><i>'How many liters of a 20% acid solution must be mixed with 5 liters of a 50% acid solution to get a 30% acid solution?'</i></p><p>Let $x$ be the liters of the 20% solution.</p><p>Equation: $0.20x + 0.50(5) = 0.30(x+5)$.</p><p>Solving: $0.20x + 2.5 = 0.30x + 1.5 \\implies 1.0 = 0.10x \\implies x = 10$.</p><p>You must mix 10 liters of the 20% solution.</p><h3>Example 2 (Value):</h3><p><i>'A coffee shop owner mixes a gourmet coffee bean blend that costs $12 per pound with a cheaper blend that costs $5 per pound. How many pounds of the cheaper blend must be added to 8 pounds of the gourmet blend to create a mixture that sells for $8 per pound?'</i></p><p>Let $x$ be the pounds of the cheaper blend.</p><p>Value equation: $12(8) + 5(x) = 8(8+x)$.</p><p>Solving: $96 + 5x = 64 + 8x \\implies 32 = 3x \\implies x = \\frac{32}{3} \\approx 10.67$.</p><p>About 10.67 pounds of the cheaper blend must be added.</p>"
+                },
+                formula_applications: {
+                    title: "Using Formulas",
+                    content: "<p>Some problems require substituting values into a known formula. The goal is often to solve for the one remaining unknown variable.</p>"
+                },
+                perimeter_area_volume_formulas: {
+                    title: "Perimeter, Area, Volume",
+                    content: "<p>These are common geometric applications.</p><h3>Example 1 (Perimeter):</h3><p><i>'The length of a rectangle is 3 meters more than its width. If the perimeter is 34 meters, find the dimensions.'</i></p><p>Let $w$ be the width. Then $l = w+3$. Formula: $P = 2l + 2w$.</p><p>Equation: $34 = 2(w+3) + 2w \\implies 34 = 4w+6 \\implies 28 = 4w \\implies w = 7$.</p><p>The width is 7m and the length is 10m.</p><h3>Example 2 (Area):</h3><p><i>'A circular garden has a circumference of $24\\pi$ feet. What is the area of the garden?'</i></p><p>First find the radius. Formula: $C = 2\\pi r$.</p><p>Equation: $24\\pi = 2\\pi r \\implies r = 12$ feet.</p><p>Now find the area. Formula: $A = \\pi r^2$.</p><p>Equation: $A = \\pi (12)^2 = 144\\pi$ square feet.</p>"
+                },
+                simple_interest_formula: {
+                    title: "Simple Interest",
+                    content: "<p>The simple interest formula calculates the interest earned on a principal amount.</p><h3>Formula:</h3>$$I = Prt$$<p>Where $I$ is interest, $P$ is principal, $r$ is the annual interest rate (as a decimal), and $t$ is time in years.</p><h3>Example 1:</h3><p><i>'You invest $2,000 at an annual interest rate of 5%. How long will it take to earn $500 in simple interest?'</i></p><p>Equation: $500 = (2000)(0.05)t \\implies 500 = 100t \\implies t = 5$.</p><p>It will take 5 years.</p><h3>Example 2:</h3><p><i>'You want to have $3000 in 2 years. How much do you need to invest at a 6% simple interest rate?'</i></p><p>The total amount $A$ is $P+I$. So $I = A - P = 3000 - P$.</p><p>Equation: $3000 - P = P(0.06)(2)$.</p><p>Solving: $3000 - P = 0.12P \\implies 3000 = 1.12P \\implies P \\approx 2678.57$.</p><p>You need to invest approximately $2,678.57.</p>"
+                },
+                distance_rate_time_formula: {
+                    title: "Distance, Rate, Time",
+                    content: "<p>This formula relates distance, speed (rate), and time.</p><h3>Formula:</h3>$$d = rt$$<p>Where $d$ is distance, $r$ is rate, and $t$ is time.</p><h3>Example 1 (Opposite Directions):</h3><p><i>'Two cars leave the same point, traveling in opposite directions. One car travels at 50 mph and the other at 60 mph. How long until they are 440 miles apart?'</i></p><p>Equation: $50t + 60t = 440 \\implies 110t = 440 \\implies t = 4$.</p><p>They will be 440 miles apart in 4 hours.</p><h3>Example 2 (Same Direction):</h3><p><i>'A freight train leaves the station traveling 30 mph. One hour later, a passenger train leaves the same station on a parallel track traveling 50 mph. How long will it take the passenger train to catch up to the freight train?'</i></p><p>Let $t$ be the time the passenger train travels. The freight train travels for $t+1$ hours.</p><p>When they meet, their distances are equal. Equation: $50t = 30(t+1)$.</p><p>Solving: $50t = 30t + 30 \\implies 20t = 30 \\implies t = 1.5$.</p><p>It will take the passenger train 1.5 hours to catch up.</p>"
+                }
+            };
+
+            const structure = {
+                linear_equation_setup: ['problem_solving_strategy', 'numeric_and_consecutive_integer_problems', 'percent_and_money_problems', 'mixture_problems'],
+                formula_applications: ['perimeter_area_volume_formulas', 'simple_interest_formula', 'distance_rate_time_formula']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>

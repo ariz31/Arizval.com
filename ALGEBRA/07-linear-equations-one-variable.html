@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Linear Equations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'linear_equations';
+
+            const mindMapInfo = {
+                linear_equations: { 
+                    title: "Linear Equations", 
+                    content: "<p>A linear equation is an equation for a straight line. This mind map covers solving linear equations in one variable, finding equations of lines, and analyzing the relationships between parallel and perpendicular lines.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
+                },
+                solving_algebraically: { 
+                    title: "Solving Algebraically", 
+                    content: "<p>Solving a linear equation in one variable means finding the value of the variable that makes the equation true. This is done by isolating the variable on one side of the equation using algebraic properties.</p>"
+                },
+                isolating_the_variable: {
+                    title: "Isolating the Variable",
+                    content: "<h3>The Goal</h3><p>The primary goal is to get the variable by itself on one side of the equals sign. This is achieved by performing inverse operations to 'undo' the operations being done to the variable.</p><ul><li><b>Addition</b> is undone by <b>subtraction</b>.</li><li><b>Subtraction</b> is undone by <b>addition</b>.</li><li><b>Multiplication</b> is undone by <b>division</b>.</li><li><b>Division</b> is undone by <b>multiplication</b>.</li></ul>"
+                },
+                properties_of_equality: {
+                    title: "Properties of Equality",
+                    content: "<h3>The Rules of the Game</h3><p>To keep an equation balanced, whatever you do to one side, you must do to the other.</p><ul><li><b>Addition Property:</b> If $a=b$, then $a+c = b+c$.</li><li><b>Subtraction Property:</b> If $a=b$, then $a-c = b-c$.</li><li><b>Multiplication Property:</b> If $a=b$, then $ac = bc$.</li><li><b>Division Property:</b> If $a=b$ and $c \\neq 0$, then $a/c = b/c$.</li></ul>"
+                },
+                solving_steps_example: {
+                    title: "Solving Steps & Example",
+                    content: "<h3>General Steps</h3><ol><li>Simplify both sides of the equation (e.g., distribute, combine like terms).</li><li>Use addition/subtraction properties to move all variable terms to one side and all constant terms to the other.</li><li>Use multiplication/division properties to isolate the variable.</li><li>Check your solution by substituting it back into the original equation.</li></ol><h3>Example</h3><p>Solve for $x$: $3(x+2) - 5 = 10$</p><ol><li><b>Distribute:</b> $3x + 6 - 5 = 10$</li><li><b>Combine like terms:</b> $3x + 1 = 10$</li><li><b>Subtract 1 from both sides:</b> $3x = 9$</li><li><b>Divide by 3:</b> $x = 3$</li></ol>"
+                },
+                rational_equations: {
+                    title: "Rational Equations",
+                    content: "<p>A rational equation is an equation containing at least one fraction whose numerator and/or denominator are polynomials. The key to solving them is to eliminate the fractions.</p>"
+                },
+                definition_rational_equation: {
+                    title: "Definition",
+                    content: "<h3>What is a Rational Equation?</h3><p>It's an equation with fractions where variables appear in the denominator. The general strategy is to find the Least Common Denominator (LCD) and multiply the entire equation by it.</p><h3>Example:</h3>$$ \\frac{2}{x} + \\frac{1}{3} = \\frac{5}{x} $$"
+                },
+                finding_the_lcd: {
+                    title: "Finding the LCD",
+                    content: "<h3>Least Common Denominator (LCD)</h3><p>The LCD is the smallest expression that is a multiple of all the denominators.</p><h3>How to Find:</h3><ol><li>Factor each denominator completely.</li><li>The LCD is the product of all unique factors, each raised to the highest power it appears in any single denominator.</li></ol><h3>Example:</h3><p>For denominators $x$, $x-2$, and $x^2-4$ (which is $(x-2)(x+2)$), the LCD is $x(x-2)(x+2)$.</p>"
+                },
+                solving_rational_example: {
+                    title: "Solving Process & Example",
+                    content: "<h3>Steps to Solve</h3><ol><li>Find the LCD of all fractions.</li><li>Multiply every term in the equation by the LCD. This will clear the denominators.</li><li>Solve the resulting linear (or other) equation.</li><li>Check for extraneous solutions.</li></ol><h3>Example</h3><p>Solve: $ \\frac{2}{x} + \\frac{1}{2} = \\frac{3}{4} $</p><ol><li><b>LCD is $4x$.</b></li><li><b>Multiply by LCD:</b> $4x(\\frac{2}{x}) + 4x(\\frac{1}{2}) = 4x(\\frac{3}{4})$</li><li><b>Simplify:</b> $8 + 2x = 3x$</li><li><b>Solve:</b> $8 = x$</li></ol>"
+                },
+                extraneous_solutions: {
+                    title: "Extraneous Solutions",
+                    content: "<h3>Important Check!</h3><p>An <b>extraneous solution</b> is a solution that emerges from the solving process, but does not satisfy the original equation. For rational equations, this occurs when a solution makes one of the original denominators equal to zero.</p><h3>Example:</h3><p>If you solve an equation and find $x=2$, but the original equation had a denominator of $(x-2)$, then $x=2$ is an extraneous solution and must be discarded.</p>"
+                },
+                finding_linear_equation: {
+                    title: "Finding a Linear Equation",
+                    content: "<p>A linear equation represents a line. Its equation can be written in several forms, most commonly slope-intercept form and point-slope form.</p>"
+                },
+                slope_intercept_form: {
+                    title: "Slope-Intercept Form",
+                    content: "<h3>Formula: $y = mx + b$</h3><ul><li>$m$ is the <b>slope</b> of the line (rise/run).</li><li>$b$ is the <b>y-intercept</b>, the point where the line crosses the y-axis, $(0, b)$.</li></ul><p>This form is useful for quickly graphing a line and identifying its key features.</p>"
+                },
+                point_slope_form: {
+                    title: "Point-Slope Form",
+                    content: "<h3>Formula: $y - y_1 = m(x - x_1)$</h3><ul><li>$m$ is the <b>slope</b>.</li><li>$(x_1, y_1)$ is any specific point on the line.</li></ul><p>This form is extremely useful for finding the equation of a line when you know its slope and at least one point it passes through.</p>"
+                },
+                from_two_points: {
+                    title: "From Two Points",
+                    content: "<h3>Finding the Equation from Two Points</h3><p>If you are given two points $(x_1, y_1)$ and $(x_2, y_2)$:</p><ol><li>First, calculate the slope ($m$): $$ m = \\frac{y_2 - y_1}{x_2 - x_1} $$</li><li>Then, use the slope and one of the points in the point-slope form: $y - y_1 = m(x - x_1)$.</li><li>Simplify to slope-intercept form if needed.</li></ol>"
+                },
+                parallel_perpendicular_lines: {
+                    title: "Parallel & Perpendicular",
+                    content: "<p>The slopes of two lines can tell you if their graphs are parallel, perpendicular, or neither.</p>"
+                },
+                parallel_lines_definition: {
+                    title: "Parallel Lines",
+                    content: "<h3>Definition</h3><p>Two non-vertical lines are <b>parallel</b> if and only if they have the <b>same slope</b>.</p><h3>Condition: $m_1 = m_2$</h3><p>Parallel lines never intersect.</p>"
+                },
+                perpendicular_lines_definition: {
+                    title: "Perpendicular Lines",
+                    content: "<h3>Definition</h3><p>Two non-vertical lines are <b>perpendicular</b> if and only if their slopes are <b>negative reciprocals</b> of each other.</p><h3>Condition: $m_1 = -\\frac{1}{m_2}$ or $m_1 \\cdot m_2 = -1$</h3><p>Perpendicular lines intersect at a right (90°) angle.</p>"
+                },
+                determining_relationship_example: {
+                    title: "Determining the Relationship",
+                    content: "<h3>Example</h3><p>Are the lines $y=2x+5$ and $x+2y=4$ parallel, perpendicular, or neither?</p><ol><li><b>Find slopes:</b> The slope of the first line is $m_1=2$.</li><li>For the second line, solve for $y$ to get slope-intercept form: $2y = -x+4 \\implies y = -\\frac{1}{2}x + 2$. The slope is $m_2 = -\\frac{1}{2}$.</li><li><b>Compare slopes:</b> Since $2 = -\\frac{1}{-1/2}$, the slopes are negative reciprocals.</li></ol><p>The lines are <b>perpendicular</b>.</p>"
+                },
+                writing_equations_of_lines: {
+                    title: "Writing Equations of Lines",
+                    content: "<p>You can write the equation of a new line if you know its relationship (parallel or perpendicular) to another line and a point it passes through.</p>"
+                },
+                writing_parallel_line_equation: {
+                    title: "Writing Parallel Line Equation",
+                    content: "<h3>Process</h3><ol><li>Find the slope of the given line.</li><li>Use the <b>same slope</b> for the new line.</li><li>Use the given point and the slope in the point-slope form: $y - y_1 = m(x - x_1)$.</li><li>Simplify to the desired form.</li></ol><h3>Example</h3><p>Find a line parallel to $y=3x+1$ that passes through $(2, 7)$.</p><ol><li>Given slope is $m=3$.</li><li>Use $m=3$ and point $(2,7)$.</li><li>$y - 7 = 3(x - 2)$</li><li>$y - 7 = 3x - 6 \\implies y = 3x + 1$</li></ol>"
+                },
+                writing_perpendicular_line_equation: {
+                    title: "Writing Perpendicular Line Equation",
+                    content: "<h3>Process</h3><ol><li>Find the slope ($m$) of the given line.</li><li>Calculate the <b>negative reciprocal</b> slope for the new line ($-1/m$).</li><li>Use the new slope and the given point in the point-slope form.</li><li>Simplify.</li></ol><h3>Example</h3><p>Find a line perpendicular to $y=2x-5$ that passes through $(4, 1)$.</p><ol><li>Given slope is $m=2$.</li><li>New slope is $-1/2$.</li><li>Use $m=-1/2$ and point $(4,1)$.</li><li>$y - 1 = -\\frac{1}{2}(x - 4)$</li><li>$y - 1 = -\\frac{1}{2}x + 2 \\implies y = -\\frac{1}{2}x + 3$</li></ol>"
+                }
+            };
+
+            const structure = {
+                solving_algebraically: ['isolating_the_variable', 'properties_of_equality', 'solving_steps_example'],
+                rational_equations: ['definition_rational_equation', 'finding_the_lcd', 'solving_rational_example', 'extraneous_solutions'],
+                finding_linear_equation: ['slope_intercept_form', 'point_slope_form', 'from_two_points'],
+                parallel_perpendicular_lines: ['parallel_lines_definition', 'perpendicular_lines_definition', 'determining_relationship_example'],
+                writing_equations_of_lines: ['writing_parallel_line_equation', 'writing_perpendicular_line_equation']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
