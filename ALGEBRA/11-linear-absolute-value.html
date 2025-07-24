@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Linear & Absolute Value Inequalities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'inequalities';
+
+            const mindMapInfo = {
+                inequalities: { 
+                    title: "Linear & Absolute Value Inequalities", 
+                    content: "<p>This mind map explores how to represent solution sets using interval notation, the properties that govern inequalities, and the methods for solving linear and absolute value inequalities in one variable.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
+                },
+                interval_notation: {
+                    title: "Interval Notation",
+                    content: "<p>Interval notation is a concise way to represent a set of numbers. It's particularly useful for expressing the solution sets of inequalities.</p>"
+                },
+                what_is_interval_notation: {
+                    title: "What is Interval Notation?",
+                    content: "<h3>Definition</h3><p>Interval notation uses parentheses and brackets to describe a range of values.</p><ul><li><b>Parentheses ( )</b> are used when an endpoint is <b>not included</b> (corresponding to $<$ or $>$).</li><li><b>Brackets [ ]</b> are used when an endpoint <b>is included</b> (corresponding to $\\le$ or $\\ge$).</li><li>Infinity ($\\infty$) and negative infinity ($-\\infty$) always use parentheses.</li></ul>"
+                },
+                types_of_intervals: {
+                    title: "Types of Intervals",
+                    content: "<h3>Bounded Intervals</h3><p>An interval is bounded if both of its endpoints are real numbers.</p><ul><li>$(a, b)$: All numbers between $a$ and $b$.</li><li>$[a, b]$: All numbers between $a$ and $b$, including $a$ and $b$.</li><li>$[a, b)$: Includes $a$, but not $b$.</li><li>$(a, b]$: Includes $b$, but not $a$.</li></ul><h3>Unbounded Intervals</h3><p>An interval is unbounded if it extends to infinity in at least one direction.</p><ul><li>$(a, \\infty)$: All numbers greater than $a$.</li><li>$[a, \\infty)$: All numbers greater than or equal to $a$.</li><li>$(-\\infty, b)$: All numbers less than $b$.</li><li>$(-\\infty, b]$: All numbers less than or equal to $b$.</li></ul>"
+                },
+                set_builder_vs_interval: {
+                    title: "Set-Builder vs. Interval",
+                    content: "<h3>Two Ways to Say the Same Thing</h3><p>Set-builder notation and interval notation are two different ways to describe a set of numbers.</p><ul><li><b>Set-Builder:</b> $\{x \\mid x > 5\}$<br><b>Interval:</b> $(5, \\infty)$</li><li><b>Set-Builder:</b> $\{x \\mid -2 \\le x < 3\}$<br><b>Interval:</b> $[-2, 3)$</li></ul>"
+                },
+                properties_of_inequalities: {
+                    title: "Properties of Inequalities",
+                    content: "<p>These are the fundamental rules that allow us to manipulate and solve inequalities algebraically.</p>"
+                },
+                addition_subtraction_property: {
+                    title: "Addition/Subtraction Property",
+                    content: "<h3>The Rule</h3><p>You can add or subtract the same number from both sides of an inequality without changing the inequality sign.</p><ul><li>If $a < b$, then $a+c < b+c$.</li><li>If $a < b$, then $a-c < b-c$.</li></ul><h3>Example:</h3><p>Given $x-5 > 10$, we can add 5 to both sides: $x > 15$.</p>"
+                },
+                multiplication_division_property: {
+                    title: "Multiplication/Division Property",
+                    content: "<h3>The Most Important Rule</h3><p>You can multiply or divide both sides by the same <b>positive</b> number without changing the inequality sign.</p><ul><li>If $a < b$ and $c > 0$, then $ac < bc$.</li></ul><p>However, if you multiply or divide both sides by a <b>negative</b> number, you <b>must flip the inequality sign</b>.</p><ul><li>If $a < b$ and $c < 0$, then $ac > bc$.</li></ul><h3>Example:</h3><p>Solve $-2x < 8$.<br>Divide both sides by -2 and flip the sign: $x > -4$.</p>"
+                },
+                solving_linear_inequalities: {
+                    title: "Solving Linear Inequalities",
+                    content: "<p>The process for solving linear inequalities is very similar to solving linear equations, with one key difference involving multiplication or division by a negative number.</p>"
+                },
+                solving_process_example: {
+                    title: "Solving Process & Example",
+                    content: "<h3>Steps</h3><ol><li>Simplify both sides of the inequality (distribute, combine like terms).</li><li>Use addition/subtraction to move variable terms to one side and constants to the other.</li><li>Use multiplication/division to isolate the variable. Remember to flip the inequality sign if you multiply or divide by a negative number.</li></ol><h3>Example:</h3><p>Solve $3(x-2) \\le 5x+8$.</p><ol><li><b>Distribute:</b> $3x - 6 \\le 5x + 8$</li><li><b>Subtract $5x$ from both sides:</b> $-2x - 6 \\le 8$</li><li><b>Add 6 to both sides:</b> $-2x \\le 14$</li><li><b>Divide by -2 and flip sign:</b> $x \\ge -7$</li></ol><p>The solution in interval notation is $[-7, \\infty)$.</p>"
+                },
+                graphing_solutions: {
+                    title: "Graphing on a Number Line",
+                    content: "<h3>Visualizing the Solution</h3><p>Solutions to inequalities can be graphed on a number line.</p><ul><li>Use an <b>open circle</b> $\\circ$ for endpoints that are not included ($<$ or $>$).</li><li>Use a <b>closed circle</b> $\\bullet$ for endpoints that are included ($\\le$ or $\\ge$).</li><li>Shade the part of the number line that represents the solution set.</li></ul><h3>Example: $x \\ge -7$</h3><p>You would place a closed circle on -7 and shade everything to the right.</p>"
+                },
+                solving_absolute_value_inequalities: {
+                    title: "Solving Absolute Value Inequalities",
+                    content: "<p>Solving inequalities with absolute values involves converting the single absolute value inequality into a compound inequality.</p>"
+                },
+                definition_of_absolute_value: {
+                    title: "Definition of Absolute Value",
+                    content: "<h3>Distance from Zero</h3><p>The absolute value of a number $x$, written as $|x|$, is its distance from 0 on the number line. Since distance is always non-negative, $|x| \\ge 0$.</p><p>This leads to two possibilities:</p><ul><li>If $x \\ge 0$, then $|x| = x$.</li><li>If $x < 0$, then $|x| = -x$.</li></ul>"
+                },
+                solving_less_than: {
+                    title: "Solving |X| < A ('Less Than')",
+                    content: "<h3>'And' Compound Inequality</h3><p>If $|X| < A$ (where $A>0$), it means $X$ is 'less than' $A$ units away from zero. This translates to a compound inequality connected by 'and'.</p>$$ |X| < A \\quad \\Leftrightarrow \\quad -A < X < A $$<p>The same rule applies for $|X| \\le A$.</p><h3>Example:</h3><p>Solve $|x-5| < 3$.</p>$$ -3 < x-5 < 3 $$$$ -3+5 < x < 3+5 $$$$ 2 < x < 8 $$<p>Interval notation: $(2, 8)$.</p>"
+                },
+                solving_greater_than: {
+                    title: "Solving |X| > A ('Greater Than')",
+                    content: "<h3>'Or' Compound Inequality</h3><p>If $|X| > A$ (where $A>0$), it means $X$ is 'greater than' $A$ units away from zero. This translates to two separate inequalities connected by 'or'.</p>$$ |X| > A \\quad \\Leftrightarrow \\quad X < -A \\quad \\text{or} \\quad X > A $$<p>The same rule applies for $|X| \\ge A$.</p><h3>Example:</h3><p>Solve $|2x+1| \\ge 7$.</p>$$ 2x+1 \\le -7 \\quad \\text{or} \\quad 2x+1 \\ge 7 $$$$ 2x \\le -8 \\quad \\text{or} \\quad 2x \\ge 6 $$$$ x \\le -4 \\quad \\text{or} \\quad x \\ge 3 $$<p>Interval notation: $(-\\infty, -4] \\cup [3, \\infty)$.</p>"
+                }
+            };
+
+            const structure = {
+                interval_notation: ['what_is_interval_notation', 'types_of_intervals', 'set_builder_vs_interval'],
+                properties_of_inequalities: ['addition_subtraction_property', 'multiplication_division_property'],
+                solving_linear_inequalities: ['solving_process_example', 'graphing_solutions'],
+                solving_absolute_value_inequalities: ['definition_of_absolute_value', 'solving_less_than', 'solving_greater_than']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = d.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
