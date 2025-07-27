@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Transformation of Functions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'transformation_of_functions';
+
+            const mindMapInfo = {
+                transformation_of_functions: { 
+                    title: "Transformation of Functions", 
+                    content: "<p>Transformations allow us to take a basic 'parent' function and shift, reflect, stretch, or compress its graph to create new functions. Understanding these rules allows us to graph complex functions by starting with a simple one.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
+                },
+                translations: {
+                    title: "Translations (Shifts)",
+                    content: "<p>Translations move the entire graph of a function up, down, left, or right without changing its shape or orientation.</p>"
+                },
+                vertical_shifts: {
+                    title: "Vertical Shifts",
+                    content: "<p>A vertical shift moves the graph up or down. It is caused by adding or subtracting a constant <b>outside</b> the function.</p><h3>Forms:</h3><ul><li>$g(x) = f(x) + k$: Shifts the graph of $f(x)$ <b>up</b> by $k$ units.</li><li>$g(x) = f(x) - k$: Shifts the graph of $f(x)$ <b>down</b> by $k$ units.</li></ul><h3>Example:</h3><p>To graph $g(x) = x^2 + 3$, you take the graph of $f(x)=x^2$ and shift it up 3 units.</p>"
+                },
+                horizontal_shifts: {
+                    title: "Horizontal Shifts",
+                    content: "<p>A horizontal shift moves the graph left or right. It is caused by adding or subtracting a constant <b>inside</b> the function.</p><h3>Forms:</h3><ul><li>$g(x) = f(x - h)$: Shifts the graph of $f(x)$ to the <b>right</b> by $h$ units.</li><li>$g(x) = f(x + h)$: Shifts the graph of $f(x)$ to the <b>left</b> by $h$ units.</li></ul><p>Note that the direction of the shift is opposite to the sign in the formula.</p><h3>Example:</h3><p>To graph $g(x) = (x-2)^2$, you take the graph of $f(x)=x^2$ and shift it right 2 units.</p>"
+                },
+                reflections: {
+                    title: "Reflections",
+                    content: "<p>Reflections flip the graph of a function across an axis.</p>"
+                },
+                reflection_x_axis: {
+                    title: "Reflection about the x-axis",
+                    content: "<p>This transformation flips the graph vertically across the x-axis. It is caused by negating the entire function.</p><h3>Form:</h3><p>$g(x) = -f(x)$</p><h3>Example:</h3><p>The graph of $g(x) = -\\sqrt{x}$ is a reflection of the graph of $f(x) = \\sqrt{x}$ across the x-axis.</p>"
+                },
+                reflection_y_axis: {
+                    title: "Reflection about the y-axis",
+                    content: "<p>This transformation flips the graph horizontally across the y-axis. It is caused by negating the input variable.</p><h3>Form:</h3><p>$g(x) = f(-x)$</p><h3>Example:</h3><p>The graph of $g(x) = \\sqrt{-x}$ is a reflection of the graph of $f(x) = \\sqrt{x}$ across the y-axis.</p>"
+                },
+                symmetry: {
+                    title: "Symmetry (Even & Odd)",
+                    content: "<p>Symmetry describes whether a graph is identical to itself after a reflection. This property can be determined algebraically.</p>"
+                },
+                even_functions: {
+                    title: "Even Functions",
+                    content: "<h3>Definition:</h3><p>A function is <b>even</b> if its graph is symmetric with respect to the y-axis.</p><h3>Algebraic Test:</h3><p>A function $f$ is even if $f(-x) = f(x)$ for all $x$ in the domain.</p><h3>Example:</h3><p>$f(x) = x^2$ is even because $f(-x) = (-x)^2 = x^2 = f(x)$.</p>"
+                },
+                odd_functions: {
+                    title: "Odd Functions",
+                    content: "<h3>Definition:</h3><p>A function is <b>odd</b> if its graph is symmetric with respect to the origin. (Rotating the graph 180° about the origin leaves it unchanged).</p><h3>Algebraic Test:</h3><p>A function $f$ is odd if $f(-x) = -f(x)$ for all $x$ in the domain.</p><h3>Example:</h3><p>$f(x) = x^3$ is odd because $f(-x) = (-x)^3 = -x^3 = -f(x)$.</p>"
+                },
+                neither_even_nor_odd: {
+                    title: "Neither Even nor Odd",
+                    content: "<p>Most functions are neither even nor odd. This occurs if they do not satisfy the algebraic tests for either property.</p><h3>Example:</h3><p>$f(x) = (x-1)^2$. Here, $f(-x) = (-x-1)^2 = (x+1)^2$. Since $(x+1)^2$ is not equal to $f(x)$ or $-f(x)$, the function is neither.</p>"
+                },
+                stretches_compressions: {
+                    title: "Stretches & Compressions",
+                    content: "<p>These transformations change the shape of the graph by making it narrower or wider, either vertically or horizontally.</p>"
+                },
+                vertical_stretch_compression: {
+                    title: "Vertical Stretch/Compression",
+                    content: "<p>This is caused by multiplying the entire function by a constant $a$.</p><h3>Forms:</h3><ul><li><b>Vertical Stretch:</b> If $|a| > 1$, the graph of $g(x) = a \\cdot f(x)$ is stretched vertically.</li><li><b>Vertical Compression:</b> If $0 < |a| < 1$, the graph is compressed vertically.</li></ul><h3>Example:</h3><p>$g(x) = 2x^2$ is a vertical stretch of $f(x)=x^2$. $h(x) = \\frac{1}{2}x^2$ is a vertical compression.</p>"
+                },
+                horizontal_stretch_compression: {
+                    title: "Horizontal Stretch/Compression",
+                    content: "<p>This is caused by multiplying the input variable by a constant $b$. The effect is the reciprocal of the constant.</p><h3>Forms:</h3><ul><li><b>Horizontal Compression:</b> If $|b| > 1$, the graph of $g(x) = f(b \\cdot x)$ is compressed horizontally by a factor of $\\frac{1}{|b|}$.</li><li><b>Horizontal Stretch:</b> If $0 < |b| < 1$, the graph is stretched horizontally by a factor of $\\frac{1}{|b|}$.</li></ul><h3>Example:</h3><p>$g(x) = (2x)^2$ is a horizontal compression of $f(x)=x^2$. $h(x) = (\\frac{1}{2}x)^2$ is a horizontal stretch.</p>"
+                },
+                combining_transformations: {
+                    title: "Combining Transformations",
+                    content: "<p>When multiple transformations are applied, the order matters. A standard approach ensures the correct final graph.</p>"
+                },
+                order_of_transformations: {
+                    title: "Order of Transformations",
+                    content: "<p>For a function of the form $g(x) = a \\cdot f(b(x-h)) + k$, apply transformations in this order:</p><ol class='list-decimal list-inside'><li><b>Horizontal transformations:</b> First apply the horizontal shift ($h$), then the horizontal stretch/compression ($b$).</li><li><b>Stretches/Compressions & Reflections:</b> Apply all vertical and horizontal stretches, compressions, and reflections ($a$ and $b$).</li><li><b>Vertical Shift:</b> Apply the vertical shift ($k$) last.</li></ol>"
+                }
+            };
+
+            const structure = {
+                translations: ['vertical_shifts', 'horizontal_shifts'],
+                reflections: ['reflection_x_axis', 'reflection_y_axis'],
+                symmetry: ['even_functions', 'odd_functions', 'neither_even_nor_odd'],
+                stretches_compressions: ['vertical_stretch_compression', 'horizontal_stretch_compression'],
+                combining_transformations: ['order_of_transformations']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
