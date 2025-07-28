@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map: Linear Algebra</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="mind-map.css">
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6ybjhKFPuy basın8Rj96Kplpo41Rt7EU7Ne9FhZdyhT9NUcHSE8KA3S7v1z" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+</head>
+<body>
+
+    <div id="mind-map-container"></div>
+
+    <div id="theme-toggle">
+        <label class="switch">
+            <input type="checkbox" id="theme-switch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+            <button id="close-modal" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+    </div>
+
+    <script src="mind-map.js"></script>
+
+    <script>
+        const ROOT_NODE_ID = "linear_algebra";
+
+        const mindMapData = {
+            "linear_algebra": {
+                "title": "Linear Algebra",
+                "content": "<h3>The Mathematics of Linearity</h3><p><b>Linear Algebra</b> is a fundamental branch of mathematics concerning vector spaces, linear mappings between these spaces, and systems of linear equations. It provides a framework for handling data in multi-dimensional spaces and is essential in nearly all areas of modern science and engineering.</p><p>Its core objects of study are <b>vectors</b> (which represent points in space) and <b>matrices</b> (which represent linear transformations or systems of equations).</p>"
+            },
+            "vectors_and_vector_spaces": {
+                "title": "Vectors & Vector Spaces",
+                "content": "<h3>The Building Blocks</h3><p>A <b>vector</b> is an object that has both magnitude and direction. Geometrically, we can picture a vector as a directed line segment. Algebraically, it is often represented as an ordered list of numbers. A <b>vector space</b> is a collection of vectors, which is closed under finite vector addition and scalar multiplication.</p>"
+            },
+            "vector_operations": {
+                "title": "Vector Operations",
+                "content": "<h3>Basic Manipulations</h3><p>Vectors can be manipulated using two fundamental operations:</p><ul><li><b>Vector Addition:</b> Adding two vectors results in a new vector. If $\\vec{u} = (u_1, u_2)$ and $\\vec{v} = (v_1, v_2)$, then $\\vec{u} + \\vec{v} = (u_1+v_1, u_2+v_2)$.</li><li><b>Scalar Multiplication:</b> Multiplying a vector by a scalar (a number) changes its magnitude. If $c$ is a scalar, then $c\\vec{v} = (cv_1, cv_2)$.</li></ul>"
+            },
+            "linear_combinations_and_span": {
+                "title": "Linear Combinations & Span",
+                "content": "<h3>Creating New Vectors</h3><p>A <b>linear combination</b> of vectors $\\vec{v}_1, \\vec{v}_2, ..., \\vec{v}_n$ is any vector of the form $c_1\\vec{v}_1 + c_2\\vec{v}_2 + ... + c_n\\vec{v}_n$, where $c_i$ are scalars.</p><p>The <b>span</b> of a set of vectors is the set of all possible linear combinations of those vectors. It represents the entire subspace that can be 'reached' by the given vectors.</p>"
+            },
+            "linear_independence": {
+                "title": "Linear Independence",
+                "content": "<h3>Non-Redundant Vectors</h3><p>A set of vectors is <b>linearly independent</b> if no vector in the set can be written as a linear combination of the others. Formally, the only solution to the equation $c_1\\vec{v}_1 + c_2\\vec{v}_2 + ... + c_n\\vec{v}_n = \\vec{0}$ is $c_1 = c_2 = ... = c_n = 0$.</p><p>If other solutions exist, the vectors are <b>linearly dependent</b>, meaning at least one vector is redundant.</p>"
+            },
+            "basis_and_dimension": {
+                "title": "Basis & Dimension",
+                "content": "<h3>A Framework for Space</h3><p>A <b>basis</b> of a vector space is a set of linearly independent vectors that spans the entire space. It's the smallest possible set of vectors needed to describe every vector in the space.</p><p>The <b>dimension</b> of a vector space is the number of vectors in any basis for that space. For example, $\\mathbb{R}^3$ has a dimension of 3.</p>"
+            },
+            "subspaces": {
+                "title": "Subspaces",
+                "content": "<h3>Spaces Within Spaces</h3><p>A <b>subspace</b> is a subset of a vector space that is itself a vector space. To qualify as a subspace, a set must satisfy three conditions:</p><ol><li>It must contain the zero vector.</li><li>It must be closed under vector addition.</li><li>It must be closed under scalar multiplication.</li></ol>"
+            },
+            "matrices_and_systems": {
+                "title": "Matrices & Linear Systems",
+                "content": "<h3>Organizing Data and Equations</h3><p>A <b>matrix</b> is a rectangular array of numbers, symbols, or expressions, arranged in rows and columns. Matrices are a powerful tool for representing and solving <b>systems of linear equations</b>, which are collections of one or more linear equations involving the same set of variables.</p><p>A system like:<br>$a_1x + b_1y = c_1$<br>$a_2x + b_2y = c_2$<br>can be written in matrix form as $A\\vec{x} = \\vec{b}$.</p>"
+            },
+            "matrix_operations": {
+                "title": "Matrix Operations",
+                "content": "<h3>Manipulating Matrices</h3><p>Key operations include:</p><ul><li><b>Addition:</b> Matrices of the same size can be added by adding corresponding entries.</li><li><b>Scalar Multiplication:</b> Multiplying a matrix by a scalar multiplies every entry by that scalar.</li><li><b>Matrix Multiplication:</b> The product $C=AB$ is defined if the number of columns in A equals the number of rows in B.</li><li><b>Transpose:</b> The transpose of a matrix, denoted $A^T$, is formed by turning its rows into columns and vice-versa.</li></ul>"
+            },
+            "types_of_matrices": {
+                "title": "Types of Matrices",
+                "content": "<h3>A Matrix Bestiary</h3><p>Special matrices have unique properties:</p><ul><li><b>Square Matrix:</b> Has the same number of rows and columns.</li><li><b>Identity Matrix ($I$):</b> A square matrix with 1s on the main diagonal and 0s elsewhere. $AI = IA = A$.</li><li><b>Zero Matrix:</b> All entries are zero.</li><li><b>Diagonal Matrix:</b> A square matrix where all off-diagonal entries are zero.</li><li><b>Symmetric Matrix:</b> A square matrix that is equal to its transpose ($A = A^T$).</li></ul>"
+            },
+            "gaussian_elimination": {
+                "title": "Gaussian Elimination",
+                "content": "<h3>Solving Systems Systematically</h3><p><b>Gaussian elimination</b> is an algorithm for solving systems of linear equations. It uses a sequence of elementary row operations to transform an augmented matrix into <b>row echelon form</b>.</p><p>Further reduction to <b>reduced row echelon form</b> (where leading entries are 1 and all other entries in their columns are 0) makes the solution to the system immediately apparent.</p>"
+            },
+            "matrix_inverse": {
+                "title": "Matrix Inverse",
+                "content": "<h3>'Undoing' a Matrix</h3><p>The <b>inverse</b> of a square matrix $A$, denoted $A^{-1}$, is the matrix that, when multiplied by $A$, results in the identity matrix $I$. That is, $AA^{-1} = A^{-1}A = I$.</p><p>A matrix is only invertible if its determinant is non-zero. The inverse is crucial for solving matrix equations of the form $A\\vec{x} = \\vec{b}$, as the solution is $\\vec{x} = A^{-1}\\vec{b}$.</p>"
+            },
+            "rank_of_a_matrix": {
+                "title": "Rank of a Matrix",
+                "content": "<h3>The 'Dimension' of a Matrix</h3><p>The <b>rank</b> of a matrix is the maximum number of linearly independent row (or column) vectors in the matrix. It can be found by reducing the matrix to row echelon form and counting the number of non-zero rows.</p><p>The rank provides key information about the solution to a system of linear equations, such as whether a solution exists and if it is unique.</p>"
+            },
+            "determinants": {
+                "title": "Determinants",
+                "content": "<h3>A Special Number from a Matrix</h3><p>The <b>determinant</b> is a scalar value that can be computed from the elements of a square matrix. It is denoted as $\\det(A)$ or $|A|$.</p><p>The determinant provides important information about the matrix. For example, a matrix has an inverse if and only if its determinant is non-zero. Geometrically, it represents the scaling factor of the volume of a shape under the linear transformation represented by the matrix.</p>"
+            },
+            "calculating_determinants": {
+                "title": "Calculating Determinants",
+                "content": "<h3>From 2x2 to NxN</h3><p>Methods for calculation depend on the matrix size:</p><ul><li><b>2x2 Matrix:</b> For $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$, $\\det(A) = ad - bc$.</li><li><b>3x3 and larger:</b> The most common method is <b>cofactor expansion</b> along a row or column. The determinant is the sum of the entries in that row/column multiplied by their corresponding signed cofactors.</li></ul>"
+            },
+            "properties_of_determinants": {
+                "title": "Properties of Determinants",
+                "content": "<h3>Useful Rules and Shortcuts</h3><p>Determinants follow several key properties:</p><ul><li>$\det(A^T) = \det(A)$</li><li>$\det(AB) = \det(A)\\det(B)$</li><li>If a row is multiplied by a scalar $k$, the new determinant is $k \\cdot \\det(A)$.</li><li>Swapping two rows multiplies the determinant by -1.</li><li>If a matrix has a row of zeros, its determinant is 0.</li></ul>"
+            },
+            "cramers_rule": {
+                "title": "Cramer's Rule",
+                "content": "<h3>Solving Systems with Determinants</h3><p><b>Cramer's Rule</b> is a method that uses determinants to solve a system of linear equations $A\\vec{x} = \\vec{b}$ that has a unique solution.</p><p>The value of each variable $x_i$ is given by the fraction: $$x_i = \\frac{\\det(A_i)}{\\det(A)}$$ where $A_i$ is the matrix formed by replacing the i-th column of $A$ with the vector $\\vec{b}$.</p>"
+            },
+            "eigenvalues_and_eigenvectors": {
+                "title": "Eigenvalues & Eigenvectors",
+                "content": "<h3>The Intrinsic Directions of a Transformation</h3><p>For a given linear transformation, an <b>eigenvector</b> is a non-zero vector that changes at most by a scalar factor when that linear transformation is applied to it. The corresponding scalar factor is the <b>eigenvalue</b>.</p><p>They are fundamental to understanding matrix transformations, as they represent the directions in which the transformation acts purely by stretching or compressing.</p>"
+            },
+            "eigen_definition": {
+                "title": "Definition & Calculation",
+                "content": "<h3>The Core Equation</h3><p>An eigenvector $\\vec{v}$ and its corresponding eigenvalue $\\lambda$ of a square matrix $A$ satisfy the equation: $$A\\vec{v} = \\lambda\\vec{v}$$</p><p>To find them, we rearrange the equation to $(A - \\lambda I)\\vec{v} = \\vec{0}$. For a non-trivial solution for $\\vec{v}$ to exist, the matrix $(A - \\lambda I)$ must be singular, meaning its determinant must be zero: $\\det(A - \\lambda I) = 0$. Solving this 'characteristic equation' gives the eigenvalues $\\lambda$.</p>"
+            },
+            "eigenspaces": {
+                "title": "Eigenspaces",
+                "content": "<h3>The Space of Eigenvectors</h3><p>For a given eigenvalue $\\lambda$, the set of all eigenvectors corresponding to $\\lambda$, along with the zero vector, forms a subspace called the <b>eigenspace</b>.</p><p>The eigenspace associated with $\\lambda$ is simply the null space of the matrix $(A - \\lambda I)$. To find a basis for the eigenspace, you solve the system $(A - \\lambda I)\\vec{v} = \\vec{0}$.</p>"
+            },
+            "diagonalization": {
+                "title": "Diagonalization",
+                "content": "<h3>Simplifying Matrices</h3><p><b>Diagonalization</b> is the process of finding a diagonal matrix $D$ that is similar to a given square matrix $A$. An $n \\times n$ matrix $A$ is diagonalizable if it has $n$ linearly independent eigenvectors.</p><p>The process is represented by the equation: $$A = PDP^{-1}$$ where $D$ is a diagonal matrix containing the eigenvalues of $A$, and $P$ is an invertible matrix whose columns are the corresponding eigenvectors.</p>"
+            },
+            "linear_transformations": {
+                "title": "Linear Transformations",
+                "content": "<h3>Functions Between Vector Spaces</h3><p>A <b>linear transformation</b> (or linear map) is a function $T: V \\to W$ between two vector spaces that preserves the operations of vector addition and scalar multiplication. They are the 'natural' functions to study in the context of vector spaces.</p>"
+            },
+            "transformation_definition": {
+                "title": "Definition & Properties",
+                "content": "<h3>Preserving Structure</h3><p>A transformation $T$ is linear if for all vectors $\\vec{u}, \\vec{v}$ in its domain and any scalar $c$, the following two properties hold:</p><ol><li>$T(\\vec{u} + \\vec{v}) = T(\\vec{u}) + T(\\vec{v})$ (Preservation of addition)</li><li>$T(c\\vec{u}) = cT(\\vec{u})$ (Preservation of scalar multiplication)</li></ol><p>Geometrically, linear transformations in $\\mathbb{R}^2$ or $\\mathbb{R}^3$ can be rotations, reflections, scaling, shears, and projections.</p>"
+            },
+            "kernel_and_range": {
+                "title": "Kernel and Range",
+                "content": "<h3>Input and Output Spaces</h3><p>For a linear transformation $T: V \\to W$:</p><ul><li>The <b>kernel</b> (or null space) of $T$ is the set of all vectors $\\vec{v}$ in $V$ such that $T(\\vec{v}) = \\vec{0}$. It is a subspace of the domain $V$.</li><li>The <b>range</b> (or image) of $T$ is the set of all possible output vectors in $W$. It is a subspace of the codomain $W$.</li></ul><p>The dimensions of these spaces are related by the Rank-Nullity Theorem: $\\text{rank}(T) + \\text{nullity}(T) = \\dim(V)$.</p>"
+            },
+            "matrix_of_transformation": {
+                "title": "Matrix of a Transformation",
+                "content": "<h3>Representing Transformations with Matrices</h3><p>Every linear transformation $T: \\mathbb{R}^n \\to \\mathbb{R}^m$ can be represented by a unique $m \\times n$ matrix $A$, such that $T(\\vec{x}) = A\\vec{x}$ for all $\\vec{x}$ in $\\mathbb{R}^n$.</p><p>The columns of this matrix $A$ are the images of the standard basis vectors of $\\mathbb{R}^n$ under the transformation $T$.</p>"
+            },
+            "applications": {
+                "title": "Applications",
+                "content": "<h3>Linear Algebra in the Real World</h3><p>Linear algebra is not just an abstract field; it is the mathematical backbone for many technologies and scientific disciplines. Its concepts are used to model and solve complex problems across numerous domains.</p>"
+            },
+            "computer_graphics": {
+                "title": "Computer Graphics",
+                "content": "<h3>Creating Virtual Worlds</h3><p>Matrices are fundamental to 2D and 3D computer graphics. Objects are represented by vertices (vectors), and transformations like <b>scaling</b>, <b>rotation</b>, and <b>translation</b> are performed by multiplying these vectors by transformation matrices. This allows for the animation and manipulation of objects in a virtual scene.</p>"
+            },
+            "machine_learning": {
+                "title": "Machine Learning",
+                "content": "<h3>The Engine of AI</h3><p>Linear algebra is at the heart of machine learning. Data is often represented as vectors and matrices. Techniques like <b>Principal Component Analysis (PCA)</b> use eigenvalues and eigenvectors to reduce dimensionality, and models like <b>linear regression</b> solve systems of equations to find the best-fit line for a dataset.</p>"
+            },
+            "cryptography": {
+                "title": "Cryptography",
+                "content": "<h3>Securing Information</h3><p>Some methods in cryptography use matrices to encrypt and decrypt messages. For example, the <b>Hill Cipher</b> uses matrix multiplication to encode a message and the matrix inverse to decode it, making it difficult to crack without knowing the key matrix.</p>"
+            },
+            "engineering_and_physics": {
+                "title": "Engineering & Physics",
+                "content": "<h3>Modeling the Physical World</h3><p>Linear algebra is indispensable in engineering and physics. It's used for <b>structural analysis</b> in civil engineering (solving for forces in trusses), analyzing circuits in electrical engineering, and solving systems of <b>differential equations</b> that model physical phenomena like fluid dynamics and quantum mechanics.</p>"
+            }
+        };
+
+        const mindMapStructure = {
+            "linear_algebra": [
+                "vectors_and_vector_spaces",
+                "matrices_and_systems",
+                "determinants",
+                "eigenvalues_and_eigenvectors",
+                "linear_transformations",
+                "applications"
+            ],
+            "vectors_and_vector_spaces": [
+                "vector_operations",
+                "linear_combinations_and_span",
+                "linear_independence",
+                "basis_and_dimension",
+                "subspaces"
+            ],
+            "matrices_and_systems": [
+                "matrix_operations",
+                "types_of_matrices",
+                "gaussian_elimination",
+                "matrix_inverse",
+                "rank_of_a_matrix"
+            ],
+            "determinants": [
+                "calculating_determinants",
+                "properties_of_determinants",
+                "cramers_rule"
+            ],
+            "eigenvalues_and_eigenvectors": [
+                "eigen_definition",
+                "eigenspaces",
+                "diagonalization"
+            ],
+            "linear_transformations": [
+                "transformation_definition",
+                "kernel_and_range",
+                "matrix_of_transformation"
+            ],
+            "applications": [
+                "computer_graphics",
+                "machine_learning",
+                "cryptography",
+                "engineering_and_physics"
+            ]
+        };
+
+    </script>
+</body>
+</html>

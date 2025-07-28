@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map: Placeholder Topic</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" xintegrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" xintegrity="sha384-cpW21h6RZv/AIa3DK8Rx_I94hrgSemTMkzaoBTELEqfH5dnbPJlrCaeCMEqyClRg" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="mind-map.css">
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="#" class="nav-brand">MindMap<span class="brand-accent">.ai</span></a>
+            <a href="#" class="nav-link" id="home-link"><i class="fas fa-home"></i> Home</a>
+            <a href="#" class="nav-link active" id="mindmap-link"><i class="fas fa-project-diagram"></i> Mind Map</a>
+            <a href="#" class="nav-link" id="list-link"><i class="fas fa-list-ul"></i> List View</a>
+            <a href="#" class="nav-link" id="snapshot-link"><i class="fas fa-camera"></i> Snapshot</a>
+        </div>
+        <div class="nav-right">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" placeholder="Search nodes...">
+            </div>
+            <div id="theme-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="theme-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <main class="content-area">
+        <div id="mind-map-container" class="view-panel active"></div>
+        <div id="list-view-container" class="view-panel">
+            <h2>Topic Outline</h2>
+            <div id="list-view-content"></div>
+        </div>
+        <div id="search-results-container" class="view-panel">
+            <h2>Search Results</h2>
+            <div id="search-results-content"></div>
+        </div>
+    </main>
+
+    <!-- Modal for Node Information -->
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title"></h2>
+                <button id="close-info-modal">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Home/File List -->
+    <div class="modal-overlay" id="home-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="home-modal-title">My Mind Maps</h2>
+                <button id="close-home-modal">&times;</button>
+            </div>
+            <div id="home-modal-body">
+                <!-- File list will be generated here by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- 1. DEFINE THE LIST OF AVAILABLE MIND MAPS ---
+        // This simulates scanning a directory. Add your HTML files here.
+        const availableMindMaps = [
+            { title: 'Placeholder Topic (This File)', file: 'index.html' },
+            { title: 'Another Topic Example', file: 'another-topic.html' },
+            { title: 'A Third Topic Example', file: 'third-topic.html' }
+        ];
+
+        // --- 2. DEFINE THE ROOT NODE ID ---
+        const ROOT_NODE_ID = 'main_topic';
+
+        // --- 3. DEFINE THE MIND MAP DATA (PLACEHOLDERS) ---
+        const mindMapData = {
+            'main_topic': {
+                title: 'Main Topic',
+                content: '<h3>This is the central idea.</h3><p>This mind map explores the various components of the main topic. Click the nodes to learn more about each part.</p>'
+            },
+            'category_a': {
+                title: 'Category A',
+                content: '<h3>About Category A</h3><p>This category covers the first major aspect of the main topic.</p>'
+            },
+            'category_b': {
+                title: 'Category B',
+                content: '<h3>About Category B</h3><p>This category covers the second major aspect of the main topic.</p>'
+            },
+            'category_c': {
+                title: 'Category C',
+                content: '<h3>About Category C</h3><p>This category covers the third major aspect of the main topic.</p>'
+            },
+            'sub_topic_a1': {
+                title: 'Sub-Topic A.1',
+                content: '<h3>Details of Sub-Topic A.1</h3><p>This is a detailed explanation of the first sub-topic within Category A.</p>'
+            },
+            'sub_topic_a2': {
+                title: 'Sub-Topic A.2',
+                content: '<h3>Details of Sub-Topic A.2</h3><p>This is a detailed explanation of the second sub-topic within Category A.</p>'
+            },
+            'sub_topic_b1': {
+                title: 'Sub-Topic B.1',
+                content: '<h3>Details of Sub-Topic B.1</h3><p>This is a detailed explanation of the first sub-topic within Category B.</p>'
+            },
+            'sub_topic_c1': {
+                title: 'Sub-Topic C.1',
+                content: '<h3>Details of Sub-Topic C.1</h3><p>This is a detailed explanation of the first sub-topic within Category C.</p>'
+            },
+            'sub_topic_c2': {
+                title: 'Sub-Topic C.2',
+                content: '<h3>Details of Sub-Topic C.2</h3><p>This is a detailed explanation of the second sub-topic within Category C.</p>'
+            },
+            'sub_topic_c3': {
+                title: 'Sub-Topic C.3',
+                content: '<h3>Details of Sub-Topic C.3</h3><p>This is a detailed explanation of the third sub-topic within Category C.</p>'
+            }
+        };
+
+        // --- 4. DEFINE THE MIND MAP STRUCTURE (PLACEHOLDERS) ---
+        const mindMapStructure = {
+            'main_topic': [
+                'category_a',
+                'category_b',
+                'category_c'
+            ],
+            'category_a': [
+                'sub_topic_a1',
+                'sub_topic_a2'
+            ],
+            'category_b': [
+                'sub_topic_b1'
+            ],
+            'category_c': [
+                'sub_topic_c1',
+                'sub_topic_c2',
+                'sub_topic_c3'
+            ]
+        };
+    </script>
+    <script src="mind-map.js"></script>
+</body>
+</html>

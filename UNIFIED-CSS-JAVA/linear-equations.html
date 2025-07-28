@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map: Linear Equations</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/AIa3DK8Rx_I94hrgSemTMkzaoBTELEqfH5dnbPJlrCaeCMEqyClRg" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="mind-map.css">
+</head>
+<body>
+
+    <div id="mind-map-container"></div>
+
+    <div id="theme-toggle">
+        <label class="switch">
+            <input type="checkbox" id="theme-switch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+            <button id="close-modal" style="position: absolute; top: 1rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: inherit;">&times;</button>
+        </div>
+    </div>
+    
+    <script src="mind-map.js"></script>
+    <script>
+        // --- 1. DEFINE THE ROOT NODE ID ---
+        const ROOT_NODE_ID = 'linear_equations';
+
+        // --- 2. DEFINE THE MIND MAP DATA ---
+        const mindMapData = {
+            'linear_equations': {
+                title: 'Linear Equations',
+                content: '<p><b>Linear equations</b> are fundamental algebraic expressions that describe a straight-line relationship between variables. They are a cornerstone of mathematics and have wide-ranging applications in science, engineering, and economics.</p><p>Click the category nodes to explore their forms, how to solve them, and how to represent them graphically.</p>'
+            },
+            // Level 1: Categories
+            'foundations': {
+                title: 'Foundations',
+                content: '<p>The core concepts that define what a linear equation is, including its components like variables, constants, slope, and intercepts.</p>'
+            },
+            'forms_of_equations': {
+                title: 'Forms of Equations',
+                content: '<p>Linear equations can be written in several standard forms, each highlighting different properties of the line. The most common forms are Slope-Intercept, Point-Slope, and Standard Form.</p>'
+            },
+            'solving_equations': {
+                title: 'Solving Equations',
+                content: '<p>Solving a linear equation involves finding the value of the variable that makes the equation true. This is typically achieved by isolating the variable on one side of the equation.</p>'
+            },
+            'graphing_equations': {
+                title: 'Graphing Equations',
+                content: '<p>Visualizing linear equations as straight lines on a Cartesian coordinate plane. Graphing helps in understanding the relationship between the variables and the properties of the equation.</p>'
+            },
+            'systems_of_equations': {
+                title: 'Systems of Equations',
+                content: '<p>A system of linear equations consists of two or more linear equations with the same set of variables. The solution to a system is the point $(x, y)$ that satisfies all equations simultaneously.</p>'
+            },
+            // Level 2: Topics
+            'definition_linear_equation': {
+                title: 'Definition',
+                content: '<h3>What is a Linear Equation?</h3><p>A linear equation is an equation for a straight line. It is called "linear" because the graph of the equation is a straight line. Formally, it\'s a polynomial equation where the highest exponent of any variable is <b>1</b>.</p><p>For example, $2x + 3 = 7$ is a linear equation with one variable, and $y = 3x - 2$ is a linear equation with two variables.</p>'
+            },
+            'variables_and_constants': {
+                title: 'Variables & Constants',
+                content: '<h3>Variables and Constants</h3><p>In a linear equation, letters represent either variables or constants.</p><ul><li><b>Variables:</b> Quantities that can change or vary. They are typically represented by letters like $x$ and $y$. In the context of a graph, $x$ is the independent variable and $y$ is the dependent variable.</li><li><b>Constants:</b> Fixed values that do not change. In the equation $y = mx + b$, the slope ($m$) and the y-intercept ($b$) are constants for a specific line.</li></ul>'
+            },
+            'concept_of_slope': {
+                title: 'The Concept of Slope',
+                content: '<h3>The Concept of Slope ($m$)</h3><p>The slope measures the "steepness" of a line. It is the ratio of the vertical change (rise) to the horizontal change (run) between any two points on the line.</p><p>The formula for slope is:</p>$$ m = \\frac{\\text{rise}}{\\text{run}} = \\frac{y_2 - y_1}{x_2 - x_1} $$<ul><li><b>Positive Slope:</b> The line goes up from left to right.</li><li><b>Negative Slope:</b> The line goes down from left to right.</li><li><b>Zero Slope:</b> The line is horizontal.</li><li><b>Undefined Slope:</b> The line is vertical.</li></ul>'
+            },
+            'intercepts': {
+                title: 'Intercepts (x and y)',
+                content: '<h3>Intercepts (x and y)</h3><p>Intercepts are the points where the line crosses the axes of the coordinate plane.</p><ul><li><b>y-intercept:</b> The point where the line crosses the vertical y-axis. At this point, the x-coordinate is always <b>0</b>. It is often denoted as the point $(0, b)$.</li><li><b>x-intercept:</b> The point where the line crosses the horizontal x-axis. At this point, the y-coordinate is always <b>0</b>.</li></ul>'
+            },
+            'slope_intercept_form': {
+                title: 'Slope-Intercept Form',
+                content: '<h3>Slope-Intercept Form</h3><p>This is one of the most common and useful forms of a linear equation.</p>$$ y = mx + b $$<ul><li>$m$ is the <b>slope</b> of the line.</li><li>$b$ is the <b>y-intercept</b> (the y-value where the line crosses the y-axis).</li></ul><p><b>Example:</b> In the equation $y = 2x + 3$, the slope is 2 and the y-intercept is 3.</p>'
+            },
+            'point_slope_form': {
+                title: 'Point-Slope Form',
+                content: '<h3>Point-Slope Form</h3><p>This form is very useful when you know the slope of a line and one point on it.</p>$$ y - y_1 = m(x - x_1) $$<ul><li>$m$ is the <b>slope</b> of the line.</li><li>$(x_1, y_1)$ is a specific <b>point on the line</b>.</li></ul><p>This form is derived directly from the slope formula.</p>'
+            },
+            'standard_form': {
+                title: 'Standard Form',
+                content: '<h3>Standard Form</h3><p>The standard form of a linear equation is written as:</p>$$ Ax + By = C $$<p>Here, $A$, $B$, and $C$ are integers, and conventionally, $A$ is non-negative. This form is particularly useful for finding the x and y-intercepts easily.</p><ul><li>To find the y-intercept, set $x=0$ and solve for $y$.</li><li>To find the x-intercept, set $y=0$ and solve for $x$.</li></ul>'
+            },
+            'solving_for_one_variable': {
+                title: 'Solving for One Variable',
+                content: '<h3>Solving for One Variable (Isolation)</h3><p>The primary goal is to isolate the variable on one side of the equals sign. This is done by applying inverse operations to both sides of the equation to maintain balance.</p><h3>Example: Solve $4x - 5 = 11$</h3><ol><li><b>Add 5 to both sides:</b><br>$4x - 5 + 5 = 11 + 5$<br>$4x = 16$</li><li><b>Divide both sides by 4:</b><br>$\\frac{4x}{4} = \\frac{16}{4}$<br>$x = 4$</li></ol>'
+            },
+            'combining_like_terms': {
+                title: 'Combining Like Terms',
+                content: '<h3>Combining Like Terms</h3><p>Before solving, simplify the equation by combining terms that have the same variable raised to the same power.</p><h3>Example: Solve $5x + 3 - 2x = 9$</h3><ol><li><b>Identify and combine like terms</b> ($5x$ and $-2x$):<br>$(5x - 2x) + 3 = 9$<br>$3x + 3 = 9$</li><li><b>Solve the simplified equation:</b><br>$3x = 6$<br>$x = 2$</li></ol>'
+            },
+            'distributive_property': {
+                title: 'Using the Distributive Property',
+                content: '<h3>Using the Distributive Property</h3><p>If an equation contains parentheses, use the distributive property to eliminate them. This property states $a(b + c) = ab + ac$.</p><h3>Example: Solve $3(x + 2) = 15$</h3><ol><li><b>Distribute the 3:</b><br>$3 \\cdot x + 3 \\cdot 2 = 15$<br>$3x + 6 = 15$</li><li><b>Solve the resulting equation:</b><br>$3x = 9$<br>$x = 3$</li></ol>'
+            },
+            'graphing_slope_intercept': {
+                title: 'Using Slope & y-intercept',
+                content: '<h3>Graphing with Slope-Intercept Form ($y=mx+b$)</h3><p>This is often the easiest way to graph a line.</p><ol><li><b>Plot the y-intercept:</b> Find the value of $b$ and mark the point $(0, b)$ on the y-axis.</li><li><b>Use the slope to find a second point:</b> Interpret the slope $m$ as "rise over run". Starting from the y-intercept, move up or down (rise) and then right or left (run) to find a second point.</li><li><b>Draw the line:</b> Connect the two points with a straight line.</li></ol>'
+            },
+            'plotting_two_points': {
+                title: 'Plotting Two Points',
+                content: '<h3>Graphing by Plotting Two Points</h3><p>Any two points are enough to define a unique straight line. This method works for any form of a linear equation.</p><ol><li><b>Choose a value for x:</b> Pick any simple value for $x$ (like 0 or 1).</li><li><b>Solve for y:</b> Substitute this x-value into the equation and solve for the corresponding y-value. This gives you your first point $(x, y)$.</li><li><b>Repeat:</b> Choose a different value for $x$ and solve for its y-value to get a second point.</li><li><b>Draw the Line:</b> Plot both points on the coordinate plane and connect them with a straight line.</li></ol>'
+            },
+            'horizontal_vertical_lines': {
+                title: 'Horizontal & Vertical Lines',
+                content: '<h3>Special Cases: Horizontal & Vertical Lines</h3><ul><li><b>Horizontal Lines:</b> The equation for a horizontal line is $y = c$, where $c$ is a constant. The line passes through the y-axis at $(0, c)$. The slope of a horizontal line is <b>0</b>.</li><li><b>Vertical Lines:</b> The equation for a vertical line is $x = c$, where $c$ is a constant. The line passes through the x-axis at $(c, 0)$. The slope of a vertical line is <b>undefined</b>.</li></ul>'
+            },
+            'solving_by_substitution': {
+                title: 'Solving by Substitution',
+                content: '<h3>Solving by Substitution</h3><p>This algebraic method involves solving one equation for one variable and then substituting that expression into the other equation.</p><ol><li>Solve one equation for either $x$ or $y$.</li><li>Substitute the resulting expression into the *other* equation.</li><li>Solve the new equation for the single variable.</li><li>Substitute the value found back into one of the original equations to find the value of the other variable.</li></ol>'
+            },
+            'solving_by_elimination': {
+                title: 'Solving by Elimination',
+                content: '<h3>Solving by Elimination</h3><p>This method involves adding or subtracting the two equations to eliminate one of the variables.</p><ol><li>Write both equations in Standard Form ($Ax + By = C$).</li><li>If necessary, multiply one or both equations by a constant so that the coefficients of one variable are opposites.</li><li>Add the equations together. One variable should be eliminated.</li><li>Solve the resulting equation for the remaining variable.</li><li>Substitute this value back into an original equation to find the other variable.</li></ol>'
+            },
+            'graphical_solutions': {
+                title: 'Graphical Solutions',
+                content: '<h3>Graphical Solutions</h3><p>The solution to a system of linear equations can be found by graphing both lines on the same coordinate plane.</p><ul><li><b>One Solution:</b> The lines intersect at a single point. The coordinates of this point $(x, y)$ are the solution to the system.</li><li><b>No Solution:</b> The lines are parallel and never intersect. The system is inconsistent.</li><li><b>Infinitely Many Solutions:</b> Both equations represent the same line. The system is dependent.</li></ul>'
+            }
+        };
+
+        // --- 3. DEFINE THE MIND MAP STRUCTURE ---
+        const mindMapStructure = {
+            'linear_equations': [
+                'foundations',
+                'forms_of_equations',
+                'solving_equations',
+                'graphing_equations',
+                'systems_of_equations'
+            ],
+            'foundations': [
+                'definition_linear_equation',
+                'variables_and_constants',
+                'concept_of_slope',
+                'intercepts'
+            ],
+            'forms_of_equations': [
+                'slope_intercept_form',
+                'point_slope_form',
+                'standard_form'
+            ],
+            'solving_equations': [
+                'solving_for_one_variable',
+                'combining_like_terms',
+                'distributive_property'
+            ],
+            'graphing_equations': [
+                'graphing_slope_intercept',
+                'plotting_two_points',
+                'horizontal_vertical_lines'
+            ],
+            'systems_of_equations': [
+                'solving_by_substitution',
+                'solving_by_elimination',
+                'graphical_solutions'
+            ]
+        };
+    </script>
+</body>
+</html>

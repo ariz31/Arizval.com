@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- The title will be replaced by the download script -->
+    <title>My Mind Map</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="mind-map.css">
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <!-- The brand title will be replaced by the download script -->
+            <span class="brand">Mind Map</span>
+        </div>
+        <div class="top-bar-right">
+             <span class="view-only-tag">View-Only Mode</span>
+        </div>
+    </div>
+
+    <div id="mind-map-container"></div>
+
+    <div class="modal-overlay" id="view-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Node Details</h2>
+                 <button class="app-button secondary" id="close-view-button">Close</button>
+            </div>
+            <div class="modal-body" id="modal-body-content">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- The script content will be replaced by the download script -->
+    <script>
+        const mindMapData = {};
+        const mindMapStructure = {};
+    </script>
+    <script src="viewer.js"></script>
+</body>
+</html>

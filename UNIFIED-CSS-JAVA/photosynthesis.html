@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map: Photosynthesis</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/AIa3DK8Rx_I94hrgSemTMkzaoBTELEqfH5dnbPJlrCaeCMEqyClRg" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="mind-map.css">
+</head>
+<body>
+
+    <div id="mind-map-container"></div>
+
+    <div id="theme-toggle">
+        <label class="switch">
+            <input type="checkbox" id="theme-switch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+            <button id="close-modal" style="position: absolute; top: 1rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: inherit;">&times;</button>
+        </div>
+    </div>
+    
+    <script src="mind-map.js"></script>
+    <script>
+        // --- 1. DEFINE THE ROOT NODE ID ---
+        const ROOT_NODE_ID = 'photosynthesis';
+
+        // --- 2. DEFINE THE MIND MAP DATA ---
+        const mindMapData = {
+            'photosynthesis': {
+                title: 'Photosynthesis',
+                content: '<h3>The Process of Life 🌱</h3><p>Photosynthesis is the remarkable process by which plants, algae, and some bacteria convert <b>light energy</b> into <b>chemical energy</b> in the form of glucose (sugar). This process sustains not only the plant but nearly all life on Earth.</p><p>Click the nodes to explore the inputs, stages, and critical importance of photosynthesis.</p>'
+            },
+            // Level 1: Categories
+            'what_is_photosynthesis': {
+                title: 'What is Photosynthesis?',
+                content: '<p>A summary of the core chemical reaction and the organisms that perform it.</p>'
+            },
+            'key_components': {
+                title: 'Key Components',
+                content: '<p>The essential ingredients and cellular machinery required for photosynthesis to occur.</p>'
+            },
+            'the_two_stages': {
+                title: 'The Two Stages',
+                content: '<p>Photosynthesis is a complex process divided into two main phases: one that requires light and one that does not.</p>'
+            },
+            'factors_affecting_photosynthesis': {
+                title: 'Affecting Factors',
+                content: '<p>The rate of photosynthesis is not constant and can be influenced by several environmental factors.</p>'
+            },
+            'importance_of_photosynthesis': {
+                title: 'Importance',
+                content: '<p>Discover why photosynthesis is arguably the most important biological process on our planet.</p>'
+            },
+            // Level 2: Topics for "What is Photosynthesis?"
+            'overall_equation': {
+                title: 'Overall Equation',
+                content: '<h3>The Chemical Summary</h3><p>The overall balanced chemical equation for photosynthesis is:</p>$$ 6CO_2 + 6H_2O \\xrightarrow{\\text{Light}} C_6H_{12}O_6 + 6O_2 $$<p>This means that six molecules of <b>carbon dioxide</b> and six molecules of <b>water</b>, with the input of light energy, produce one molecule of <b>glucose</b> (a sugar) and six molecules of <b>oxygen</b>.</p>'
+            },
+            'who_photosynthesizes': {
+                title: 'Who Photosynthesizes?',
+                content: '<h3>The Producers</h3><p>Organisms that perform photosynthesis are called <b>autotrophs</b>, meaning they produce their own food. This group includes:</p><ul><li><b>Plants:</b> From the smallest mosses to the largest trees.</li><li><b>Algae:</b> Ranging from single-celled diatoms to large seaweed.</li><li><b>Cyanobacteria:</b> A group of bacteria that were among the first photosynthetic organisms on Earth.</li></ul>'
+            },
+            // Level 2: Topics for "Key Components"
+            'chloroplasts': {
+                title: 'Chloroplasts',
+                content: '<h3>The Photosynthetic Factory</h3><p>Chloroplasts are the specialized organelles within plant and algae cells where photosynthesis takes place.</p><h3>Key Structures:</h3><ul><li><b>Thylakoids:</b> Disc-like structures containing chlorophyll. The light-dependent reactions occur here. Stacks of thylakoids are called grana.</li><li><b>Stroma:</b> The fluid-filled space surrounding the grana. The light-independent reactions (Calvin Cycle) occur here.</li></ul>'
+            },
+            'chlorophyll_and_pigments': {
+                title: 'Chlorophyll & Pigments',
+                content: '<h3>Capturing Sunlight</h3><p><b>Chlorophyll</b> is the primary pigment responsible for absorbing light energy. It absorbs red and blue light most effectively and reflects green light, which is why plants appear green.</p><ul><li><b>Chlorophyll a:</b> The main pigment.</li><li><b>Accessory Pigments:</b> (e.g., chlorophyll b, carotenoids) Absorb light at different wavelengths and pass the energy to chlorophyll a.</li></ul>'
+            },
+            'sunlight': {
+                title: 'Sunlight',
+                content: '<h3>The Ultimate Energy Source</h3><p>Sunlight provides the energy, in the form of <b>photons</b>, needed to initiate the photosynthetic process. This light energy is used to split water molecules and create energy-storing molecules like ATP and NADPH.</p>'
+            },
+            'water_h2o': {
+                title: 'Water (H₂O)',
+                content: '<h3>The Electron Donor</h3><p>Water is absorbed by plants, usually through the roots. During the light-dependent reactions, water molecules are split (a process called photolysis) to provide:</p><ul><li><b>Electrons ($e^-$)</b> to replace those lost by chlorophyll.</li><li><b>Protons ($H^+$)</b> to create a concentration gradient.</li><li><b>Oxygen ($O_2$)</b> as a waste product, which is released into the atmosphere.</li></ul>'
+            },a
+            'carbon_dioxide_co2': {
+                title: 'Carbon Dioxide (CO₂)',
+                content: '<h3>The Carbon Source</h3><p>Carbon dioxide from the atmosphere enters the plant leaf through small pores called <b>stomata</b>. The carbon atoms from $CO_2$ are used as the building blocks to synthesize glucose during the Calvin Cycle in a process called <b>carbon fixation</b>.</p>'
+            },
+            // Level 2: Topics for "The Two Stages"
+            'light_dependent_reactions': {
+                title: 'Light-Dependent Reactions',
+                content: '<h3>"The Photo Part"</h3><p>These reactions occur in the <b>thylakoid membranes</b> and require a direct input of light.</p><h3>Key Events:</h3><ol><li>Light energy is captured by chlorophyll and excites electrons.</li><li>Water molecules are split, releasing oxygen gas ($O_2$).</li><li>The captured energy is temporarily stored in the energy-carrying molecules <b>ATP</b> (adenosine triphosphate) and <b>NADPH</b> (nicotinamide adenine dinucleotide phosphate).</li></ol>'
+            },
+            'calvin_cycle': {
+                title: 'The Calvin Cycle',
+                content: '<h3>"The Synthesis Part"</h3><p>Also known as the light-independent reactions, this cycle occurs in the <b>stroma</b> of the chloroplasts and does not directly require light.</p><h3>Key Events:</h3><ol><li><b>Carbon Fixation:</b> The enzyme RuBisCO attaches $CO_2$ to an organic molecule.</li><li><b>Reduction:</b> The energy from ATP and NADPH (produced in the light reactions) is used to convert the fixed carbon into a three-carbon sugar (G3P).</li><li><b>Regeneration:</b> Some of the G3P molecules are used to regenerate the starting molecule, allowing the cycle to continue. The rest are used to build glucose.</li></ol>'
+            },
+            // Level 2: Topics for "Factors Affecting"
+            'light_intensity': {
+                title: 'Light Intensity',
+                content: '<h3>Light Intensity</h3><p>As light intensity increases, the rate of photosynthesis increases until it reaches a <b>saturation point</b>. Beyond this point, increasing light does not increase the rate because other factors, such as the amount of $CO_2$ or enzymes, become limiting.</p>'
+            },
+            'co2_concentration': {
+                title: 'CO₂ Concentration',
+                content: '<h3>CO₂ Concentration</h3><p>Similar to light intensity, an increase in the concentration of carbon dioxide will increase the photosynthetic rate up to a certain point, after which the rate plateaus. This plateau indicates that another factor, like light intensity, is now the limiting factor.</p>'
+            },
+            'temperature': {
+                title: 'Temperature',
+                content: '<h3>Temperature</h3><p>Photosynthesis relies on enzymes, which are sensitive to temperature. The rate increases with temperature up to an <b>optimal point</b> (e.g., around 25°C to 35°C for many plants). At temperatures that are too high or too low, the enzymes do not function efficiently (or can be permanently damaged), causing the rate of photosynthesis to decrease sharply.</p>'
+            },
+            // Level 2: Topics for "Importance"
+            'oxygen_production': {
+                title: 'Oxygen Production',
+                content: '<h3>The Air We Breathe</h3><p>The oxygen released as a byproduct of photosynthesis is essential for <b>aerobic respiration</b>, the process used by most organisms—including humans—to release energy from food. Photosynthesis transformed Earth\'s atmosphere into one that could support complex life.</p>'
+            },
+            'foundation_of_food_webs': {
+                title: 'Foundation of Food Webs',
+                content: '<h3>The Base of the Pyramid</h3><p>Photosynthetic organisms (autotrophs) are the <b>producers</b> at the base of nearly every food web. They create the organic matter (glucose) that provides energy for all other organisms (consumers), from the smallest insect to the largest whale.</p>'
+            },
+            'carbon_cycle_regulation': {
+                title: 'Carbon Cycle Regulation',
+                content: '<h3>A Global Carbon Sink</h3><p>Photosynthesis plays a crucial role in the global <b>carbon cycle</b>. By taking in $CO_2$ from the atmosphere, it helps to regulate Earth\'s climate and mitigate the accumulation of this potent greenhouse gas, thereby helping to combat global warming.</p>'
+            }
+        };
+
+        // --- 3. DEFINE THE MIND MAP STRUCTURE ---
+        const mindMapStructure = {
+            'photosynthesis': [
+                'what_is_photosynthesis',
+                'key_components',
+                'the_two_stages',
+                'factors_affecting_photosynthesis',
+                'importance_of_photosynthesis'
+            ],
+            'what_is_photosynthesis': [
+                'overall_equation',
+                'who_photosynthesizes'
+            ],
+            'key_components': [
+                'chloroplasts',
+                'chlorophyll_and_pigments',
+                'sunlight',
+                'water_h2o',
+                'carbon_dioxide_co2'
+            ],
+            'the_two_stages': [
+                'light_dependent_reactions',
+                'calvin_cycle'
+            ],
+            'factors_affecting_photosynthesis': [
+                'light_intensity',
+                'co2_concentration',
+                'temperature'
+            ],
+            'importance_of_photosynthesis': [
+                'oxygen_production',
+                'foundation_of_food_webs',
+                'carbon_cycle_regulation'
+            ]
+        };
+    </script>
+</body>
+</html>

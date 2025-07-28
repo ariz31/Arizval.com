@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Mind Map Maker</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="mind-map.css">
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <span class="brand">Mind Map <span class="brand-accent">Maker</span></span>
+        </div>
+        <div class="top-bar-right">
+            <button class="app-button secondary" id="add-node-button"><i class="fas fa-plus"></i> Add Node</button>
+            <button class="app-button" id="download-button"><i class="fas fa-download"></i> Download</button>
+        </div>
+    </div>
+
+    <div id="mind-map-container"></div>
+
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Edit Node</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="node-title">Title</label>
+                    <input type="text" id="node-title" placeholder="Enter node title">
+                </div>
+                <div class="form-group">
+                    <label for="node-content">Content (HTML allowed)</label>
+                    <textarea id="node-content" placeholder="Enter node description..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="app-button delete-button" id="delete-node-button"><i class="fas fa-trash"></i> Delete</button>
+                <div>
+                    <button class="app-button secondary" id="cancel-edit-button">Cancel</button>
+                    <button class="app-button" id="save-edit-button">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="creator.js"></script>
+</body>
+</html>
