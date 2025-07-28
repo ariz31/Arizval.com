@@ -1,0 +1,441 @@
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    signOut,
+    signInAnonymously,
+    signInWithCustomToken
+} from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+
+// --- Helper Functions & Configuration ---
+
+// Safely parse Firebase config from environment variable
+const getFirebaseConfig = () => {
+    try {
+        return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    } catch (e) {
+        console.error("Error parsing Firebase config:", e);
+        return {};
+    }
+};
+
+// Safely get App ID from environment variable
+const getAppId = () => typeof __app_id !== 'undefined' ? __app_id : 'default-login-app';
+
+// --- Firebase Initialization ---
+const firebaseConfig = getFirebaseConfig();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// --- Main App Component ---
+
+export default function App() {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Effect to listen for authentication state changes
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                // User is signed in.
+                const userDocRef = doc(db, `artifacts/${getAppId()}/users/${currentUser.uid}/profile`, "data");
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    setUser({ ...currentUser, ...userDoc.data() });
+                } else {
+                    setUser(currentUser);
+                }
+            } else {
+                // User is signed out.
+                setUser(null);
+            }
+            setLoading(false);
+        });
+
+        // Initial authentication check
+        const authenticateUser = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication error:", error);
+                setLoading(false);
+            }
+        };
+
+        authenticateUser();
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
+
+    // Helper function to handle user sign out
+    const handleSignOut = () => {
+        signOut(auth).catch((error) => console.error("Sign out error:", error));
+    };
+
+    // Render loading screen while checking auth status
+    if (loading) {
+        return (
+            <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 font-sans">
+                <div className="text-gray-400">Loading...</div>
+            </div>
+        );
+    }
+
+    // Render LoginPage or DashboardPage based on user state
+    return (
+        <div className="min-h-screen bg-gray-100 font-sans antialiased">
+            {user && !user.isAnonymous ? (
+                <DashboardPage user={user} onSignOut={handleSignOut} />
+            ) : (
+                <LoginPage />
+            )}
+        </div>
+    );
+}
+
+// --- Login Page Component ---
+
+const LoginPage = () => {
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [passwordValidation, setPasswordValidation] = useState({
+        minLength: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        specialChar: false,
+    });
+
+    const validatePassword = (value) => {
+        const minLength = value.length >= 8;
+        const uppercase = /[A-Z]/.test(value);
+        const lowercase = /[a-z]/.test(value);
+        const number = /[0-9]/.test(value);
+        const specialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+        setPasswordValidation({ minLength, uppercase, lowercase, number, specialChar });
+    };
+
+    const createUserDocument = async (user, additionalData = {}) => {
+        if (!user) return;
+        const userDocRef = doc(db, `artifacts/${getAppId()}/users/${user.uid}/profile`, "data");
+        const snapshot = await getDoc(userDocRef);
+
+        if (!snapshot.exists()) {
+            const { displayName, email, photoURL } = user;
+            const createdAt = new Date();
+            try {
+                await setDoc(userDocRef, {
+                    displayName: displayName || email.split('@')[0],
+                    email,
+                    photoURL,
+                    createdAt,
+                    ...additionalData,
+                });
+            } catch (error) {
+                console.error("Error creating user document:", error);
+                setError("Couldn't save user profile.");
+            }
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!email || !password) {
+            setError("Please enter both email and password.");
+            return;
+        }
+        
+        if (isSignUp) {
+            if (password !== confirmPassword) {
+                setError("Passwords do not match. Please try again.");
+                return;
+            }
+            const allValid = Object.values(passwordValidation).every(Boolean);
+            if (!allValid) {
+                setError("Please ensure your password meets all criteria.");
+                return;
+            }
+        }
+
+        try {
+            if (isSignUp) {
+                const { user } = await createUserWithEmailAndPassword(auth, email, password);
+                await createUserDocument(user);
+            } else {
+                await signInWithEmailAndPassword(auth, email, password);
+            }
+        } catch (err) {
+            switch (err.code) {
+                case 'auth/email-already-in-use':
+                    setError('This email address is already in use.');
+                    break;
+                case 'auth/invalid-email':
+                    setError('Please enter a valid email address.');
+                    break;
+                case 'auth/weak-password':
+                    setError('Password is too weak. Please use a stronger one.');
+                    break;
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    setError('Invalid email or password.');
+                    break;
+                default:
+                    setError('An unexpected error occurred. Please try again.');
+                    console.error("Auth Error:", err);
+            }
+        }
+    };
+    
+    const handleGoogleSignIn = async () => {
+        setError('');
+        try {
+            const { user } = await signInWithPopup(auth, provider);
+            await createUserDocument(user);
+        } catch (error) {
+            setError('Failed to sign in with Google. Please try again.');
+            console.error("Google Sign-In Error:", error);
+        }
+    };
+
+    return (
+        <div 
+            className="flex items-center justify-center min-h-screen bg-cover bg-center p-4"
+            style={{ backgroundImage: "url('https://cdn.pixabay.com/photo/2022/07/09/18/14/forest-7311484_1280.jpg')" }}
+        >
+            <div className="w-full max-w-md bg-white/20 backdrop-blur-xl shadow-2xl rounded-2xl p-8 border border-white/30">
+                <h2 className="text-3xl font-bold text-center text-white mb-2">
+                    {isSignUp ? 'Create Account' : 'Welcome Back'}
+                </h2>
+                <p className="text-center text-gray-200 mb-8">
+                    {isSignUp ? 'Get started with your new account.' : 'Sign in to continue.'}
+                </p>
+
+                {error && (
+                    <div className="bg-red-500/50 border border-red-700 text-white px-4 py-3 rounded-lg relative mb-6" role="alert">
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} noValidate>
+                    <div className="mb-4">
+                        <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="email">
+                            Email Address
+                        </label>
+                        <input
+                            className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
+                            id="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="password">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <input
+                                className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••••"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (isSignUp) {
+                                        validatePassword(e.target.value);
+                                    }
+                                }}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-300 hover:text-white"
+                            >
+                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {isSignUp && (
+                        <div className="mb-6">
+                            <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="confirm-password">
+                                Confirm Password
+                            </label>
+                            <input
+                                className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
+                                id="confirm-password"
+                                type="password"
+                                placeholder="••••••••••"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {isSignUp && (
+                        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-200">
+                            <ValidationCriterion isValid={passwordValidation.minLength} text="At least 8 characters" />
+                            <ValidationCriterion isValid={passwordValidation.uppercase} text="One uppercase letter" />
+                            <ValidationCriterion isValid={passwordValidation.lowercase} text="One lowercase letter" />
+                            <ValidationCriterion isValid={passwordValidation.number} text="One number" />
+                            <ValidationCriterion isValid={passwordValidation.specialChar} text="One special character" />
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                        <button
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-transform transform hover:scale-105 duration-300"
+                            type="submit"
+                        >
+                            {isSignUp ? 'Sign Up' : 'Sign In'}
+                        </button>
+                    </div>
+                </form>
+
+                <div className="my-6 flex items-center">
+                    <div className="flex-grow border-t border-white/30"></div>
+                    <span className="flex-shrink mx-4 text-gray-300">OR</span>
+                    <div className="flex-grow border-t border-white/30"></div>
+                </div>
+
+                <button
+                    onClick={handleGoogleSignIn}
+                    className="w-full bg-white/90 hover:bg-white text-gray-800 font-semibold py-2 px-4 border border-white/30 rounded-lg shadow-md flex items-center justify-center transition-all transform hover:scale-105 duration-300"
+                >
+                    <GoogleIcon />
+                    <span className="ml-2">Sign in with Google</span>
+                </button>
+
+                <p className="text-center text-sm text-gray-200 mt-8">
+                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                    <button
+                        onClick={() => {
+                            setIsSignUp(!isSignUp);
+                            setError('');
+                        }}
+                        className="font-bold text-blue-300 hover:text-white ml-2 focus:outline-none transition-colors duration-300"
+                    >
+                        {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </button>
+                </p>
+            </div>
+        </div>
+    );
+};
+
+
+// --- Dashboard Page Component ---
+
+const DashboardPage = ({ user, onSignOut }) => {
+    const displayName = user.displayName || 'User';
+    const photoURL = user.photoURL;
+
+    return (
+        <div className="bg-gray-100 min-h-screen">
+            <header className="bg-white shadow-md">
+                <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <div className="text-2xl font-bold text-blue-600">MyCorp</div>
+                    <div className="flex items-center">
+                        {photoURL ? (
+                             <img src={photoURL} alt="Profile" className="w-10 h-10 rounded-full mr-4 border-2 border-blue-500"/>
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xl mr-4">
+                                {displayName.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                        <span className="text-gray-700 hidden md:block">{displayName}</span>
+                        <button
+                            onClick={onSignOut}
+                            className="ml-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                </nav>
+            </header>
+
+            <main className="container mx-auto px-6 py-12">
+                <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to the Dashboard!</h1>
+                <p className="text-lg text-gray-600 mb-8">
+                    Hello, <span className="font-semibold">{displayName}</span>. You have successfully logged in.
+                </p>
+                <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Your Details</h2>
+                    <ul className="space-y-2 text-gray-600">
+                        <li><strong>Email:</strong> {user.email}</li>
+                        <li><strong>User ID:</strong> {user.uid}</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+// --- Child Components & Icons ---
+
+const ValidationCriterion = ({ isValid, text }) => (
+    <div className={`flex items-center ${isValid ? 'text-green-300' : 'text-gray-300'}`}>
+        {isValid ? <CheckCircleIcon /> : <XCircleIcon />}
+        <span className="ml-2">{text}</span>
+    </div>
+);
+
+const GoogleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 48 48">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.519-3.317-11.28-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C41.38,36.148,44,30.638,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+    </svg>
+);
+
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .946-3.11 3.56-5.448 6.837-6.182M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.75 4.75l14.5 14.5" />
+    </svg>
+);
+
+const CheckCircleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+);
+
+const XCircleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+    </svg>
+);
