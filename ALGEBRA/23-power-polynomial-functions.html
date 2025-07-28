@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Power, Polynomials, and Division</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            
+            --cat-bg-expanded-light: #e0e7ff;
+            --cat-border-expanded-light: #a5b4fc;
+            --cat-text-expanded-light: #3730a3;
+
+            --cat-bg-collapsed-light: #e5e7eb;
+            --cat-border-collapsed-light: #9ca3af;
+            --cat-text-collapsed-light: #4b5563;
+
+            --cat-bg-expanded-dark: #312e81;
+            --cat-border-expanded-dark: #818cf8;
+            --cat-text-expanded-dark: #e0e7ff;
+
+            --cat-bg-collapsed-dark: #374151;
+            --cat-border-collapsed-dark: #6b7280;
+            --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text {
+            pointer-events: none; text-anchor: middle; dominant-baseline: central;
+            font-weight: 500; transition: fill 0.3s ease;
+        }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
+            border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.95);
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+        .long-division { font-family: monospace; white-space: pre; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    <div id="mind-map-container"></div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'power_and_polynomial_functions';
+
+            const mindMapInfo = {
+                power_and_polynomial_functions: { 
+                    title: "Power & Polynomial Functions", 
+                    content: "<p>This mind map explores fundamental concepts of functions in algebra, including <b>power functions</b>, <b>polynomial functions</b>, and methods for <b>dividing polynomials</b>.</p><h3>How to Use:</h3><ul><li>Click a blue category node to expand or collapse its topics.</li><li>Click this root node to expand or collapse all categories.</li><li>Click any gray topic node to view detailed information.</li><li>Pan by clicking and dragging the background.</li><li>Zoom using your mouse wheel or trackpad.</li></ul>"
+                },
+                power_functions: {
+                    title: "Power Functions",
+                    content: "<h3>Definition</h3><p>A power function is a function that can be represented in the form:</p>$$f(x) = kx^p$$<p>where $k$ and $p$ are real numbers, and $k$ is known as the coefficient.</p><p>These functions are a basic building block for more complex functions, like polynomials.</p>"
+                },
+                identifying_power_functions: {
+                    title: "Identifying Power Functions",
+                    content: "<p>A function is a power function if it consists of a single term with a variable base raised to a constant power, multiplied by a constant coefficient.</p><h3>Key Characteristics:</h3><ul><li><b>Form:</b> Must be expressible as $f(x) = kx^p$.</li><li><b>Base:</b> The base must be a variable (e.g., $x$).</li><li><b>Exponent:</b> The exponent must be a constant (e.g., $2$, $-1$, $1/2$).</li></ul><h3>More Examples:</h3><ul><li><b>Area of a circle:</b> $A(r) = \\pi r^2$ (Here, $k=\\pi$, $p=2$)</li><li><b>Constant function:</b> $f(x) = 5 = 5x^0$ (Here, $k=5$, $p=0$)</li><li><b>Reciprocal function:</b> $f(x) = \\frac{1}{x} = x^{-1}$ (Here, $k=1$, $p=-1$)</li><li><b>Cube root function:</b> $g(x) = 4\\sqrt[3]{x} = 4x^{1/3}$ (Here, $k=4$, $p=1/3$)</li></ul><h3>More Non-Examples:</h3><ul><li>$f(x) = 2^x$ (Exponential function: constant base, variable exponent).</li><li>$g(x) = x^2 + 3x$ (Polynomial with two terms).</li><li>$h(x) = (x+1)^2$ (When expanded, $x^2+2x+1$, it's a polynomial).</li><li>$j(x) = \\sin(x)$ (Trigonometric function).</li></ul>"
+                },
+                power_function_end_behavior: {
+                    title: "End Behavior",
+                    content: "<p>The end behavior of a power function $f(x) = kx^p$ describes what happens to the function's values as $x$ approaches positive or negative infinity ($x \\to \\infty$ or $x \\to -\\infty$). It depends on the sign of the coefficient $k$ and the parity (even or odd) of the exponent $p$ (assuming $p$ is a positive integer).</p><h3>Case 1: Even Exponent ($p$ is even)</h3><ul><li>If $k > 0$ (e.g., $f(x) = 2x^4$), the graph goes up on both ends. <br>$\\lim_{x \\to -\\infty} f(x) = \\infty$ and $\\lim_{x \\to \\infty} f(x) = \\infty$.</li><li>If $k < 0$ (e.g., $f(x) = -x^2$), the graph goes down on both ends. <br>$\\lim_{x \\to -\\infty} f(x) = -\\infty$ and $\\lim_{x \\to \\infty} f(x) = -\\infty$.</li></ul><h3>Case 2: Odd Exponent ($p$ is odd)</h3><ul><li>If $k > 0$ (e.g., $f(x) = x^3$), the graph starts down and goes up. <br>$\\lim_{x \\to -\\infty} f(x) = -\\infty$ and $\\lim_{x \\to \\infty} f(x) = \\infty$.</li><li>If $k < 0$ (e.g., $f(x) = -5x^5$), the graph starts up and goes down. <br>$\\lim_{x \\to -\\infty} f(x) = \\infty$ and $\\lim_{x \\to \\infty} f(x) = -\\infty$.</li></ul>"
+                },
+                polynomial_functions: {
+                    title: "Polynomial Functions",
+                    content: "<h3>Definition</h3><p>A polynomial function is a function that can be written in the general form:</p>$$f(x) = a_n x^n + a_{n-1} x^{n-1} + \\dots + a_1 x + a_0$$<p>where:</p><ul><li>$a_n, a_{n-1}, \\dots, a_0$ are real numbers called <b>coefficients</b>.</li><li>The exponents ($n, n-1, \\dots$) must be <b>non-negative integers</b>.</li><li>The term $a_n x^n$ with the highest exponent is the <b>leading term</b>.</li></ul><p>Essentially, a polynomial is a sum of power functions where all exponents are whole numbers.</p>"
+                },
+                identifying_polynomial_functions: {
+                    title: "Identifying Polynomials",
+                    content: "<p>To identify a polynomial, check two main conditions for every term:</p><ol><li><b>The exponents of the variable must be non-negative integers (0, 1, 2, ...).</b></li><li><b>The coefficients must be real numbers.</b></li></ol><p>The domain of any polynomial function is all real numbers, $(-\\infty, \\infty)$.</p><h3>More Examples:</h3><ul><li>$f(x) = -10x^4$ (A polynomial with one term).</li><li>$g(x) = \\frac{x^2}{2} + 5x - 1 = \\frac{1}{2}x^2+5x-1$ (This is a polynomial; division by a constant is allowed).</li><li>$h(x) = 6$ (A constant polynomial, degree 0).</li><li>$k(x) = (x+1)(x-2) = x^2-x-2$ (Polynomials can be in factored form).</li></ul><h3>More Non-Examples:</h3><ul><li>$f(x) = 6x^{-1} + 2$ (Not a polynomial due to the negative exponent).</li><li>$g(x) = 5\\sqrt[3]{x} = 5x^{1/3}$ (Not a polynomial due to the fractional exponent).</li><li>$h(x) = \\frac{3x+1}{x^2}$ (Not a polynomial because it's a rational function with a variable in the denominator).</li></ul>"
+                },
+                degree_and_leading_coefficient: {
+                    title: "Degree & Leading Coefficient",
+                    content: "<p>For a polynomial function, we identify two key features after writing it in standard form: $f(x) = a_n x^n + a_{n-1} x^{n-1} + \\dots + a_0$.</p><h3>Degree</h3><p>The <b>degree</b> of the polynomial is the highest exponent of the variable. In the general form, the degree is $n$.</p><h3>Leading Coefficient</h3><p>The <b>leading coefficient</b> is the coefficient of the term with the highest exponent. In the general form, the leading coefficient is $a_n$.</p><h3>Example 1: Standard Form</h3><p>For the polynomial $f(x) = -3x^4 + 5x^2 - 7x + 2$</p><ul><li>The terms are already in descending order of power.</li><li>The <b>leading term</b> is $-3x^4$.</li><li>The <b>degree</b> is 4.</li><li>The <b>leading coefficient</b> is -3.</li></ul><h3>Example 2: Not in Standard Form</h3><p>For the polynomial $g(x) = 10 + 4x^2 - 2x^5$</p><ul><li>First, rewrite in standard form: $g(x) = -2x^5 + 4x^2 + 10$.</li><li>The <b>leading term</b> is $-2x^5$.</li><li>The <b>degree</b> is 5.</li><li>The <b>leading coefficient</b> is -2.</li></ul>"
+                },
+                dividing_polynomials: {
+                    title: "Dividing Polynomials",
+                    content: "<h3>Introduction</h3><p>Polynomial division is similar to long division with numbers. It is used to simplify rational expressions or to factor polynomials. The result is expressed by the <b>Division Algorithm</b>:</p>$$f(x) = d(x)q(x) + r(x)$$<p>Where $f(x)$ is the dividend, $d(x)$ is the divisor, $q(x)$ is the quotient, and $r(x)$ is the remainder. This can also be written as:</p>$$\\frac{f(x)}{d(x)} = q(x) + \\frac{r(x)}{d(x)}$$</p>"
+                },
+                long_division: {
+                    title: "Long Division",
+                    content: "<h3>Process</h3><p>Long division can be used to divide any polynomial by another polynomial of equal or lesser degree.</p><ol><li><b>Set up:</b> Write the problem in a long division format. Ensure both polynomials are in standard form, using 0 for any missing terms.</li><li><b>Divide:</b> Divide the leading term of the dividend by the leading term of the divisor. This gives the first term of the quotient.</li><li><b>Multiply:</b> Multiply the entire divisor by the first term of the quotient.</li><li><b>Subtract:</b> Subtract the result from the dividend. Bring down the next term.</li><li><b>Repeat:</b> Repeat the process until the degree of the remainder is less than the degree of the divisor.</li></ol><h3>Example 1: Simple Case</h3><p>Divide $x^2 + 5x + 6$ by $x+2$.</p><div class='long-division'>      x  + 3\nx+2 | x² + 5x + 6\n    -(x² + 2x)\n      ----------\n           3x + 6\n         -(3x + 6)\n           -------\n                0</div><p>The quotient is $x+3$ and the remainder is 0.</p><h3>Example 2: With Remainder</h3><p>Divide $2x^3 - 3x^2 + 4x + 5$ by $x-2$.</p><div class='long-division'>      2x² +  x  + 6\nx-2 | 2x³ - 3x² + 4x + 5\n    -(2x³ - 4x²)\n      ----------\n            x² + 4x\n          -(x² - 2x)\n            --------\n                 6x + 5\n               -(6x - 12)\n                 -------\n                      17</div><p>The quotient is $2x^2+x+6$ and the remainder is 17. So, $\\frac{2x^3 - 3x^2 + 4x + 5}{x-2} = 2x^2+x+6 + \\frac{17}{x-2}$.</p>"
+                },
+                synthetic_division: {
+                    title: "Synthetic Division",
+                    content: "<h3>Process</h3><p>Synthetic division is a shortcut for polynomial division, but it can <b>only</b> be used when the divisor is a linear factor of the form $x-c$.</p><ol><li><b>Set up:</b> Find the value of $c$. Write the coefficients of the dividend in a row.</li><li><b>Bring down:</b> Bring down the first coefficient.</li><li><b>Multiply & Add:</b> Multiply the number just brought down by $c$. Write the result under the next coefficient and add.</li><li><b>Repeat:</b> Repeat the multiply-and-add step for the entire row.</li><li><b>Result:</b> The last number is the remainder. The other numbers are the coefficients of the quotient (whose degree is one less than the dividend).</li></ol><h3>Example 1: Simple Case</h3><p>Divide $x^2 + 5x + 6$ by $x+2$. Here, $c=-2$.</p><div class='long-division'>-2 | 1   5   6\n   |    -2  -6\n   --------------\n     1   3   0</div><p>The remainder is 0. The quotient's coefficients are 1 and 3. Since the dividend was degree 2, the quotient is degree 1. Result: $1x+3$.</p><h3>Example 2: With Missing Term</h3><p>Divide $x^3 - 2x + 1$ by $x-3$. Here, $c=3$. Use a 0 for the missing $x^2$ term.</p><div class='long-division'> 3 | 1   0  -2   1\n   |     3   9  21\n   ----------------\n     1   3   7  22</div><p>The remainder is 22. The quotient is $x^2+3x+7$. So, $\\frac{x^3 - 2x + 1}{x-3} = x^2+3x+7 + \\frac{22}{x-3}$.</p>"
+                }
+            };
+
+            const structure = {
+                power_functions: ['identifying_power_functions', 'power_function_end_behavior'],
+                polynomial_functions: ['identifying_polynomial_functions', 'degree_and_leading_coefficient'],
+                dividing_polynomials: ['long_division', 'synthetic_division']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    if (catId === 'dividing_polynomials') {
+                        // Special handling to make this a sub-node of polynomials
+                        const polyNode = hierarchyRoot.children.find(c => c.id === 'polynomial_functions');
+                        if (polyNode) {
+                            if (!polyNode._children) polyNode._children = [];
+                            polyNode._children.push(categoryNode);
+                        } else {
+                             hierarchyRoot.children.push(categoryNode);
+                        }
+                    } else {
+                        hierarchyRoot.children.push(categoryNode);
+                    }
+
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const container = document.getElementById('mind-map-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                if (d.id === ROOT_NODE_ID) {
+                    const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                    hierarchyRoot.children.forEach(child => {
+                        child.children = shouldCollapseAll ? null : (child._children || null);
+                    });
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                } else {
+                    const data = mindMapInfo[d.id];
+                    if (data && data.content) {
+                        document.getElementById('modal-title').innerHTML = data.title;
+                        const modalBody = document.getElementById('modal-body');
+                        modalBody.innerHTML = data.content;
+                        
+                        if (window.renderMathInElement) {
+                            window.renderMathInElement(modalBody, {
+                                delimiters: [
+                                    {left: '$$', right: '$$', display: true},
+                                    {left: '$', right: '$', display: false}
+                                ],
+                                throwOnError: false
+                            });
+                        }
+                        modal.classList.add('active');
+                    }
+                    return;
+                }
+                updateGraph();
+            }
+
+            function initializeGraph() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                d3.select(container).select("svg").remove();
+                svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
+                g = svg.append("g");
+
+                linkGroup = g.append("g").attr("class", "links");
+                nodeGroup = g.append("g").attr("class", "nodes");
+
+                simulation = d3.forceSimulation()
+                    .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-600))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                    .on("tick", () => {
+                        if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                        if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                    });
+
+                svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
+                
+                hierarchyRoot.children.forEach(child => child.children = null);
+                updateGraph();
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x; d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x; d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    if (d.id !== ROOT_NODE_ID) {
+                       d.fx = null; d.fy = null;
+                    }
+                }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+            
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
