@@ -5,6 +5,7 @@ https://ariz31.github.io/Arizval.com/ALGEBRA/02-exponents-and-sci-notation.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/03-radicals-rational-exponents.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/04-polynomials.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/05-factoring-polynomials.html
+https://ariz31.github.io/Arizval.com/ALGEBRA/05-factoring-polynomials.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/06-coordinate-systems-graphs.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/07-linear-equations-one-variable.html
 https://ariz31.github.io/Arizval.com/ALGEBRA/08-models-applications.html
