@@ -1,0 +1,92 @@
+1 Prerequisites 7
+Introduction to Prerequisites 7
+1.1 Real Numbers: Algebra Essentials 7
+1.2 Exponents and Scientific Notation 24
+1.3 Radicals and Rational Exponents 39
+1.4 Polynomials 50
+1.5 Factoring Polynomials 59
+1.6 Rational Expressions 68
+2 Equations and Inequalities 83
+Introduction to Equations and Inequalities 83
+2.1 The Rectangular Coordinate Systems and Graphs 83
+2.2 Linear Equations in One Variable 98
+2.3 Models and Applications 115
+2.4 Complex Numbers 125
+2.5 Quadratic Equations 134
+2.6 Other Types of Equations 149
+2.7 Linear Inequalities and Absolute Value Inequalities 161
+Chapter Review 172
+Exercises 175
+3 Functions 181
+Introduction to Functions 181
+3.1 Functions and Function Notation 181
+3.2 Domain and Range 205
+3.3 Rates of Change and Behavior of Graphs 223
+3.4 Composition of Functions 239
+3.5 Transformation of Functions 255
+3.6 Absolute Value Functions 287
+3.7 Inverse Functions 295
+Chapter Review 310
+Exercises 314
+4 Linear Functions 323
+Introduction to Linear Functions 323
+4.1 Linear Functions 323
+4.2 Modeling with Linear Functions 360
+4.3 Fitting Linear Models to Data 374
+Chapter Review 388
+Exercises 389
+5 Polynomial and Rational Functions 399
+Introduction to Polynomial and Rational Functions 399
+5.1 Quadratic Functions 400
+5.2 Power Functions and Polynomial Functions 419
+5.3 Graphs of Polynomial Functions 438
+5.4 Dividing Polynomials 460
+5.5 Zeros of Polynomial Functions 471
+5.6 Rational Functions 484
+5.7 Inverses and Radical Functions 508
+5.8 Modeling Using Variation 521
+Chapter Review 531
+Exercises 535
+6 Exponential and Logarithmic Functions 541
+Introduction to Exponential and Logarithmic Functions 541
+6.1 Exponential Functions 542
+6.2 Graphs of Exponential Functions 561
+6.3 Logarithmic Functions 575
+6.4 Graphs of Logarithmic Functions 584
+6.5 Logarithmic Properties 606
+6.6 Exponential and Logarithmic Equations 618
+6.7 Exponential and Logarithmic Models 631
+6.8 Fitting Exponential Models to Data 650
+Chapter Review 666
+Exercises 671
+7 Systems of Equations and Inequalities 681
+Introduction to Systems of Equations and Inequalities 681
+7.1 Systems of Linear Equations: Two Variables 682
+7.2 Systems of Linear Equations: Three Variables 701
+7.3 Systems of Nonlinear Equations and Inequalities: Two Variables 713
+7.4 Partial Fractions 725
+7.5 Matrices and Matrix Operations 735
+7.6 Solving Systems with Gaussian Elimination 748
+7.7 Solving Systems with Inverses 762
+7.8 Solving Systems with Cramer's Rule 777
+Chapter Review 790
+Exercises 793
+8 Analytic Geometry 801
+Introduction to Analytic Geometry 801
+8.1 The Ellipse 802
+8.2 The Hyperbola 818
+8.3 The Parabola 835
+8.4 Rotation of Axes 851
+8.5 Conic Sections in Polar Coordinates 866
+Chapter Review 877
+Exercises 879
+9 Sequences, Probability, and Counting Theory 885
+Introduction to Sequences, Probability and Counting Theory 885
+Access for free at openstax.org
+9.1 Sequences and Their Notations 885
+9.2 Arithmetic Sequences 900
+9.3 Geometric Sequences 912
+9.4 Series and Their Notations 921
+9.5 Counting Principles 935
+9.6 Binomial Theorem 946
+9.7 Probability 953
