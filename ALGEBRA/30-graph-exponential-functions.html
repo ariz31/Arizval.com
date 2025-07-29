@@ -1,774 +1,419 @@
-Core Identity & Goal
-
-You are the Mind Map Architect, a specialist AI. Your sole function is to receive any topic from a user and generate a complete, single-file, interactive HTML mind map by populating a fixed template. You must follow the rules and execution protocol below with absolute precision.
-
-Critical Rules
-
-DO NOT ALTER THE TEMPLATE LOGIC: The HTML structure, CSS styling, and D3.js JavaScript functions in the template are fixed. Do not modify, add, or remove any part of this logic. Your only job is to replace the content data.
-
-ID FORMAT IS MANDATORY: All unique IDs you generate for nodes MUST be in lowercase_snake_case format (e.g., quantum_mechanics, wave_particle_duality). This is essential for the script to function.
-
-ROOT ID REPLACEMENT IS VITAL: You must define a new root ID for the user's topic and replace the placeholder ID ('root_placeholder') in the script with this new ID.
-
-DATA CONSISTENCY IS KEY: The snake_case keys in the mindMapInfo object must perfectly match the snake_case keys and array values used in the structure object.
-
-COMPREHENSIVE CONTENT: You must generate detailed, informative content for every single node. Do not leave any content fields empty or with placeholder text.
-
-CORRECT LATEX FORMATTING: All mathematical notation must be formatted using LaTeX within the content strings.
-
-Execution Protocol
-
-When a user provides a topic, execute the following steps:
-
-Step 1: Analyze and Structure the Topic
-
-Analyze the user's topic to understand its core components and logical hierarchy.
-
-Define a clear structure:
-
-Level 0 (Root): The main subject itself (e.g., "Calculus"). Create a lowercase_snake_case ID for it (e.g., calculus).
-
-Level 1 (Categories): Identify all fundamental categories of the subject (e.g., "Limits", "Derivatives"). Create snake_case IDs for each.
-
-Level 2 (Concepts): For each category, list all specific, important concepts (e.g., for "Derivatives", use "Power Rule", "Product Rule"). Create snake_case IDs for each.
-
-Step 2: Generate Content (mindMapInfo Object)
-
-Create the mindMapInfo object.
-
-For every single node (Root, Categories, and Concepts), use its lowercase_snake_case ID as the key.
-
-The value for each key must be an object: { title: "Display Title", content: "HTML content for modal" }.
-
-Write rich content for every node, using HTML for structure and LaTeX for math.
-
-Step 3: Format Mathematical Formulas (LaTeX)
-
-When writing content for the mindMapInfo object, use the following rules for all mathematical notation:
-
-Inline Formulas: Wrap LaTeX code with single dollar signs ($).
-
-Example: "The equation for energy is $E=mc^2$."
-
-Display Formulas: Wrap LaTeX code with double dollar signs ($$). This will center the formula on its own line.
-
-Example: "The Pythagorean theorem is stated as 
-
-a2
-
-+b2
-
-=c2
-
-"
-
-Escape Backslashes: Inside the JavaScript string, every backslash (\) in your LaTeX code MUST be escaped with another backslash (\\).
-
-Correct: "The quadratic formula is 
-
-frac−bpmsqrtb2
-
-−4ac2a
-
-"
-
-Incorrect: "
-
-2a
-
-
-
-−b±b2
-
-−4ac
-
-
-
-
-
-​
-
-​
-
-"
-
-Step 4: Define Hierarchy (structure Object)
-
-Create the structure object.
-
-The keys of this object must be the snake_case IDs of your Level 1 Categories.
-
-The value for each key must be an array containing the snake_case IDs of its corresponding Level 2 Concepts. If a category has no sub-topics, use an empty array [].
-
-Step 5: Assemble the Final HTML
-
-Take the entire HTML_TEMPLATE provided below.
-
-Perform the following replacements:
-
-Update <title>: Change the text to "Interactive Mind Map: [Topic Name]".
-
-Replace mindMapInfo: Delete the placeholder object and insert the one you generated.
-
-Replace structure: Delete the placeholder object and insert the one you generated.
-
-Replace Root ID: Find const ROOT_NODE_ID = 'root_placeholder'; and replace 'root_placeholder' with your new root ID.
-
-Final Output
-
-Your output must be only the complete, final HTML code in a single markdown code block. Do not include any introductory text, explanations, or comments before or after the code block.
-
-HTML_TEMPLATE
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-    <title>Interactive Mind Map</title>
-
+    <title>Interactive Mind Map: Graphs of Exponential Functions</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script src="https://d3js.org/d3.v7.min.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-
     
-
     <!-- KaTeX for LaTeX Rendering -->
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
-
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
-
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
 
     <style>
-
         :root {
-
             --bg-light: #f8fafc; --bg-dark: #0b1120;
-
             --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
-
             --text-light: #1e293b; --text-dark: #e2e8f0;
-
             --border-light: #cbd5e1; --border-dark: #475569;
-
             --link-light: #94a3b8; --link-dark: #64748b;
-
             --primary-light: #3b82f6; --primary-dark: #60a5fa;
-
             --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
-
             
-
             --cat-bg-expanded-light: #e0e7ff;
-
             --cat-border-expanded-light: #a5b4fc;
-
             --cat-text-expanded-light: #3730a3;
 
-
-
             --cat-bg-collapsed-light: #e5e7eb;
-
             --cat-border-collapsed-light: #9ca3af;
-
             --cat-text-collapsed-light: #4b5563;
 
-
-
             --cat-bg-expanded-dark: #312e81;
-
             --cat-border-expanded-dark: #818cf8;
-
             --cat-text-expanded-dark: #e0e7ff;
 
-
-
             --cat-bg-collapsed-dark: #374151;
-
             --cat-border-collapsed-dark: #6b7280;
-
             --cat-text-collapsed-dark: #d1d5db;
-
         }
-
         body, html {
-
             margin: 0; padding: 0; width: 100%; height: 100%;
-
             overflow: hidden; font-family: 'Inter', sans-serif;
-
             background-color: var(--bg-light); transition: background-color 0.3s ease;
-
         }
-
         body.dark { background-color: var(--bg-dark); }
-
         #mind-map-container { width: 100%; height: 100%; position: relative; cursor: grab; }
-
         #mind-map-container:active { cursor: grabbing; }
 
-
-
         .node { cursor: pointer; }
-
         .node rect {
-
             stroke-width: 2.5px; rx: 8; ry: 8;
-
             filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
-
             transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease;
-
         }
-
         .node:hover rect { transform: scale(1.05); }
-
         .node text {
-
             pointer-events: none; text-anchor: middle; dominant-baseline: central;
-
             font-weight: 500; transition: fill 0.3s ease;
-
         }
-
         .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
-
-
 
         .katex { font-size: 1.1em; }
 
-
-
         .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
-
         .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
-
         
-
         .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
-
         .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
-
         .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
-
         .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
 
-
-
         .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
-
         .node.level-2 text { fill: var(--text-light); font-size: 12px; }
-
         .link { stroke: var(--link-light); }
-
         
-
         body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
-
         body.dark .node.level-0 text { fill: var(--primary-text-dark); }
 
-
-
         body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
-
         body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
-
         body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
-
         body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
 
-
-
         body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
-
         body.dark .node.level-2 text { fill: var(--text-dark); }
-
         body.dark .link { stroke: var(--link-dark); }
-
         
-
         #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
-
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-
         .switch input { display: none; }
-
         .slider {
-
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-
             background-color: #ccc; transition: .4s; border-radius: 34px;
-
         }
-
         .slider:before {
-
             position: absolute; content: ""; height: 26px; width: 26px;
-
             left: 4px; bottom: 4px; background-color: white;
-
             transition: .4s; border-radius: 50%;
-
         }
-
         input:checked + .slider { background-color: var(--primary-light); }
-
         body.dark input:checked + .slider { background-color: var(--primary-dark); }
-
         input:checked + .slider:before { transform: translateX(26px); }
 
-
-
         .modal-overlay {
-
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
-
             display: flex; align-items: center; justify-content: center; z-index: 1000;
-
             opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
-
         }
-
         .modal-overlay.active { opacity: 1; visibility: visible; }
-
         .modal-content {
-
             background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem;
-
             border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh;
-
             overflow-y: auto; transform: scale(0.95);
-
             transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
-
         }
-
         body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
-
         .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
-
         body.dark .modal-content h2 { color: var(--primary-dark); }
-
         .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
-
         body.dark .modal-content h3 { color: var(--primary-dark); }
-
         .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
-
         body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
-
     </style>
-
 </head>
-
 <body>
-
     <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
-
     <div id="mind-map-container"></div>
-
     <div id="info-modal" class="modal-overlay">
-
         <div class="modal-content">
-
             <div class="flex justify-between items-center mb-4">
-
                 <h2 id="modal-title"></h2>
-
                 <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
-
             </div>
-
             <div id="modal-body"></div>
-
         </div>
-
     </div>
 
-
-
     <script>
-
         document.addEventListener('DOMContentLoaded', () => {
-
             // ========= DYNAMIC CONTENT SECTION START =========
-
-            const ROOT_NODE_ID = 'root_placeholder';
-
-
+            const ROOT_NODE_ID = 'graphs_of_exponential_functions';
 
             const mindMapInfo = {
-
-                root_placeholder: { 
-
-                    title: "Topic Title", 
-
-                    content: "<p>Topic overview goes here.</p><h3>How to Use:</h3><ul><li>Click a category to expand/collapse.</li><li>Click the main node to expand/collapse all.</li><li>Click a topic for details.</li><li>Pan & Zoom.</li></ul>" 
-
+                graphs_of_exponential_functions: { 
+                    title: "Graphs of Exponential Functions", 
+                    content: `<p>An exponential function is a function of the form $f(x) = b^x$, where the base $b$ is a positive constant other than 1. Understanding their graphs is key to modeling phenomena like population growth, radioactive decay, and compound interest.</p>
+                             <h3>How to Use:</h3>
+                             <ul>
+                                <li>Click a category to expand or collapse its topics.</li>
+                                <li>Click this main node to expand or collapse all categories.</li>
+                                <li>Click a specific topic for detailed information.</li>
+                             </ul>`
+                },
+                basic_exponential_function: {
+                    title: "The Parent Function",
+                    content: "<p>The parent exponential function provides the foundation for all other exponential graphs. Its form is $f(x) = b^x$.</p>"
+                },
+                definition_and_form: {
+                    title: "Definition & Form",
+                    content: `<h3>Exponential Function</h3>
+                             <p>An exponential function is defined as:</p>
+                             $$f(x) = ab^x$$
+                             <p>where $a \\neq 0$, the base $b$ is a positive real number such that $b \\neq 1$, and $x$ is any real number.</p>
+                             <p>The parent function is the simplest form, where $a=1$: $f(x) = b^x$.</p>`
+                },
+                key_characteristics: {
+                    title: "Key Characteristics",
+                    content: `<h3>Characteristics of $f(x) = b^x$</h3>
+                             <ul>
+                                <li><b>Domain:</b> All real numbers, $(-\\infty, \\infty)$.</li>
+                                <li><b>Range:</b> All positive real numbers, $(0, \\infty)$.</li>
+                                <li><b>Horizontal Asymptote:</b> The x-axis, $y=0$. The graph gets closer and closer to this line but never touches it.</li>
+                                <li><b>Y-intercept:</b> The graph always passes through the point $(0, 1)$, because $b^0 = 1$.</li>
+                                <li><b>One-to-one Function:</b> It passes the Horizontal Line Test.</li>
+                             </ul>`
+                },
+                growth_vs_decay: {
+                    title: "Growth vs. Decay",
+                    content: `<h3>Exponential Growth vs. Decay</h3>
+                             <p>The behavior of the graph depends entirely on the value of the base $b$.</p>
+                             <p><b>Exponential Growth:</b></p>
+                             <p>Occurs when $b > 1$. The function values increase as $x$ increases. The graph rises from left to right.</p>
+                             <p><b>Exponential Decay:</b></p>
+                             <p>Occurs when $0 < b < 1$. The function values decrease as $x$ increases. The graph falls from left to right.</p>`
+                },
+                graphing_using_transformations: {
+                    title: "Graphing with Transformations",
+                    content: "<p>We can graph more complex exponential functions by applying transformations to the parent graph $f(x)=b^x$. The general form is $g(x) = ab^{x+c} + d$.</p>"
+                },
+                vertical_shifts: {
+                    title: "Vertical Shifts",
+                    content: `<h3>Vertical Shifts: $g(x) = b^x + d$</h3>
+                             <p>The value of $d$ shifts the graph vertically.</p>
+                             <ul>
+                                <li>If $d > 0$, the graph shifts up by $d$ units.</li>
+                                <li>If $d < 0$, the graph shifts down by $d$ units.</li>
+                             </ul>
+                             <p>The horizontal asymptote also shifts to $y=d$.</p>`
+                },
+                horizontal_shifts: {
+                    title: "Horizontal Shifts",
+                    content: `<h3>Horizontal Shifts: $g(x) = b^{x+c}$</h3>
+                             <p>The value of $c$ shifts the graph horizontally.</p>
+                             <ul>
+                                <li>If $c > 0$, the graph shifts left by $c$ units.</li>
+                                <li>If $c < 0$, the graph shifts right by $c$ units.</li>
+                             </ul>
+                             <p>This is often written as $g(x) = b^{x-h}$, where $h$ is the horizontal shift.</p>`
+                },
+                stretches_and_compressions: {
+                    title: "Stretches & Compressions",
+                    content: `<h3>Vertical Stretch/Compression: $g(x) = ab^x$</h3>
+                             <p>The value of $a$ stretches or compresses the graph vertically.</p>
+                             <ul>
+                                <li>If $|a| > 1$, the graph is stretched vertically.</li>
+                                <li>If $0 < |a| < 1$, the graph is compressed vertically.</li>
+                             </ul>`
+                },
+                reflections: {
+                    title: "Reflections",
+                    content: `<h3>Reflections</h3>
+                             <p><b>Reflection across the x-axis:</b></p>
+                             <p>Occurs when $a$ is negative. The graph of $g(x) = -b^x$ is a reflection of $f(x)=b^x$ across the x-axis.</p>
+                             <p><b>Reflection across the y-axis:</b></p>
+                             <p>Occurs when $x$ is replaced by $-x$. The graph of $g(x) = b^{-x}$ is a reflection of $f(x)=b^x$ across the y-axis. Note that $b^{-x} = (\\frac{1}{b})^x$, so this transforms a growth function into a decay function and vice versa.</p>`
+                },
+                combining_transformations: {
+                    title: "Combining Transformations",
+                    content: `<h3>The General Form: $g(x) = ab^{x-h} + k$</h3>
+                             <p>To graph a complex exponential function, apply transformations to the parent graph $y=b^x$ in the following order:</p>
+                             <ol class='list-decimal list-inside ml-4'>
+                                 <li><b>h (Horizontal Shift):</b> Shift the graph left or right.</li>
+                                 <li><b>a (Stretch/Compress/Reflect):</b> Apply any vertical stretching, compressing, or reflection across the x-axis.</li>
+                                 <li><b>k (Vertical Shift):</b> Shift the graph up or down. This determines the final horizontal asymptote at $y=k$.</li>
+                             </ol>`
                 }
-
             };
-
-
 
             const structure = {
-
-                category_1: ['topic_1_1', 'topic_1_2'],
-
+                basic_exponential_function: ['definition_and_form', 'key_characteristics', 'growth_vs_decay'],
+                graphing_using_transformations: ['vertical_shifts', 'horizontal_shifts', 'stretches_and_compressions', 'reflections', 'combining_transformations']
             };
-
             // ========= DYNAMIC CONTENT SECTION END =========
 
 
-
-
-
             // --- CORE VISUALIZATION LOGIC (DO NOT EDIT) ---
-
             const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
-
             for (const catId in structure) {
-
                 if (mindMapInfo[catId]) {
-
                     const categoryNode = { id: catId, level: 1, _children: [] };
-
                     hierarchyRoot.children.push(categoryNode);
-
                     if (structure[catId] && structure[catId].length > 0) {
-
                         structure[catId].forEach(topicId => {
-
                             if (mindMapInfo[topicId]) {
-
                                 categoryNode._children.push({ id: topicId, level: 2 });
-
                             }
-
                         });
-
                     }
-
                 }
-
             }
-
             
-
             const container = document.getElementById('mind-map-container');
-
             const modal = document.getElementById('info-modal');
-
             const themeSwitch = document.getElementById('theme-switch');
-
             let simulation, svg, g, linkGroup, nodeGroup, link, node;
 
-
-
             function getVisibleNodesAndLinks(root) {
-
                 const visibleNodes = [];
-
                 const visibleLinks = [];
-
                 function recurse(node) {
-
                     visibleNodes.push(node);
-
                     if (node.children) {
-
                         node.children.forEach(child => {
-
                             visibleLinks.push({ source: node, target: child });
-
                             recurse(child);
-
                         });
-
                     }
-
                 }
-
                 recurse(root);
-
                 return { nodes: visibleNodes, links: visibleLinks };
-
             }
-
-
 
             function updateGraph() {
-
                 const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
-
                 
-
                 const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
-
                 currentNodes.forEach(n => {
-
                     const textEl = tempSvg.append("text")
-
                         .attr("class", `node level-${n.level}`)
-
                         .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
-
                         .style("font-weight", n.level < 2 ? "600" : "500")
-
                         .text(mindMapInfo[n.id].title);
-
                     const bbox = textEl.node().getBBox();
-
                     n.width = bbox.width + (n.level === 1 ? 40 : 30);
-
                     n.height = bbox.height + 20;
-
                 });
-
                 tempSvg.remove();
 
-
-
                 node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
-
                     .join(
-
                         enter => {
-
                             const nodeEnter = enter.append("g")
-
                                 .attr("class", d => `node level-${d.level}`)
-
                                 .call(drag(simulation))
-
                                 .on("click", handleNodeClick);
-
                             nodeEnter.append("rect");
-
                             nodeEnter.append("text");
-
                             return nodeEnter;
-
                         },
-
                         update => update,
-
                         exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
-
                     );
-
                 
-
                 node.classed("collapsed", d => d._children && !d.children);
-
                 node.select("rect").transition().duration(300)
-
                     .attr("width", d => d.width).attr("height", d => d.height)
-
                     .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
-
                 node.select("text").text(d => mindMapInfo[d.id].title);
 
-
-
                 link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
-
                     .join(
-
                         enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
-
                         update => update,
-
                         exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
-
                     );
-
                 link.transition().duration(300).attr("stroke-opacity", 1);
 
-
-
                 simulation.nodes(currentNodes);
-
                 simulation.force("link").links(currentLinks);
-
                 simulation.alpha(0.8).restart();
-
             }
-
-
 
             function handleNodeClick(event, d) {
-
                 if (event.defaultPrevented) return;
-
                 
-
                 if (d.id === ROOT_NODE_ID) {
-
                     const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
-
                     hierarchyRoot.children.forEach(child => {
-
                         child.children = shouldCollapseAll ? null : (child._children || null);
-
                     });
-
                 } else if (d._children && d._children.length > 0) {
-
                     d.children = d.children ? null : d._children;
-
                 } else {
-
                     const data = mindMapInfo[d.id];
-
                     if (data && data.content) {
-
                         document.getElementById('modal-title').innerHTML = data.title;
-
                         const modalBody = document.getElementById('modal-body');
-
                         modalBody.innerHTML = data.content;
-
                         
-
                         if (window.renderMathInElement) {
-
                             window.renderMathInElement(modalBody, {
-
                                 delimiters: [
-
                                     {left: '$$', right: '$$', display: true},
-
                                     {left: '$', right: '$', display: false}
-
                                 ],
-
                                 throwOnError: false
-
                             });
-
                         }
-
                         modal.classList.add('active');
-
                     }
-
                     return;
-
                 }
-
                 updateGraph();
-
             }
-
-
 
             function initializeGraph() {
-
                 const width = container.clientWidth;
-
                 const height = container.clientHeight;
 
-
-
                 d3.select(container).select("svg").remove();
-
                 svg = d3.select(container).append("svg").attr("viewBox", [0, 0, width, height]);
-
                 g = svg.append("g");
 
-
-
                 linkGroup = g.append("g").attr("class", "links");
-
                 nodeGroup = g.append("g").attr("class", "nodes");
 
-
-
                 simulation = d3.forceSimulation()
-
                     .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 180 : 100)).strength(0.8))
-
                     .force("charge", d3.forceManyBody().strength(-600))
-
                     .force("center", d3.forceCenter(width / 2, height / 2))
-
                     .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
-
                     .on("tick", () => {
-
                         if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-
                         if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
-
                     });
 
-
-
                 svg.call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)));
-
                 
-
                 hierarchyRoot.children.forEach(child => child.children = null);
-
                 updateGraph();
-
             }
-
             
-
             function drag(simulation) {
-
                 function dragstarted(event, d) {
-
                     if (!event.active) simulation.alphaTarget(0.3).restart();
-
                     d.fx = d.x; d.fy = d.y;
-
                 }
-
                 function dragged(event, d) {
-
                     d.fx = event.x; d.fy = event.y;
-
                 }
-
                 function dragended(event, d) {
-
                     if (!event.active) simulation.alphaTarget(0);
-
                     if (d.id !== ROOT_NODE_ID) {
-
                        d.fx = null; d.fy = null;
-
                     }
-
                 }
-
                 return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
-
             }
-
-
 
             document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
-
             modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
-
             themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
-
             window.addEventListener('resize', initializeGraph);
+            
             initializeGraph();
         });
     </script>
