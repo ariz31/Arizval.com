@@ -1,441 +1,597 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-    getAuth, 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword,
-    signInWithPopup,
-    GoogleAuthProvider,
-    signOut,
-    signInAnonymously,
-    signInWithCustomToken
-} from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-
-// --- Helper Functions & Configuration ---
-
-// Safely parse Firebase config from environment variable
-const getFirebaseConfig = () => {
-    try {
-        return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-    } catch (e) {
-        console.error("Error parsing Firebase config:", e);
-        return {};
-    }
-};
-
-// Safely get App ID from environment variable
-const getAppId = () => typeof __app_id !== 'undefined' ? __app_id : 'default-login-app';
-
-// --- Firebase Initialization ---
-const firebaseConfig = getFirebaseConfig();
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-// --- Main App Component ---
-
-export default function App() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    // Effect to listen for authentication state changes
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                // User is signed in.
-                const userDocRef = doc(db, `artifacts/${getAppId()}/users/${currentUser.uid}/profile`, "data");
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    setUser({ ...currentUser, ...userDoc.data() });
-                } else {
-                    setUser(currentUser);
-                }
-            } else {
-                // User is signed out.
-                setUser(null);
-            }
-            setLoading(false);
-        });
-
-        // Initial authentication check
-        const authenticateUser = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else if (!auth.currentUser) {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication error:", error);
-                setLoading(false);
-            }
-        };
-
-        authenticateUser();
-
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-    }, []);
-
-    // Helper function to handle user sign out
-    const handleSignOut = () => {
-        signOut(auth).catch((error) => console.error("Sign out error:", error));
-    };
-
-    // Render loading screen while checking auth status
-    if (loading) {
-        return (
-            <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 font-sans">
-                <div className="text-gray-400">Loading...</div>
-            </div>
-        );
-    }
-
-    // Render LoginPage or DashboardPage based on user state
-    return (
-        <div className="min-h-screen bg-gray-100 font-sans antialiased">
-            {user && !user.isAnonymous ? (
-                <DashboardPage user={user} onSignOut={handleSignOut} />
-            ) : (
-                <LoginPage />
-            )}
-        </div>
-    );
-}
-
-// --- Login Page Component ---
-
-const LoginPage = () => {
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [passwordValidation, setPasswordValidation] = useState({
-        minLength: false,
-        uppercase: false,
-        lowercase: false,
-        number: false,
-        specialChar: false,
-    });
-
-    const validatePassword = (value) => {
-        const minLength = value.length >= 8;
-        const uppercase = /[A-Z]/.test(value);
-        const lowercase = /[a-z]/.test(value);
-        const number = /[0-9]/.test(value);
-        const specialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
-        setPasswordValidation({ minLength, uppercase, lowercase, number, specialChar });
-    };
-
-    const createUserDocument = async (user, additionalData = {}) => {
-        if (!user) return;
-        const userDocRef = doc(db, `artifacts/${getAppId()}/users/${user.uid}/profile`, "data");
-        const snapshot = await getDoc(userDocRef);
-
-        if (!snapshot.exists()) {
-            const { displayName, email, photoURL } = user;
-            const createdAt = new Date();
-            try {
-                await setDoc(userDocRef, {
-                    displayName: displayName || email.split('@')[0],
-                    email,
-                    photoURL,
-                    createdAt,
-                    ...additionalData,
-                });
-            } catch (error) {
-                console.error("Error creating user document:", error);
-                setError("Couldn't save user profile.");
-            }
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (!email || !password) {
-            setError("Please enter both email and password.");
-            return;
-        }
-        
-        if (isSignUp) {
-            if (password !== confirmPassword) {
-                setError("Passwords do not match. Please try again.");
-                return;
-            }
-            const allValid = Object.values(passwordValidation).every(Boolean);
-            if (!allValid) {
-                setError("Please ensure your password meets all criteria.");
-                return;
-            }
-        }
-
-        try {
-            if (isSignUp) {
-                const { user } = await createUserWithEmailAndPassword(auth, email, password);
-                await createUserDocument(user);
-            } else {
-                await signInWithEmailAndPassword(auth, email, password);
-            }
-        } catch (err) {
-            switch (err.code) {
-                case 'auth/email-already-in-use':
-                    setError('This email address is already in use.');
-                    break;
-                case 'auth/invalid-email':
-                    setError('Please enter a valid email address.');
-                    break;
-                case 'auth/weak-password':
-                    setError('Password is too weak. Please use a stronger one.');
-                    break;
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential':
-                    setError('Invalid email or password.');
-                    break;
-                default:
-                    setError('An unexpected error occurred. Please try again.');
-                    console.error("Auth Error:", err);
-            }
-        }
-    };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: College Algebra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     
-    const handleGoogleSignIn = async () => {
-        setError('');
-        try {
-            const { user } = await signInWithPopup(auth, provider);
-            await createUserDocument(user);
-        } catch (error) {
-            setError('Failed to sign in with Google. Please try again.');
-            console.error("Google Sign-In Error:", error);
+    <!-- KaTeX for LaTeX Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            --highlight-border-light: #ef4444; /* Red-500 */
+            --highlight-border-dark: #f87171; /* Red-400 */
+            
+            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
+            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
+            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
+            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
         }
-    };
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; }
+        #mind-map-container { cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
 
-    return (
-        <div 
-            className="flex items-center justify-center min-h-screen bg-cover bg-center p-4"
-            style={{ backgroundImage: "url('https://cdn.pixabay.com/photo/2022/07/09/18/14/forest-7311484_1280.jpg')" }}
-        >
-            <div className="w-full max-w-md bg-white/20 backdrop-blur-xl shadow-2xl rounded-2xl p-8 border border-white/30">
-                <h2 className="text-3xl font-bold text-center text-white mb-2">
-                    {isSignUp ? 'Create Account' : 'Welcome Back'}
-                </h2>
-                <p className="text-center text-gray-200 mb-8">
-                    {isSignUp ? 'Get started with your new account.' : 'Sign in to continue.'}
-                </p>
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+        .katex { font-size: 1.1em; }
 
-                {error && (
-                    <div className="bg-red-500/50 border border-red-700 text-white px-4 py-3 rounded-lg relative mb-6" role="alert">
-                        <span className="block sm:inline">{error}</span>
-                    </div>
-                )}
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
 
-                <form onSubmit={handleSubmit} noValidate>
-                    <div className="mb-4">
-                        <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="email">
-                            Email Address
-                        </label>
-                        <input
-                            className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
-                            id="email"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="password">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <input
-                                className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••••"
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    if (isSignUp) {
-                                        validatePassword(e.target.value);
-                                    }
-                                }}
-                                required
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-300 hover:text-white"
-                            >
-                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                            </button>
-                        </div>
-                    </div>
+        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
+        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
+        
+        #theme-toggle { position: absolute; top: 20px; right: 20px; z-index: 100; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { display: none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-light); }
+        body.dark input:checked + .slider { background-color: var(--primary-dark); }
+        input:checked + .slider:before { transform: translateX(26px); }
 
-                    {isSignUp && (
-                        <div className="mb-6">
-                            <label className="block text-gray-200 text-sm font-bold mb-2" htmlFor="confirm-password">
-                                Confirm Password
-                            </label>
-                            <input
-                                className="shadow-inner appearance-none border border-white/30 rounded-lg w-full py-3 px-4 bg-white/20 text-white placeholder-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
-                                id="confirm-password"
-                                type="password"
-                                placeholder="••••••••••"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                    )}
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
 
-                    {isSignUp && (
-                        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-200">
-                            <ValidationCriterion isValid={passwordValidation.minLength} text="At least 8 characters" />
-                            <ValidationCriterion isValid={passwordValidation.uppercase} text="One uppercase letter" />
-                            <ValidationCriterion isValid={passwordValidation.lowercase} text="One lowercase letter" />
-                            <ValidationCriterion isValid={passwordValidation.number} text="One number" />
-                            <ValidationCriterion isValid={passwordValidation.specialChar} text="One special character" />
-                        </div>
-                    )}
+        /* Toolbar Styles */
+        #toolbar {
+            position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+            z-index: 500;
+        }
+        #list-view-container {
+            padding: 2rem; padding-bottom: 8rem; /* Space for toolbar */
+            overflow-y: auto;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
+        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark #list-view-container h1 { color: var(--primary-dark); }
+        #list-view-container h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
+        body.dark #list-view-container h2 { border-bottom-color: var(--border-dark); }
+        #list-view-container ul { list-style: none; padding-left: 1rem; }
+        #list-view-container li {
+            padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        #list-view-container li:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark #list-view-container li:hover { background-color: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+    <div id="theme-toggle"><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label></div>
+    
+    <div id="mind-map-container"></div>
+    <div id="list-view-container" class="hidden"></div>
 
-                    <div className="flex items-center justify-between">
-                        <button
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-transform transform hover:scale-105 duration-300"
-                            type="submit"
-                        >
-                            {isSignUp ? 'Sign Up' : 'Sign In'}
-                        </button>
-                    </div>
-                </form>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
 
-                <div className="my-6 flex items-center">
-                    <div className="flex-grow border-t border-white/30"></div>
-                    <span className="flex-shrink mx-4 text-gray-300">OR</span>
-                    <div className="flex-grow border-t border-white/30"></div>
-                </div>
-
-                <button
-                    onClick={handleGoogleSignIn}
-                    className="w-full bg-white/90 hover:bg-white text-gray-800 font-semibold py-2 px-4 border border-white/30 rounded-lg shadow-md flex items-center justify-center transition-all transform hover:scale-105 duration-300"
-                >
-                    <GoogleIcon />
-                    <span className="ml-2">Sign in with Google</span>
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <div class="flex items-center gap-2 p-2 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 dark:border-gray-700">
+            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+            <button id="toggle-all-btn" title="Toggle All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+            </button>
+            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+            <div class="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+            <div id="search-container" class="flex items-center">
+                <input type="text" id="search-input" placeholder="Search..." class="w-0 p-2 rounded-l-full bg-transparent focus:outline-none transition-all duration-300 text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400">
+                <button id="search-btn" title="Search" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </button>
-
-                <p className="text-center text-sm text-gray-200 mt-8">
-                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-                    <button
-                        onClick={() => {
-                            setIsSignUp(!isSignUp);
-                            setError('');
-                        }}
-                        className="font-bold text-blue-300 hover:text-white ml-2 focus:outline-none transition-colors duration-300"
-                    >
-                        {isSignUp ? 'Sign In' : 'Sign Up'}
-                    </button>
-                </p>
             </div>
         </div>
-    );
-};
-
-
-// --- Dashboard Page Component ---
-
-const DashboardPage = ({ user, onSignOut }) => {
-    const displayName = user.displayName || 'User';
-    const photoURL = user.photoURL;
-
-    return (
-        <div className="bg-gray-100 min-h-screen">
-            <header className="bg-white shadow-md">
-                <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-                    <div className="text-2xl font-bold text-blue-600">MyCorp</div>
-                    <div className="flex items-center">
-                        {photoURL ? (
-                             <img src={photoURL} alt="Profile" className="w-10 h-10 rounded-full mr-4 border-2 border-blue-500"/>
-                        ) : (
-                            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xl mr-4">
-                                {displayName.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                        <span className="text-gray-700 hidden md:block">{displayName}</span>
-                        <button
-                            onClick={onSignOut}
-                            className="ml-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-200"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                </nav>
-            </header>
-
-            <main className="container mx-auto px-6 py-12">
-                <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to the Dashboard!</h1>
-                <p className="text-lg text-gray-600 mb-8">
-                    Hello, <span className="font-semibold">{displayName}</span>. You have successfully logged in.
-                </p>
-                <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Your Details</h2>
-                    <ul className="space-y-2 text-gray-600">
-                        <li><strong>Email:</strong> {user.email}</li>
-                        <li><strong>User ID:</strong> {user.uid}</li>
-                    </ul>
-                </div>
-            </main>
-        </div>
-    );
-};
-
-// --- Child Components & Icons ---
-
-const ValidationCriterion = ({ isValid, text }) => (
-    <div className={`flex items-center ${isValid ? 'text-green-300' : 'text-gray-300'}`}>
-        {isValid ? <CheckCircleIcon /> : <XCircleIcon />}
-        <span className="ml-2">{text}</span>
     </div>
-);
 
-const GoogleIcon = () => (
-    <svg className="w-5 h-5" viewBox="0 0 48 48">
-        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
-        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
-        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.519-3.317-11.28-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
-        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C41.38,36.148,44,30.638,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
-    </svg>
-);
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'college_algebra';
 
-const EyeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
+            const mindMapInfo = {
+                college_algebra: { title: "College Algebra", content: "<p>An interactive mind map covering the core concepts of College Algebra.</p><h3>How to Use:</h3><ul><li>Click a chapter to expand/collapse.</li><li>Click a section to open the corresponding learning materials in a new tab.</li><li>Use the toolbar to navigate, search, and switch views.</li></ul>", keywords: "math, study, guide, map" },
 
-const EyeOffIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .946-3.11 3.56-5.448 6.837-6.182M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.75 4.75l14.5 14.5" />
-    </svg>
-);
+                // Chapter 1: Prerequisites
+                prerequisites: { title: "1. Prerequisites", content: "Foundational concepts for the study of algebra.", keywords: "basics, fundamentals, foundations, review" },
+                real_numbers: { title: "1.1 Real Numbers", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/01-real-numbers.html", keywords: "integers, rational, irrational, number line, properties" },
+                exponents_sci_notation: { title: "1.2 Exponents & Sci Notation", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/02-exponents-and-sci-notation.html", keywords: "powers, scientific notation, engineering notation" },
+                radicals_rational_exponents: { title: "1.3 Radicals & Rational Exponents", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/03-radicals-rational-exponents.html", keywords: "roots, square root, cube root, fractional exponents" },
+                polynomials_prereq: { title: "1.4 Polynomials", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/04-polynomials.html", keywords: "monomial, binomial, trinomial, degree, standard form" },
+                factoring_polynomials: { title: "1.5 Factoring Polynomials", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/05-factoring-polynomials.html", keywords: "factor, GCF, difference of squares, trinomials" },
+                rational_expressions: { title: "1.6 Rational Expressions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/06-coordinate-systems-graphs.html", keywords: "fractions, algebraic fractions, simplify, multiply, divide" },
 
-const CheckCircleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    </svg>
-);
+                // Chapter 2: Equations and Inequalities
+                equations_inequalities: { title: "2. Equations & Inequalities", content: "Solving various types of equations and inequalities.", keywords: "solving, solutions, sets, intervals" },
+                coord_systems_graphs: { title: "2.1 Coordinate Systems & Graphs", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/06-coordinate-systems-graphs.html", keywords: "cartesian, plane, x-axis, y-axis, plot, points" },
+                linear_eq_one_var: { title: "2.2 Linear Equations in One Variable", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/07-linear-equations-one-variable.html", keywords: "solve for x, one solution, no solution, infinite solutions" },
+                models_applications: { title: "2.3 Models & Applications", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/08-models-applications.html", keywords: "word problems, real world, distance, rate, time, mixture" },
+                complex_numbers: { title: "2.4 Complex Numbers", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/09-complex-numbers.html", keywords: "imaginary, i, standard form, conjugate" },
+                quadratic_equations: { title: "2.5 Quadratic Equations", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/10-quadratic-equations.html", keywords: "ax^2+bx+c, quadratic formula, complete the square, discriminant" },
+                other_eq_types: { title: "2.6 Other Types of Equations", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/10.5-other-types-equation.html", keywords: "radical, absolute value, rational, higher degree" },
+                linear_abs_inequalities: { title: "2.7 Linear & Absolute Value Inequalities", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/11-linear-absolute-value.html", keywords: "greater than, less than, interval notation" },
 
-const XCircleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    </svg>
-);
+                // Chapter 3: Functions
+                functions: { title: "3. Functions", content: "Exploring the concept of functions, their properties, and operations.", keywords: "input, output, relation, mapping" },
+                func_notation: { title: "3.1 Functions & Function Notation", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/12-function-function-notation.html", keywords: "f(x), evaluating, vertical line test" },
+                domain_range: { title: "3.2 Domain & Range", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/13-domain-range.html", keywords: "input values, output values, set-builder, interval notation" },
+                rate_change_behavior: { title: "3.3 Rates of Change & Graph Behavior", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/14-rate-of-change-graph-behavior.html", keywords: "slope, increasing, decreasing, constant, local maxima, minima" },
+                composition_functions: { title: "3.4 Composition of Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/15-composition-of-functions.html", keywords: "f(g(x)), combining functions, composite" },
+                transformation_functions: { title: "3.5 Transformation of Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/16-transformation-functions.html", keywords: "shift, reflect, stretch, compress, parent function" },
+                abs_value_functions: { title: "3.6 Absolute Value Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/17-absolute-value-functions.html", keywords: "v-shape, vertex, transformations" },
+                inverse_functions: { title: "3.7 Inverse Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/18-inverse-functions.html", keywords: "one-to-one, horizontal line test, f^-1(x), switch x and y" },
+
+                // Chapter 4: Linear Functions
+                linear_functions: { title: "4. Linear Functions", content: "In-depth study of linear functions and their applications.", keywords: "line, slope, y-intercept, constant rate of change" },
+                linear_functions_intro: { title: "4.1 Linear Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/19-linear-functions.html", keywords: "slope-intercept, point-slope, standard form" },
+                modeling_linear_functions: { title: "4.2 Modeling with Linear Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/20-modelling-linear-function.html", keywords: "word problems, linear models, prediction, interpolation, extrapolation" },
+                fitting_linear_models: { title: "4.3 Fitting Linear Models to Data", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/21-fitting-linear-models.html", keywords: "scatter plot, regression, line of best fit, correlation" },
+
+                // Chapter 5: Polynomial and Rational Functions
+                poly_rational_functions: { title: "5. Polynomial & Rational Functions", content: "Analysis of polynomial and rational functions.", keywords: "curves, end behavior, asymptotes" },
+                quadratic_functions: { title: "5.1 Quadratic Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/22-qudratic-functions.html", keywords: "parabola, vertex, axis of symmetry, maximum, minimum" },
+                power_poly_functions: { title: "5.2 Power & Polynomial Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/23-power-polynomial-functions.html", keywords: "end behavior, degree, leading coefficient, turning points" },
+                graphs_poly_functions: { title: "5.3 Graphs of Polynomial Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/24-graph-of-polynomial-functions.html", keywords: "zeros, multiplicity, intermediate value theorem" },
+                dividing_poly: { title: "5.4 Dividing Polynomials", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/24.5-dividing-polynomials.html", keywords: "long division, synthetic division, remainder theorem, factor theorem" },
+                zeros_poly_functions: { title: "5.5 Zeros of Polynomial Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/25-zeros-of-polynomial-functions.html", keywords: "roots, rational zero theorem, fundamental theorem of algebra" },
+                rational_functions: { title: "5.6 Rational Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/26-rational-functions.html", keywords: "asymptotes, vertical, horizontal, slant, holes" },
+                inverses_radical_functions: { title: "5.7 Inverses & Radical Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/27-inverses-radical-functions.html", keywords: "square root function, cube root function, inverse" },
+                modeling_variation: { title: "5.8 Modeling Using Variation", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/28-modelling-variations.html", keywords: "direct, inverse, joint, combined variation" },
+
+                // Chapter 6: Exponential and Logarithmic Functions
+                exp_log_functions: { title: "6. Exponential & Logarithmic Functions", content: "Study of exponential and logarithmic functions, their properties, and applications.", keywords: "growth, decay, inverse operations" },
+                exp_functions: { title: "6.1 Exponential Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/29-exponential-functions.html", keywords: "exponential growth, decay, compound interest, e" },
+                graphs_exp_functions: { title: "6.2 Graphs of Exponential Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/30-graph-exponential-functions.html", keywords: "asymptote, transformations, graphing" },
+                log_functions: { title: "6.3 Logarithmic Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/31-logarithmic-functions.html", keywords: "log, common log, natural log, ln" },
+                graphs_log_functions: { title: "6.4 Graphs of Logarithmic Functions", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/32-graph-logarithmic-functions.html", keywords: "asymptote, transformations, graphing, domain" },
+                log_properties: { title: "6.5 Logarithmic Properties", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/33-logarithmic-properties.html", keywords: "product rule, quotient rule, power rule, change of base" },
+                exp_log_equations: { title: "6.6 Exponential & Logarithmic Equations", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/34-exponential-logarithmic-equations.html", keywords: "solving, one-to-one property" },
+                exp_log_models: { title: "6.7 Exponential & Logarithmic Models", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/35-exponential-logarithmic-models.html", keywords: "growth, decay, half-life, doubling time, pH, Richter scale" },
+                fitting_exp_models: { title: "6.8 Fitting Exponential Models to Data", url: "https://ariz31.github.io/Arizval.com/ALGEBRA/36-fitting-exponential-models.html", keywords: "regression, exponential, logarithmic, logistic" },
+            };
+
+            const structure = {
+                prerequisites: ['real_numbers', 'exponents_sci_notation', 'radicals_rational_exponents', 'polynomials_prereq', 'factoring_polynomials', 'rational_expressions'],
+                equations_inequalities: ['coord_systems_graphs', 'linear_eq_one_var', 'models_applications', 'complex_numbers', 'quadratic_equations', 'other_eq_types', 'linear_abs_inequalities'],
+                functions: ['func_notation', 'domain_range', 'rate_change_behavior', 'composition_functions', 'transformation_functions', 'abs_value_functions', 'inverse_functions'],
+                linear_functions: ['linear_functions_intro', 'modeling_linear_functions', 'fitting_linear_models'],
+                poly_rational_functions: ['quadratic_functions', 'power_poly_functions', 'graphs_poly_functions', 'dividing_poly', 'zeros_poly_functions', 'rational_functions', 'inverses_radical_functions', 'modeling_variation'],
+                exp_log_functions: ['exp_functions', 'graphs_exp_functions', 'log_functions', 'graphs_log_functions', 'log_properties', 'exp_log_equations', 'exp_log_models', 'fitting_exp_models']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE VISUALIZATION LOGIC ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const mindMapContainer = document.getElementById('mind-map-container');
+            const listViewContainer = document.getElementById('list-view-container');
+            const modal = document.getElementById('info-modal');
+            const themeSwitch = document.getElementById('theme-switch');
+            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
+            let searchActive = false;
+            // --- NEW: Navigation State ---
+            let visibleNavigableNodes = [];
+            let highlightedNodeIndex = -1;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [];
+                const visibleLinks = [];
+                function recurse(node) {
+                    if (!node) return;
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                // --- NEW: Update navigable nodes list ---
+                visibleNavigableNodes = visibleNodes;
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph() {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 1);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+            }
+
+            function openModal(nodeId) {
+                const data = mindMapInfo[nodeId];
+                if (data && data.content) {
+                    document.getElementById('modal-title').innerHTML = data.title;
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = data.content;
+                    
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(modalBody, {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false}
+                            ],
+                            throwOnError: false
+                        });
+                    }
+                    modal.classList.add('active');
+                }
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                
+                const nodeInfo = mindMapInfo[d.id];
+                
+                // --- NEW: Set highlighted index on click ---
+                highlightedNodeIndex = visibleNavigableNodes.findIndex(n => n.id === d.id);
+                highlightNode(d.id, false); // Don't pan on click
+
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    return;
+                }
+
+                if (d.id === ROOT_NODE_ID) {
+                    toggleAllNodes();
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                    updateGraph();
+                } else if (nodeInfo.content) {
+                    openModal(d.id);
+                }
+            }
+
+            function initializeGraph() {
+                if (listViewContainer.classList.contains('hidden')) {
+                    const width = mindMapContainer.clientWidth;
+                    const height = mindMapContainer.clientHeight;
+
+                    d3.select(mindMapContainer).select("svg").remove();
+                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
+                    g = svg.append("g");
+
+                    linkGroup = g.append("g").attr("class", "links");
+                    nodeGroup = g.append("g").attr("class", "nodes");
+
+                    simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
+                        .force("charge", d3.forceManyBody().strength(-800))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                        .on("tick", () => {
+                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                        });
+                    
+                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
+                    svg.call(zoom);
+                    
+                    hierarchyRoot.children.forEach(child => child.children = null);
+                    updateGraph();
+                }
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            // --- TOOLBAR FUNCTIONALITY ---
+            function resetView() {
+                if (svg && zoom) {
+                    svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+                }
+            }
+
+            function toggleAllNodes() {
+                const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                hierarchyRoot.children.forEach(child => {
+                    child.children = shouldCollapseAll ? null : (child._children || null);
+                });
+                updateGraph();
+            }
+
+            function generateListView() {
+                let html = `<h1>${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
+                for (const catId in structure) {
+                    if (mindMapInfo[catId]) {
+                        html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2>`;
+                        html += '<ul>';
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`;
+                            }
+                        });
+                        html += '</ul>';
+                    }
+                }
+                listViewContainer.innerHTML = html;
+                listViewContainer.querySelectorAll('li, h2').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info.url) {
+                            window.open(info.url, '_blank');
+                        } else if (info.content) {
+                            openModal(item.dataset.id);
+                        }
+                    });
+                });
+            }
+
+            function toggleListView() {
+                mindMapContainer.classList.toggle('hidden');
+                listViewContainer.classList.toggle('hidden');
+                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') {
+                    generateListView();
+                }
+            }
+            
+            // --- NEW: Navigation Functions ---
+            function highlightNode(nodeId, doPan = true) {
+                node.classed("highlight", d => d.id === nodeId);
+                if (doPan) {
+                    const targetNode = visibleNavigableNodes.find(n => n.id === nodeId);
+                    if (targetNode && svg && zoom) {
+                        const width = mindMapContainer.clientWidth;
+                        const height = mindMapContainer.clientHeight;
+                        const transform = d3.zoomIdentity
+                            .translate(width / 2, height / 2)
+                            .scale(d3.zoomTransform(svg.node()).k) // Keep current scale
+                            .translate(-targetNode.x, -targetNode.y);
+                        
+                        svg.transition().duration(500).call(zoom.transform, transform);
+                    }
+                }
+            }
+
+            function navigateNext() {
+                if (visibleNavigableNodes.length === 0) return;
+                highlightedNodeIndex = (highlightedNodeIndex + 1) % visibleNavigableNodes.length;
+                highlightNode(visibleNavigableNodes[highlightedNodeIndex].id);
+            }
+
+            function navigatePrevious() {
+                if (visibleNavigableNodes.length === 0) return;
+                highlightedNodeIndex = (highlightedNodeIndex - 1 + visibleNavigableNodes.length) % visibleNavigableNodes.length;
+                highlightNode(visibleNavigableNodes[highlightedNodeIndex].id);
+            }
+
+            // --- UPDATED SEARCH LOGIC ---
+            function handleSearch(query) {
+                const lowerCaseQuery = query.trim().toLowerCase();
+                node.classed("highlight", false);
+                highlightedNodeIndex = -1;
+
+                if (lowerCaseQuery.length < 2) {
+                    return;
+                }
+
+                const matchedNodeData = [];
+                const allNodes = d3.hierarchy(hierarchyRoot).descendants();
+
+                allNodes.forEach(n => {
+                    const info = mindMapInfo[n.data.id];
+                    const titleMatch = info.title.toLowerCase().includes(lowerCaseQuery);
+                    const contentMatch = info.content && info.content.toLowerCase().includes(lowerCaseQuery);
+                    const keywordsMatch = info.keywords && info.keywords.toLowerCase().includes(lowerCaseQuery);
+
+                    if (info && (titleMatch || contentMatch || keywordsMatch)) {
+                        matchedNodeData.push(n.data);
+                        
+                        let parent = n.parent;
+                        while(parent) {
+                            if (parent.data._children && !parent.data.children) {
+                                parent.data.children = parent.data._children;
+                            }
+                            parent = parent.parent;
+                        }
+                    }
+                });
+
+                if (matchedNodeData.length > 0) {
+                    updateGraph();
+
+                    setTimeout(() => {
+                        const firstMatchId = matchedNodeData[0].id;
+                        highlightedNodeIndex = visibleNavigableNodes.findIndex(n => n.id === firstMatchId);
+                        highlightNode(firstMatchId); // Pan to the first result
+                    }, 350);
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+            document.getElementById('close-modal').addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => e.target === modal && modal.classList.remove('active'));
+            themeSwitch.addEventListener('change', () => document.body.classList.toggle('dark', themeSwitch.checked));
+            window.addEventListener('resize', initializeGraph);
+
+            // Toolbar listeners
+            document.getElementById('home-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
+            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
+            
+            const searchInput = document.getElementById('search-input');
+            document.getElementById('search-btn').addEventListener('click', () => {
+                searchActive = !searchActive;
+                searchInput.classList.toggle('w-0');
+                searchInput.classList.toggle('w-48');
+                if (searchActive) {
+                    searchInput.focus();
+                } else {
+                    searchInput.value = '';
+                    handleSearch('');
+                }
+            });
+            searchInput.addEventListener('input', () => handleSearch(searchInput.value));
+            
+            // --- NEW: Keyboard and Touch Listeners ---
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    navigateNext();
+                } else if (e.key === 'ArrowLeft') {
+                    navigatePrevious();
+                }
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+            const swipeThreshold = 50; // Minimum distance for a swipe
+
+            mindMapContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            mindMapContainer.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                if (touchEndX < touchStartX - swipeThreshold) {
+                    navigateNext(); // Swiped left
+                }
+                if (touchEndX > touchStartX + swipeThreshold) {
+                    navigatePrevious(); // Swiped right
+                }
+            }
+
+            // --- INITIALIZATION ---
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
