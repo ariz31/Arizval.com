@@ -8,9 +8,9 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -86,6 +86,7 @@
         .modal-content li { margin-bottom: 0.25rem; }
         .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
         body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+        .modal-content .text-center { text-align: center; margin-top: 1rem; margin-bottom: 1rem; }
 
         #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
         #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
@@ -210,9 +211,11 @@
                                     <p>While statics deals with objects at rest, Newton's laws are the foundation upon which all of mechanics is built.</p>
                                     <ul>
                                         <li><strong>First Law (Inertia):</strong> An object at rest stays at rest and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force.</li>
-                                        <li><strong>Second Law (Acceleration):</strong> The acceleration of an object is dependent upon two variables - the net force acting upon the object and the mass of the object. The foundation for dynamics. $$ \\sum \\vec{F} = m\\vec{a} $$</li>
+                                        <li><strong>Second Law (Acceleration):</strong> The acceleration of an object is dependent upon the net force acting upon it and its mass. This is the foundation for dynamics.</li>
                                         <li><strong>Third Law (Action-Reaction):</strong> For every action, there is an equal and opposite reaction.</li>
-                                    </ul>`,
+                                    </ul>
+                                    <p>The Second Law is expressed mathematically as:</p>
+                                    <div class="text-center">$$ \\sum \\vec{F} = m\\vec{a} $$</div>`,
                     keywords: "newton, inertia, action, reaction, force, mass"
                 },
                 vectors_and_scalars: {
@@ -268,7 +271,7 @@
                     title: "Moment of a Force",
                     content: `<h3>Moment of a Force (Torque)</h3>
                                     <p>The tendency of a force to cause rotation about a point or axis. The moment $M_O$ of a force $\\vec{F}$ about a point O is a vector quantity defined by the cross product:</p>
-                                    $$ \\vec{M}_O = \\vec{r} \\times \\vec{F} $$
+                                    <div class="text-center">$$\\vec{M}_O = \\vec{r} \\times \\vec{F}$$</div>
                                     <p>Where $\\vec{r}$ is the position vector from point O to any point on the line of action of $\\vec{F}$. The magnitude is $M_O = Fd$, where $d$ is the perpendicular distance (moment arm).</p>
                                     <h3>Varignon's Theorem</h3>
                                     <p>The moment of a force about a point is equal to the sum of the moments of its components about the same point.</p>`,
@@ -278,7 +281,7 @@
                     title: "Couples",
                     content: `<h3>Couples</h3>
                                     <p>A couple consists of two parallel forces that are equal in magnitude, opposite in direction, and do not share a line of action. A couple produces a pure rotation, or moment, that is independent of the point about which it is calculated. The moment of a couple is given by:</p>
-                                    $$ M = Fd $$
+                                    <div class="text-center">$$M = Fd$$</div>
                                     <p>Where $d$ is the perpendicular distance between the two forces.</p>`,
                     keywords: "couple, pure moment, rotation"
                 },
@@ -287,8 +290,8 @@
                     content: `<h3>Resultants</h3>
                                     <p>The process of finding a single force and/or couple moment that has the same external effect on a body as the original system of forces. This is the simplest equivalent system.</p>
                                     <p>For a general force system, the resultant force $\\vec{F}_R$ and resultant moment $\\vec{M}_{R_O}$ are:</p>
-                                    $$ \\vec{F}_R = \\sum \\vec{F} $$
-                                    $$ \\vec{M}_{R_O} = \\sum (\\vec{r} \\times \\vec{F}) + \\sum \\vec{M}_C $$`,
+                                    <div class="text-center">$$\\vec{F}_R = \\sum \\vec{F}$$</div>
+                                    <div class="text-center">$$\\vec{M}_{R_O} = \\sum (\\vec{r} \\times \\vec{F}) + \\sum \\vec{M}_C$$</div>`,
                     keywords: "resultant, equivalent system, simplification"
                 },
                 equilibrium: {
@@ -300,19 +303,19 @@
                     title: "Equilibrium of a Particle",
                     content: `<h3>Equilibrium of a Particle</h3>
                                     <p>A particle is in equilibrium if the vector sum of all forces acting on it is zero. Particles are idealized as single points, so moments are not considered.</p>
-                                    $$ \\sum \\vec{F} = 0 $$
+                                    <div class="text-center">$$ \\sum \\vec{F} = 0 $$</div>
                                     <p>In 2D, this resolves to two scalar equations:</p>
-                                    $$ \\sum F_x = 0 \\quad \\text{and} \\quad \\sum F_y = 0 $$`,
+                                    <div class="text-center">$$ \\sum F_x = 0 \\quad \\text{and} \\quad \\sum F_y = 0 $$</div>`,
                     keywords: "particle, equilibrium, sum of forces"
                 },
                 equilibrium_of_a_rigid_body: {
                     title: "Equilibrium of a Rigid Body",
                     content: `<h3>Equilibrium of a Rigid Body</h3>
                                     <p>A rigid body is in equilibrium if the vector sum of all external forces is zero, AND the vector sum of all moments about any arbitrary point is zero.</p>
-                                    $$ \\sum \\vec{F} = 0 $$
-                                    $$ \\sum \\vec{M}_O = 0 $$
+                                    <div class="text-center">$$\\sum \\vec{F} = 0$$</div>
+                                    <div class="text-center">$$\\sum \\vec{M}_O = 0$$</div>
                                     <p>In 2D, this resolves to three scalar equations:</p>
-                                    $$ \\sum F_x = 0, \\quad \\sum F_y = 0, \\quad \\sum M_O = 0 $$`,
+                                    <div class="text-center">$$\\sum F_x = 0, \\quad \\sum F_y = 0, \\quad \\sum M_O = 0$$</div>`,
                     keywords: "rigid body, equilibrium, sum of forces, sum of moments"
                 },
                 two_and_three_force_members: {
@@ -333,14 +336,14 @@
                 method_of_joints: {
                     title: "Method of Joints",
                     content: `<h3>Method of Joints</h3>
-                                    <p>A method for finding the forces in members of a truss. It involves applying the equations of equilibrium ($ \\sum F_x = 0, \\sum F_y = 0 $) to each joint of the truss, treating each joint as a particle in equilibrium under the influence of the connected members and any external loads.</p>
+                                    <p>A method for finding the forces in members of a truss. It involves applying the equations of equilibrium ($\\sum F_x = 0, \\sum F_y = 0$) to each joint of the truss, treating each joint as a particle in equilibrium under the influence of the connected members and any external loads.</p>
                                     <p>It is most efficient when you need to find the forces in all members of the truss.</p>`,
                     keywords: "truss, method of joints, joint equilibrium"
                 },
                 method_of_sections: {
                     title: "Method of Sections",
                     content: `<h3>Method of Sections</h3>
-                                    <p>A method for finding forces in specific members of a truss. It involves cutting the truss into two sections through the members whose forces are desired. The equations of equilibrium ($ \\sum F_x = 0, \\sum F_y = 0, \\sum M_O = 0 $) are then applied to one of the sections, treating it as a rigid body.</p>
+                                    <p>A method for finding forces in specific members of a truss. It involves cutting the truss into two sections through the members whose forces are desired. The equations of equilibrium ($\\sum F_x = 0, \\sum F_y = 0, \\sum M_O = 0$) are then applied to one of the sections, treating it as a rigid body.</p>
                                     <p>It is most efficient for finding forces in a few specific members.</p>`,
                     keywords: "truss, method of sections, cut, section"
                 },
@@ -376,11 +379,14 @@
                     content: `<h3>Relationships between Load, Shear, and Moment</h3>
                                     <p>Differential and integral relationships that simplify the construction of shear and moment diagrams.</p>
                                     <ul>
-                                        <li>The slope of the shear diagram at any point is equal to the intensity of the distributed load $w(x)$ at that point: $$ \\frac{dV}{dx} = -w(x) $$</li>
-                                        <li>The slope of the moment diagram at any point is equal to the shear force at that point: $$ \\frac{dM}{dx} = V(x) $$</li>
+                                        <li>The slope of the shear diagram at any point is equal to the intensity of the distributed load $w(x)$ at that point.</li>
+                                        <li>The slope of the moment diagram at any point is equal to the shear force at that point.</li>
                                         <li>The change in shear between two points is the area under the load diagram between those points.</li>
                                         <li>The change in moment between two points is the area under the shear diagram between those points.</li>
-                                    </ul>`,
+                                    </ul>
+                                    <p>These relationships are expressed as:</p>
+                                    <div class="text-center">$$\\frac{dV}{dx} = -w(x)$$</div>
+                                    <div class="text-center">$$\\frac{dM}{dx} = V(x)$$</div>`,
                     keywords: "load, shear, moment, derivative, integral, area"
                 },
                 friction: {
@@ -393,9 +399,12 @@
                     content: `<h3>Dry Friction</h3>
                                     <p>Friction between two solid surfaces in contact, in the absence of a lubricating fluid.</p>
                                     <ul>
-                                        <li><strong>Static Friction ($F_s$):</strong> The friction force that prevents motion. It has a maximum value: $$ F_s \\le \\mu_s N $$ where $\\mu_s$ is the coefficient of static friction and $N$ is the normal force.</li>
-                                        <li><strong>Kinetic Friction ($F_k$):</strong> The friction force that opposes motion once it has started. It has a constant magnitude: $$ F_k = \\mu_k N $$ where $\\mu_k$ is the coefficient of kinetic friction. Typically, $\\mu_k < \\mu_s$.</li>
-                                    </ul>`,
+                                        <li><strong>Static Friction ($F_s$):</strong> The friction force that prevents motion. It has a maximum value, where $\\mu_s$ is the coefficient of static friction and $N$ is the normal force.</li>
+                                        <li><strong>Kinetic Friction ($F_k$):</strong> The friction force that opposes motion once it has started. It has a constant magnitude, where $\\mu_k$ is the coefficient of kinetic friction. Typically, $\\mu_k < \\mu_s$.</li>
+                                    </ul>
+                                    <p>The formulas for static and kinetic friction are:</p>
+                                    <div class="text-center">$$F_s \\le \\mu_s N$$</div>
+                                    <div class="text-center">$$F_k = \\mu_k N$$</div>`,
                     keywords: "dry friction, static, kinetic, coulomb, coefficient"
                 },
                 wedges: {
@@ -416,8 +425,9 @@
                                     <ul>
                                         <li><strong>Axle/Journal Bearings:</strong> Friction creates a resisting moment that opposes the rotation of the axle.</li>
                                         <li><strong>Thrust Bearings:</strong> Friction occurs over the circular contact area, creating a resisting moment.</li>
-                                        <li><strong>Belt Friction:</strong> The difference in tension in a flexible belt wrapped around a pulley is related to the coefficient of friction and the angle of wrap. For impending slip: $$ \\frac{T_2}{T_1} = e^{\\mu \\beta} $$</li>
-                                    </ul>`,
+                                        <li><strong>Belt Friction:</strong> The difference in tension in a flexible belt wrapped around a pulley is related to the coefficient of friction ($\\mu$) and the angle of wrap ($\\beta$). For impending slip, the relationship between the tighter side tension ($T_2$) and the slacker side ($T_1$) is:</li>
+                                    </ul>
+                                    <div class="text-center">$$ \\frac{T_2}{T_1} = e^{\\mu \\beta} $$</div>`,
                     keywords: "bearing, belt, axle, tension, friction"
                 },
                 center_of_mass_and_centroids: {
@@ -434,24 +444,27 @@
                                         <li><strong>Centroid (C):</strong> The geometric center of a shape (volume, area, or line). For a body with uniform density, the centroid coincides with the center of mass.</li>
                                     </ul>
                                     <p>The centroid coordinates $(\\bar{x}, \\bar{y})$ for an area are found by integrating over the area A, where $(\\tilde{x}, \\tilde{y})$ are the coordinates of the centroid of the differential area element $dA$:</p>
-                                    $$ \\bar{x} = \\frac{\\int_A \\tilde{x} \\, dA}{\\int_A dA} \\quad \\text{and} \\quad \\bar{y} = \\frac{\\int_A \\tilde{y} \\, dA}{\\int_A dA} $$`,
+                                    <div class="text-center">$$\\bar{x} = \\frac{\\int_A \\tilde{x} \\, dA}{\\int_A dA} \\quad \\text{and} \\quad \\bar{y} = \\frac{\\int_A \\tilde{y} \\, dA}{\\int_A dA}$$</div>`,
                     keywords: "center of gravity, center of mass, centroid, integral"
                 },
                 composite_bodies: {
                     title: "Composite Bodies",
                     content: `<h3>Composite Bodies</h3>
                                     <p>A method for finding the centroid of a complex shape by dividing it into simpler, common shapes (rectangles, triangles, circles, etc.). The overall centroid is found by taking a weighted average of the individual centroids, where $\\tilde{x}_i$ and $\\tilde{y}_i$ are the centroidal coordinates of each simple shape $A_i$.</p>
-                                    $$ \\bar{X} = \\frac{\\sum_i \\tilde{x}_i A_i}{\\sum_i A_i} \\quad \\text{and} \\quad \\bar{Y} = \\frac{\\sum_i \\tilde{y}_i A_i}{\\sum_i A_i} $$`,
+                                    <div class="text-center">$$ \\bar{X} = \\frac{\\sum_i \\tilde{x}_i A_i}{\\sum_i A_i} \\quad \\text{and} \\quad \\bar{Y} = \\frac{\\sum_i \\tilde{y}_i A_i}{\\sum_i A_i} $$</div>`,
                     keywords: "composite body, weighted average, centroid"
                 },
                 theorems_of_pappus_guldinus: {
                     title: "Theorems of Pappus-Guldinus",
                     content: `<h3>Theorems of Pappus-Guldinus</h3>
                                     <p>Two theorems relating surfaces and volumes of revolution to the centroid of the generating curve or area.</p>
-                                    <ul>
-                                        <li><strong>First Theorem (Surface Area):</strong> The surface area generated by revolving a plane curve about a non-intersecting axis is equal to the product of the length of the curve and the distance traveled by its centroid. $$ A = 2\\pi \\bar{y} L $$</li>
-                                        <li><strong>Second Theorem (Volume):</strong> The volume generated by revolving a plane area about a non-intersecting axis is equal to the product of the area and the distance traveled by its centroid. $$ V = 2\\pi \\bar{y} A $$</li>
-                                    </ul>`,
+                                     <ul>
+                                        <li><strong>First Theorem (Surface Area):</strong> The surface area ($A$) generated by revolving a plane curve about a non-intersecting axis is the product of the curve's length ($L$) and the distance traveled by its centroid ($\\bar{y}$).</li>
+                                        <li><strong>Second Theorem (Volume):</strong> The volume ($V$) generated by revolving a plane area about a non-intersecting axis is the product of the area ($A$) and the distance traveled by its centroid ($\\bar{y}$).</li>
+                                    </ul>
+                                    <p>The theorems are expressed as:</p>
+                                    <div class="text-center">$$A = 2\\pi \\bar{y} L$$</div>
+                                    <div class="text-center">$$V = 2\\pi \\bar{y} A$$</div>`,
                     keywords: "pappus, guldinus, revolution, surface area, volume"
                 },
                 moments_of_inertia: {
@@ -463,10 +476,10 @@
                     title: "Area Moment of Inertia",
                     content: `<h3>Area Moment of Inertia</h3>
                                     <p>A property of a 2D plane shape which characterizes its resistance to bending. It is a purely geometric property.</p>
-                                    $$ I_x = \\int_A y^2 \\, dA $$
-                                    $$ I_y = \\int_A x^2 \\, dA $$
+                                    <div class="text-center">$$I_x = \\int_A y^2 \\, dA$$</div>
+                                    <div class="text-center">$$I_y = \\int_A x^2 \\, dA$$</div>
                                     <p>The <strong>Polar Moment of Inertia</strong>, $J_O$, characterizes resistance to torsion:</p>
-                                    $$ J_O = \\int_A r^2 \\, dA = I_x + I_y $$`,
+                                    <div class="text-center">$$J_O = \\int_A r^2 \\, dA = I_x + I_y$$</div>`,
                     keywords: "area moment of inertia, bending, second moment of area, polar"
                 },
                 parallel_axis_theorem: {
@@ -474,8 +487,8 @@
                     content: `<h3>Parallel-Axis Theorem</h3>
                                     <p>A theorem used to determine the moment of inertia of a rigid body or plane shape about any axis, given its moment of inertia about a parallel axis through its own centroid.</p>
                                     <p>For an area:</p>
-                                    $$ I_x = I_{\\bar{x}} + A d_y^2 $$
-                                    $$ I_y = I_{\\bar{y}} + A d_x^2 $$
+                                    <div class="text-center">$$I_x = I_{\\bar{x}} + A d_y^2$$</div>
+                                    <div class="text-center">$$I_y = I_{\\bar{y}} + A d_x^2$$</div>
                                     <p>Where $I_{\\bar{x}}$ is the moment of inertia about the centroidal x-axis and $d_y$ is the perpendicular distance between the x and $\\bar{x}$ axes.</p>`,
                     keywords: "parallel axis theorem, moment of inertia, centroid"
                 },
@@ -483,7 +496,7 @@
                     title: "Mass Moment of Inertia",
                     content: `<h3>Mass Moment of Inertia</h3>
                                     <p>A measure of an object's resistance to angular acceleration. It is the rotational analog of mass.</p>
-                                    $$ I = \\int_m r^2 \\, dm $$
+                                    <div class="text-center">$$I = \\int_m r^2 \\, dm$$</div>
                                     <p>It depends on the mass of the body and its distribution relative to the axis of rotation.</p>`,
                     keywords: "mass moment of inertia, angular acceleration, rotation"
                 }

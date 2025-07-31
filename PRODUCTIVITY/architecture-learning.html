@@ -1,94 +1,16 @@
------
-
-### **Core Identity & Goal**
-
-You are the **Mind Map Architect**, a specialist AI. Your sole function is to receive any topic from a user and generate a complete, single-file, interactive HTML mind map by populating a fixed template. You must follow the rules and execution protocol below with absolute precision.
-
------
-
-### **Critical Rules**
-
-  * **DO NOT ALTER THE TEMPLATE LOGIC**: The HTML structure, CSS styling, and JavaScript functions in the template are fixed. Do not modify, add, or remove any part of this logic. Your only job is to populate the content data.
-  * **ID FORMAT IS MANDATORY**: All unique IDs you generate for nodes MUST be in `lowercase_snake_case` format (e.g., `quantum_mechanics`, `wave_particle_duality`). This is essential for the script to function.
-  * **ROOT ID REPLACEMENT IS VITAL**: You must define a new root ID for the user's topic and replace the placeholder ID (`'root_placeholder'`) in the script with this new ID.
-  * **DATA CONSISTENCY IS KEY**: The `snake_case` keys in the `mindMapInfo` object must perfectly match the `snake_case` keys and array values used in the `structure` object.
-  * **COMPREHENSIVE CONTENT**: You must generate informative content for every single node. The `content` field should **never** be empty.
-      * For nodes that open a modal, provide detailed HTML content.
-      * For category nodes or nodes that link to an external `url`, provide a concise summary in the `content` field.
-      * The root node's `content` **must** include a "How to Use" section explaining the interactive toolbar features, as shown in the template's placeholder.
-  * **CORRECT LATEX FORMATTING**: All mathematical notation must be formatted using LaTeX within the content strings.
-
------
-
-### **Execution Protocol**
-
-When a user provides a topic, execute the following steps:
-
-#### **Step 1: Analyze and Structure the Topic**
-
-Analyze the user's topic to understand its core components and logical hierarchy. Define a clear structure:
-
-  * **Level 0 (Root)**: The main subject itself (e.g., "Calculus"). Create a `lowercase_snake_case` ID for it (e.g., `calculus`).
-  * **Level 1 (Categories)**: Identify all fundamental categories of the subject (e.g., "Limits", "Derivatives"). Create `snake_case` IDs for each.
-  * **Level 2 (Concepts)**: For each category, list all specific, important concepts (e.g., for "Derivatives", use "Power Rule", "Product Rule"). Create `snake_case` IDs for each.
-
-#### **Step 2: Generate Content (`mindMapInfo` Object)**
-
-Create the `mindMapInfo` object. For every single node (Root, Categories, and Concepts), use its `lowercase_snake_case` ID as the key. The value for each key must be an object with the following structure:
-`{ title: "Display Title", content: "HTML content...", url: "optional_url", keywords: "optional, keywords" }`
-
-  * `title`: The text displayed on the node.
-  * `content`: HTML content for the modal or a summary. For the root node, this must include a "How to Use" guide.
-  * `url` (Optional): If provided, clicking the node opens this link in a new tab. If omitted, clicking the node opens a modal with the `content`.
-  * `keywords` (Optional): A comma-separated string of keywords for search functionality.
-
-#### **Step 3: Format Mathematical Formulas (LaTeX)**
-
-When writing content for the `mindMapInfo` object, use the following rules for all mathematical notation:
-
-  * **Inline Formulas**: Wrap LaTeX code with single dollar signs (`$`). Example: `"The equation for energy is $E=mc^2$."`
-  * **Display Formulas**: Wrap LaTeX code with double dollar signs (`$$`). This will center the formula on its own line. Example: `"The Pythagorean theorem is stated as $$a^2 + b^2 = c^2$$"`
-  * **Escape Backslashes**: Inside the JavaScript string, every backslash (`\`) in your LaTeX code MUST be escaped with another backslash (`\\`).
-      * Correct: `"The quadratic formula is $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$"`
-      * Incorrect: `"The quadratic formula is $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"`
-
-#### **Step 4: Define Hierarchy (`structure` Object)**
-
-Create the `structure` object. The keys of this object must be the `snake_case` IDs of your Level 1 Categories. The value for each key must be an array containing the `snake_case` IDs of its corresponding Level 2 Concepts.
-
-#### **Step 5: Assemble the Final HTML**
-
-Take the entire `HTML_TEMPLATE` provided below. Perform the following replacements:
-
-1.  **Update `<title>`**: Change the text to `"Interactive Mind Map: [Topic Name]"`.
-2.  **Replace `mindMapInfo`**: Delete the placeholder object and insert the one you generated.
-3.  **Replace `structure`**: Delete the placeholder object and insert the one you generated.
-4.  **Replace Root ID**: Find `const ROOT_NODE_ID = 'root_placeholder';` and replace `'root_placeholder'` with your new root ID.
-
------
-
-### **Final Output**
-
-Your output must be **only** the complete, final HTML code in a single markdown code block. Do not include any introductory text, explanations, or comments before or after the code block.
-
------
-
-### **HTML\_TEMPLATE**
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Interactive Mind Map</title>
+    <title>Interactive Mind Map: The Architecture of Accelerated Learning</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -253,18 +175,18 @@ Your output must be **only** the complete, final HTML code in a single markdown 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // ========= DYNAMIC CONTENT SECTION START =========
-            const ROOT_NODE_ID = 'root_placeholder';
+            const ROOT_NODE_ID = 'accelerated_learning';
 
             const mindMapInfo = {
-                root_placeholder: {
-                    title: "Topic Title",
+                accelerated_learning: {
+                    title: "Accelerated Learning",
                     content: `
-                        <p>A brief, engaging overview of the main topic goes here.</p>
+                        <p>This mind map explores the architecture of accelerated learning, synthesizing neuroscience and cognitive strategy. It provides a science-backed guide to mastering the skill of learning itself, moving beyond anecdotal 'study hacks' to build a foundational understanding of the principles that underpin effective learning.</p>
                         <h3>How to Use This Mind Map</h3>
                         <ul>
-                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for details or to open its link.</li>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for details.</li>
                             <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
-                            <li><strong>Toolbar:</strong> Use the floating toolbar for more options:
+                            <li><strong>Toolbar:</strong> Use the floating toolbar on the right for more options:
                                 <ul>
                                     <li><strong>Reset View:</strong> Centers the map.</li>
                                     <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
@@ -275,28 +197,183 @@ Your output must be **only** the complete, final HTML code in a single markdown 
                                 </ul>
                             </li>
                         </ul>`,
-                    keywords: "main, root, topic"
+                    keywords: "learning, neuroscience, cognitive strategy, main"
                 },
-                category_1: {
-                    title: "Category 1",
-                    content: "<p>A summary of what this category covers.</p>",
-                    keywords: "category, section"
+                neuroplasticity: {
+                    title: "The Malleable Mind",
+                    content: "<p>Explores neuroplasticity, the brain's ability to physically change and reorganize itself in response to experience. This is the biological foundation of all learning.</p>",
+                    keywords: "neuroplasticity, brain, biology, foundations"
                 },
-                topic_1_1: {
-                    title: "Topic 1.1",
-                    content: "<p>Detailed content for Topic 1.1. You can use <strong>HTML tags</strong> and LaTeX for math, like $a^2 + b^2 = c^2$.</p><p>Or a display formula:</p>$$e^{i\\pi} + 1 = 0$$",
-                    keywords: "detail, concept, subtopic"
+                hebbian_principle: {
+                    title: "Hebbian Principle",
+                    content: "<h3>Cells that fire together, wire together.</h3><p>When neurons are activated in concert, the connections (synapses) between them are strengthened. Repeated practice makes these neural pathways more efficient and automatic, ingraining skills and memories into the brain's physical structure.</p>",
+                    keywords: "neurons, synapses, practice, memory trace"
                 },
-                topic_1_2: {
-                    title: "Topic 1.2 (URL)",
-                    content: "<p>This node links to an external website. This content serves as a brief description.</p>",
-                    url: "https://example.com",
-                    keywords: "link, external, resource"
+                synaptic_pruning: {
+                    title: "Synaptic Pruning",
+                    content: "<h3>Use it or lose it.</h3><p>Neural pathways that are not regularly activated are weakened and eventually eliminated. This natural process of decay means that learning is not a one-time act, but requires continuous maintenance through active use and recall.</p>",
+                    keywords: "forgetting, maintenance, review, decay"
+                },
+                neurogenesis: {
+                    title: "Neurogenesis",
+                    content: "<h3>The birth of new neurons.</h3><p>Contrary to older beliefs, the adult brain can produce new neurons, particularly in the hippocampus. This process is actively promoted by healthy lifestyle habits like exercise, good nutrition, and adequate sleep.</p>",
+                    keywords: "neurons, hippocampus, health, exercise, sleep"
+                },
+                memory_journey: {
+                    title: "The Journey of Knowledge",
+                    content: "<p>Traces the multi-stage journey of a memory from a fragile, initial encoding to a stable, enduring piece of knowledge, highlighting the critical consolidation process.</p>",
+                    keywords: "memory, consolidation, hippocampus, knowledge"
+                },
+                hippocampus: {
+                    title: "The Hippocampus",
+                    content: "<h3>The Brain's Memory Architect.</h3><p>A seahorse-shaped structure in the temporal lobe that is critical for converting short-term memories into long-term ones. It acts as a temporary guide, encoding new declarative memories (facts and events) before they are stored elsewhere.</p>",
+                    keywords: "memory, brain anatomy, encoding, long-term potentiation"
+                },
+                synaptic_consolidation: {
+                    title: "Synaptic Consolidation",
+                    content: "<h3>The Initial 'Save' Function.</h3><p>A rapid process occurring in the minutes and hours after learning. Molecular events, including protein synthesis, stabilize the memory trace at the synapse, making it resistant to immediate disruption.</p>",
+                    keywords: "short-term memory, synapses, protein synthesis, LTP"
+                },
+                systems_consolidation: {
+                    title: "Systems Consolidation",
+                    content: "<h3>The Long-Term Installation.</h3><p>A slow process over weeks, months, or years where a memory is gradually restructured. The hippocampus 'trains' the neocortex until the memory is stored permanently in a distributed network, independent of the hippocampus.</p>",
+                    keywords: "long-term memory, neocortex, schema, abstraction"
+                },
+                role_of_sleep: {
+                    title: "The Role of Sleep",
+                    content: "<h3>Non-Negotiable for Consolidation.</h3><p>Sleep is an active state critical for learning. Before learning, it prepares the hippocampus. After learning, it's when consolidation primarily occurs, as the brain replays and strengthens neural patterns. A lack of sleep can reduce learning capacity by up to 40%.</p>",
+                    keywords: "sleep, consolidation, memory, brain health"
+                },
+                psychology_of_learning: {
+                    title: "Psychology of a Learner",
+                    content: "<p>Examines how a learner's internal psychological state—including mindset, stress management, and self-awareness—profoundly modulates the biological machinery of learning.</p>",
+                    keywords: "psychology, mindset, stress, metacognition"
+                },
+                growth_mindset: {
+                    title: "Growth vs. Fixed Mindset",
+                    content: "<h3>Beliefs about intelligence dictate outcomes.</h3><p><b>Growth Mindset:</b> The belief that abilities can be developed through effort and strategy. Leads to embracing challenges and persisting through setbacks.</p><p><b>Fixed Mindset:</b> The belief that abilities are innate and unchangeable. Leads to avoiding challenges and giving up easily.</p>",
+                    keywords: "carol dweck, belief, intelligence, effort, challenge"
+                },
+                optimal_stress_curve: {
+                    title: "Optimal Stress Curve",
+                    content: "<h3>The 'Inverted U' of Performance.</h3><p>Performance is poor with too little stress (boredom) or too much stress (anxiety, cortisol). A moderate level of 'desirable difficulty' creates a state of heightened focus optimal for learning. A growth mindset helps frame challenges as desirable, keeping stress in the optimal zone.</p>",
+                    keywords: "stress, cortisol, performance, desirable difficulty, focus"
+                },
+                metacognition: {
+                    title: "Metacognition",
+                    content: "<h3>Thinking about thinking.</h3><p>The ability to be aware of one's own cognitive processes and to actively regulate them. It involves diagnosing knowledge gaps and adjusting learning strategies accordingly. It's the skill that allows a learner to become autonomous and enact a growth mindset.</p>",
+                    keywords: "self-awareness, regulation, strategy, learning how to learn"
+                },
+                learning_toolkit: {
+                    title: "Evidence-Based Toolkit",
+                    content: "<p>A collection of core learning strategies proven by cognitive science to be superior for creating robust, long-term knowledge. These methods often feel more difficult but are far more effective.</p>",
+                    keywords: "strategies, techniques, tools, evidence-based"
+                },
+                retrieval_practice: {
+                    title: "Retrieval Practice",
+                    content: "<h3>The Power of Active Recall.</h3><p>Actively recalling information from memory (e.g., via flashcards, practice questions) rather than passively re-reading it. This effortful act strengthens the memory trace and fights the 'illusion of knowing'.</p>",
+                    keywords: "testing effect, active recall, flashcards, memory"
+                },
+                spaced_repetition: {
+                    title: "Spaced Repetition",
+                    content: "<h3>Defeating the Forgetting Curve.</h3><p>Distributing study and retrieval sessions over increasing intervals of time. This strategically interrupts forgetting, making retrieval more effortful and signaling to the brain that the information is important for long-term storage.</p>",
+                    keywords: "forgetting curve, spacing, anki, long-term memory"
+                },
+                interleaving: {
+                    title: "Interleaving",
+                    content: "<h3>Building Deeper Understanding.</h3><p>Alternating between different but related topics or problem types in a single study session. This forces the brain to discriminate between concepts and retrieve the correct strategy, building more flexible and transferable knowledge.</p>",
+                    keywords: "mixed practice, problem solving, flexible knowledge, transfer"
+                },
+                elaboration_dual_coding: {
+                    title: "Elaboration & Dual Coding",
+                    content: "<h3>Creating Rich Mental Models.</h3><p><b>Elaboration:</b> Connecting new material to existing knowledge by asking 'how' and 'why'.</p><p><b>Dual Coding:</b> Combining verbal information with visual representations (diagrams, mind maps) to encode it in two brain channels, creating a stronger memory.</p>",
+                    keywords: "connections, meaning, visuals, diagrams, memory trace"
+                },
+                feynman_technique: {
+                    title: "Feynman Technique",
+                    content: "<h3>The Ultimate Litmus Test.</h3><p>A four-step process: 1) Choose a concept. 2) Explain it in simple terms, as if to a child. 3) Identify gaps in your understanding where you get stuck. 4) Review and refine your explanation. It combines retrieval, elaboration, and metacognition.</p>",
+                    keywords: "richard feynman, understanding, simplification, teaching"
+                },
+                deliberate_practice: {
+                    title: "Deliberate Practice",
+                    content: "<h3>The Path from Novice to Expert.</h3><p>A highly structured form of training focused on improving specific aspects of performance. It involves operating at the edge of one's ability, receiving constant and immediate feedback, and focusing intently on weaknesses.</p>",
+                    keywords: "anders ericsson, expertise, skill, feedback, focus"
+                },
+                ineffective_habits: {
+                    title: "Illusions of Competence",
+                    content: "<p>An exploration of common but ineffective study habits that create a false sense of mastery. These methods persist because they feel easy and productive, but fail to produce durable learning.</p>",
+                    keywords: "bad habits, ineffective, illusion of knowing, fluency"
+                },
+                illusion_of_knowing: {
+                    title: "Illusion of Knowing",
+                    content: "<h3>Mistaking Recognition for Recall.</h3><p>A cognitive bias where a learner mistakes the ease of recognizing information in front of them for the much harder ability to recall it from memory without cues. This is the primary reason ineffective, passive strategies feel effective.</p>",
+                    keywords: "fluency, cognitive bias, recognition, recall"
+                },
+                passive_rereading: {
+                    title: "Passive Re-reading",
+                    content: "<h3>The Most Common Ineffective Habit.</h3><p>Running one's eyes over text without effortful retrieval. It creates a strong illusion of fluency because the material becomes familiar, but this familiarity is not knowledge. Highlighting often makes this worse.</p>",
+                    keywords: "highlighting, passive learning, familiarity, fluency"
+                },
+                cramming: {
+                    title: "Cramming",
+                    content: "<h3>Cognitive Sabotage.</h3><p>Studying for long, uninterrupted hours right before a test (massed practice). It loads information into fragile short-term memory but bypasses the consolidation process needed for long-term retention. It's often paired with sleep deprivation, which cripples learning.</p>",
+                    keywords: "massed practice, procrastination, short-term memory, sleep deprivation"
+                },
+                multitasking: {
+                    title: "Multitasking",
+                    content: "<h3>A Myth of Efficiency.</h3><p>The human brain is not wired for effective parallel processing of complex information. Attempting to study while engaging with other media divides attention, reduces focus, and severely impairs the encoding and retention of new information.</p>",
+                    keywords: "focus, attention, distraction, cognitive load"
+                },
+                biological_pillars: {
+                    title: "Fueling the Engine",
+                    content: "<p>Optimal cognitive performance is an embodied process dependent on the brain's biological state. Nutrition, exercise, and sleep are non-negotiable pillars of any effective learning system.</p>",
+                    keywords: "biology, health, nutrition, exercise, sleep"
+                },
+                neuro_nutrition: {
+                    title: "Neuro-Nutrition",
+                    content: "<h3>Food for Thought.</h3><p>The brain is an energy-intensive organ. Key nutrients like Omega-3s, B Vitamins, antioxidants, and proteins provide the fuel and building blocks for its structure and function. A 'whole diet' approach like the Mediterranean diet is consistently linked to better cognitive function.</p>",
+                    keywords: "diet, nutrition, omega-3, vitamins, antioxidants"
+                },
+                exercise: {
+                    title: "Exercise and the Brain",
+                    content: "<h3>'Miracle-Gro' for the Brain.</h3><p>Physical activity boosts blood flow, stimulates Brain-Derived Neurotrophic Factor (BDNF) which promotes neurogenesis, and reduces stress. It is one of the most powerful interventions for enhancing memory and learning.</p>",
+                    keywords: "BDNF, neurogenesis, blood flow, stress reduction"
+                },
+                sleep_rest: {
+                    title: "Sleep, Rest, and Naps",
+                    content: "<h3>The Consolidation State.</h3><p>As established, sleep is the primary biological state for memory consolidation. Most adults require 7-9 hours. Strategic napping can also be beneficial, with short naps boosting alertness and longer naps aiding memory.</p>",
+                    keywords: "consolidation, memory, rest, naps, brain health"
+                },
+                synthesis_protocol: {
+                    title: "The Art of Synthesis",
+                    content: "<p>Focuses on building a personalized learning protocol by intelligently adapting evidence-based strategies to the specific subject matter and individual goals.</p>",
+                    keywords: "synthesis, application, protocol, personalization"
+                },
+                diagnosing_task: {
+                    title: "Diagnosing the Task",
+                    content: "<h3>Matching Strategy to Subject.</h3><p>The first step is to analyze the nature of the material. The optimal strategy differs for conceptual subjects (use Elaboration, Feynman), fact-intensive subjects (use Spaced Repetition, Retrieval), and practical skills (use Deliberate Practice).</p>",
+                    keywords: "strategy, subject, conceptual, factual, skills"
+                },
+                layering_strategies: {
+                    title: "Layering Strategies",
+                    content: "<h3>Creating an Integrated System.</h3><p>Effective learning involves combining multiple techniques. For example, using the Feynman Technique to create a simple explanation, then turning that into flashcards for spaced retrieval practice.</p>",
+                    keywords: "integration, combination, system, workflow"
+                },
+                habit_formation: {
+                    title: "Habit Formation",
+                    content: "<h3>Engineering a Learning Lifestyle.</h3><p>The most successful learners integrate effective strategies into a consistent routine. This involves creating a dedicated study environment and anchoring new learning habits to existing daily schedules to build a holistic 'learning lifestyle'.</p>",
+                    keywords: "habits, routine, environment, consistency, lifestyle"
                 }
             };
 
             const structure = {
-                category_1: ['topic_1_1', 'topic_1_2'],
+                neuroplasticity: ['hebbian_principle', 'synaptic_pruning', 'neurogenesis'],
+                memory_journey: ['hippocampus', 'synaptic_consolidation', 'systems_consolidation', 'role_of_sleep'],
+                psychology_of_learning: ['growth_mindset', 'optimal_stress_curve', 'metacognition'],
+                learning_toolkit: ['retrieval_practice', 'spaced_repetition', 'interleaving', 'elaboration_dual_coding', 'feynman_technique', 'deliberate_practice'],
+                ineffective_habits: ['illusion_of_knowing', 'passive_rereading', 'cramming', 'multitasking'],
+                biological_pillars: ['neuro_nutrition', 'exercise', 'sleep_rest'],
+                synthesis_protocol: ['diagnosing_task', 'layering_strategies', 'habit_formation']
             };
             // ========= DYNAMIC CONTENT SECTION END =========
 
