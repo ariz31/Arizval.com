@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Social Media & SEO Integration (AI Enhanced)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            --highlight-border-light: #ef4444; /* Red-500 */
+            --highlight-border-dark: #f87171; /* Red-400 */
+            
+            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
+            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
+            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
+            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; box-sizing: border-box; }
+        #mind-map-container { cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+
+        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
+        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .modal-content li { margin-bottom: 0.25rem; }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+        #modal-body { flex-grow: 1; }
+        .modal-footer { margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem; }
+        body.dark .modal-footer { border-top-color: var(--border-dark); }
+        .ai-button { background-color: var(--primary-light); color: var(--primary-text-light); border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .ai-button:hover { background-color: #2563eb; }
+        body.dark .ai-button { background-color: var(--primary-dark); color: var(--primary-text-dark); }
+        body.dark .ai-button:hover { background-color: #93c5fd; }
+        
+        /* AI Modal Specific Styles */
+        .loader { width: 48px; height: 48px; border: 5px solid; border-color: var(--primary-light) transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        body.dark .loader { border-color: var(--primary-dark) transparent; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+
+        #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
+        body.dark #toolbar.expanded { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(71, 85, 105, 0.5); }
+        #toolbar-tools { display: flex; flex-direction: column; gap: 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1), padding 0.5s ease; }
+        #toolbar.expanded #toolbar-tools { max-height: 500px; }
+        .toolbar-divider { width: 80%; height: 1px; margin: 0.25rem auto; background-color: #e2e8f0; }
+        body.dark .toolbar-divider { background-color: #475569; }
+
+        #list-view-container { padding: 2rem; overflow-y: auto; background-color: var(--bg-light); color: var(--text-light); box-sizing: border-box; height: 100%; }
+        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
+        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark #list-view-container h1 { color: var(--primary-dark); }
+        #list-view-container h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
+        body.dark #list-view-container h2 { border-bottom-color: var(--border-dark); }
+        #list-view-container ul { list-style: none; padding-left: 1rem; }
+        #list-view-container li { padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        #list-view-container li:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark #list-view-container li:hover { background-color: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+    <div id="mind-map-container"></div>
+    <div id="list-view-container" class="hidden"></div>
+
+    <!-- Main Info Modal -->
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modal-title"></h2>
+                    <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+                </div>
+                <div id="modal-body"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="ai-explain-btn" class="ai-button">✨ Explain Further</button>
+                <button id="ai-strategy-btn" class="ai-button">✨ Suggest Strategies</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Content Modal -->
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="ai-modal-title">AI Assistant</h2>
+                <button id="close-modal-ai" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="ai-modal-body" class="prose dark:prose-invert max-w-none">
+                <div id="ai-loader" class="flex justify-center items-center p-8">
+                    <div class="loader"></div>
+                </div>
+                <div id="ai-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Share Mind Map</h2>
+                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
+                <div class="relative">
+                    <input id="share-url" type="text" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
+                    <button id="copy-link-btn" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                </div>
+                <p id="copy-feedback" class="text-sm text-green-600 dark:text-green-400 h-4 text-center"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolbar">
+        <button id="menu-toggle-btn" title="Toggle Menu" class="p-3 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div id="toolbar-tools">
+            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+            <button id="toggle-all-btn" title="Expand/Collapse All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4" /></svg>
+            </button>
+            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="prev-btn" title="Previous Topic (Left Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button id="next-btn" title="Next Topic (Right Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="share-btn" title="Share" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
+            </button>
+            <button id="theme-toggle" title="Toggle Dark Mode" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'social_media_seo_integration';
+
+            const mindMapInfo = {
+                social_media_seo_integration: {
+                    title: "Social Media & SEO Integration",
+                    content: `
+                        <p>The traditional separation between Search Engine Optimization (SEO) and Social Media Marketing is obsolete. They have converged into a single, fluid user discovery journey. This mind map explores this synergistic relationship, from foundational concepts to future trends.</p>
+                        <h3>How to Use This Mind Map</h3>
+                        <ul>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for details.</li>
+                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
+                            <li><strong>Toolbar:</strong> Use the floating toolbar for more options:
+                                <ul>
+                                    <li><strong>Reset View:</strong> Centers the map.</li>
+                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
+                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
+                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
+                                    <li><strong>Share:</strong> Get a link to share the map.</li>
+                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
+                                </ul>
+                            </li>
+                        </ul>`,
+                    keywords: "seo, social media, integration, marketing, strategy"
+                },
+                redefining_the_landscape: {
+                    title: "Redefining the Landscape",
+                    content: "<p>This section outlines the fundamental convergence of search and social media, driven by a major shift in user behavior and the evolution of digital platforms.</p>",
+                    keywords: "convergence, landscape, user behavior, paradigm shift"
+                },
+                convergence_of_search_and_social: {
+                    title: "Convergence of Search & Social",
+                    content: `
+                        <h3>The Obsolete Demarcation</h3>
+                        <p>The lines between SEO (capturing intent) and Social Media (building awareness) have blurred. They now form a single user discovery journey.</p>
+                        <h3>The Strategic Imperative</h3>
+                        <p>Understanding this convergence is critical for digital relevance and growth. Siloed strategies are no longer effective.</p>`,
+                    keywords: "convergence, user journey, strategy"
+                },
+                foundational_pillars: {
+                    title: "Foundational Pillars",
+                    content: `
+                        <h3>Modern SEO</h3>
+                        <ul>
+                            <li><strong>On-Page SEO:</strong> High-quality content, keywords, meta tags, page structure, UX.</li>
+                            <li><strong>Off-Page SEO:</strong> Building authority via backlinks, brand mentions, and social engagement.</li>
+                            <li><strong>Technical SEO:</strong> Site speed, mobile-friendliness, security (HTTPS), structured data.</li>
+                        </ul>
+                        <h3>Social Media Marketing</h3>
+                        <p>The strategic use of platforms to build relationships, engage communities, and increase brand awareness where users congregate daily.</p>`,
+                    keywords: "on-page, off-page, technical seo, social media marketing"
+                },
+                paradigm_shift: {
+                    title: "The Paradigm Shift",
+                    content: `
+                        <h3>Social Platforms as Search Engines</h3>
+                        <p>Social media has evolved from a connection tool to a powerful search engine, especially for younger demographics (e.g., nearly 40% of 18-24 year olds start searches on TikTok/Instagram).</p>
+                        <h3>Drivers of Change:</h3>
+                        <ul>
+                            <li><strong>Demand for Authenticity:</strong> Users trust user-generated content (UGC) and peer reviews over corporate messaging.</li>
+                            <li><strong>Visual-First Processing:</strong> Platforms like Pinterest and Instagram cater to the brain's preference for visual information.</li>
+                            <li><strong>Personalized, Real-Time Discovery:</strong> Algorithms deliver hyper-personalized content and surface trends faster than traditional search engines.</li>
+                        </ul>`,
+                    keywords: "social search, user behavior, authenticity, visual search, personalization"
+                },
+                social_signals_and_rankings: {
+                    title: "Social Signals & Rankings",
+                    content: "<p>Examines the contentious but crucial relationship between social media activity and search engine rankings, moving beyond the 'direct vs. indirect' debate.</p>",
+                    keywords: "social signals, seo rankings, correlation, influence"
+                },
+                official_stance_vs_reality: {
+                    title: "Official Stance vs. Reality",
+                    content: `
+                        <h3>Google's Position</h3>
+                        <p>Publicly states that social signals (likes, shares) are <strong>not</strong> a direct ranking factor, citing easy manipulation and 'nofollow' links.</p>
+                        <h3>Bing's Position</h3>
+                        <p>Explicitly states that social media activity and influencer shares are considered 'positive signals' that can impact rankings.</p>
+                        <h3>The Correlation Data</h3>
+                        <p>Despite Google's stance, numerous third-party studies show a strong, persistent correlation between high social engagement and higher search rankings. The indirect effects are too powerful to ignore.</p>`,
+                    keywords: "google, bing, correlation, nofollow"
+                },
+                indirect_powerhouses: {
+                    title: "The Indirect Powerhouses",
+                    content: `
+                        <p>The true power of social media for SEO lies in its ability to catalyze events that align with confirmed ranking factors:</p>
+                        <ul>
+                            <li><strong>Content Amplification & Reach:</strong> Exposing content to new audiences, journalists, and bloggers.</li>
+                            <li><strong>Driving Referral Traffic & User Signals:</strong> High engagement from social referrals (low bounce rate, time on site) signals content quality to search engines.</li>
+                            <li><strong>Generating Authoritative Backlinks:</strong> The most tangible benefit. Increased visibility leads to earned 'dofollow' links from reputable sources.</li>
+                            <li><strong>Building Brand Authority:</strong> Brand recognition from social media increases organic Click-Through Rate (CTR) in SERPs.</li>
+                            <li><strong>Accelerating Content Indexing:</strong> Social buzz, especially on platforms like X, leads to faster discovery and indexing by search crawlers.</li>
+                        </ul>`,
+                    keywords: "backlinks, brand authority, referral traffic, user signals, indexing"
+                },
+                platform_specific_playbook: {
+                    title: "Platform-Specific Playbook",
+                    content: "<p>A tactical guide to optimizing each major social platform for maximum SEO impact, recognizing that each is a unique search ecosystem with different user intents.</p>",
+                    keywords: "platform, playbook, tactics, optimization"
+                },
+                linkedin_seo: {
+                    title: "LinkedIn SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Establish industry authority, generate B2B leads, and rank for professional expertise queries.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Profile/Page Optimization:</strong> Fully populate 'About', 'Headline', and 'Services' sections with keywords.</li>
+                            <li><strong>Authoritative Content:</strong> Publish insightful long-form articles and detailed text posts/carousels.</li>
+                            <li><strong>Strategic Engagement:</strong> Encourage employee advocacy and participate in relevant LinkedIn Groups.</li>
+                        </ul>`,
+                    keywords: "linkedin, b2b, authority, professional"
+                },
+                x_twitter_seo: {
+                    title: "X (Twitter) SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Capitalize on real-time trends, gain immediate visibility, and appear in Google's indexed tweet carousels.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Profile Optimization:</strong> Complete the bio with primary keywords and a link to your site.</li>
+                            <li><strong>Content Strategy:</strong> Use threads for complex topics and provide context when sharing links.</li>
+                            <li><strong>Intelligent Hashtag Use:</strong> Use 1-2 highly relevant hashtags, not a long list of generic ones.</li>
+                            <li><strong>Engagement as a Signal:</strong> Prompt replies and retweets boost visibility and indexing probability.</li>
+                        </ul>`,
+                    keywords: "x, twitter, real-time, trends, indexing"
+                },
+                facebook_seo: {
+                    title: "Facebook SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Build a foundational brand presence, enhance local SEO, and cultivate a strong community.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Page Setup:</strong> Use a primary keyword in the Page name and claim a custom vanity URL.</li>
+                            <li><strong>Local SEO Completeness:</strong> Ensure Name, Address, Phone (NAP) info is accurate and consistent. Use Location Pages for multiple branches.</li>
+                            <li><strong>Content & Engagement:</strong> Add descriptive alt text to images and respond promptly to all comments and reviews.</li>
+                        </ul>`,
+                    keywords: "facebook, local seo, community, brand page"
+                },
+                instagram_seo: {
+                    title: "Instagram SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Master visual discovery, appear on the Explore page, and build brand identity through visual storytelling.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Profile/Bio Optimization:</strong> Use relevant keywords in your searchable name and bio.</li>
+                            <li><strong>Keyword/Hashtag Strategy:</strong> Integrate keywords in captions and use 3-5 highly relevant hashtags.</li>
+                            <li><strong>Custom Alt Text:</strong> Write custom, descriptive alt text for images to include target keywords.</li>
+                            <li><strong>Leverage Trends:</strong> Participate in trends using popular audio and varied formats (Reels, Stories) to signal relevance.</li>
+                        </ul>`,
+                    keywords: "instagram, visual search, explore page, hashtags, alt text"
+                },
+                pinterest_seo: {
+                    title: "Pinterest SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Operate as a visual search engine to drive high-intent, long-term referral traffic.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Profile/Board Architecture:</strong> Treat boards as keyword-optimized landing pages with rich descriptions.</li>
+                            <li><strong>Pin Optimization:</strong> Use high-quality vertical images, keyword-rich titles/descriptions, and ensure pins link to your site. Prioritize creating fresh, new Pins.</li>
+                            <li><strong>Keyword Research:</strong> Use native tools like Pinterest Trends to find what users are actively searching for.</li>
+                        </ul>`,
+                    keywords: "pinterest, visual search engine, long-term traffic, pins"
+                },
+                youtube_seo: {
+                    title: "YouTube SEO",
+                    content: `
+                        <h3>Strategic Goal</h3>
+                        <p>Rank high within YouTube (the #2 search engine) and secure video visibility in Google SERPs.</p>
+                        <h3>Key Optimization Techniques</h3>
+                        <ul>
+                            <li><strong>Video Keyword Research:</strong> Focus on queries with video intent (e.g., 'how to', 'tutorial', 'review').</li>
+                            <li><strong>Comprehensive Optimization:</strong> Integrate keywords into the title, description, and spoken script.</li>
+                            <li><strong>Leverage Platform Features:</strong> Upload a full transcript for closed captions, use timestamps for chapters, and create a compelling custom thumbnail to boost CTR.</li>
+                        </ul>`,
+                    keywords: "youtube, video seo, rich snippets, tutorials"
+                },
+                unified_content_strategy: {
+                    title: "Unified Content Strategy",
+                    content: "<p>A modern approach centered on a 'create once, distribute forever' model, where a single high-value pillar content piece is repurposed for multiple channels.</p>",
+                    keywords: "content strategy, repurposing, pillar content, atomization"
+                },
+                content_feedback_loop: {
+                    title: "Content Feedback Loop",
+                    content: `
+                        <p>A continuous, data-driven cycle to ensure content efforts are always aligned with both search demand and audience interest.</p>
+                        <ol>
+                            <li><strong>Unified Research:</strong> Merge SEO keyword research with social listening to find topics with both search demand and social buzz.</li>
+                            <li><strong>Pillar Content Creation:</strong> Create a comprehensive, authoritative piece (e.g., in-depth guide, webinar).</li>
+                            <li><strong>Promotion & Repurposing:</strong> Atomize the pillar content into smaller pieces for social media.</li>
+                            <li><strong>Multi-Channel Analysis:</strong> Monitor performance using both web and social analytics.</li>
+                            <li><strong>Iteration & Refinement:</strong> Use insights to inform the next round of research and content creation.</li>
+                        </ol>`,
+                    keywords: "feedback loop, research, pillar content, analysis, iteration"
+                },
+                architecting_for_shareability: {
+                    title: "Architecting for Shareability",
+                    content: `
+                        <p>Content must be designed from the ground up to succeed in both SEO and social arenas.</p>
+                        <ul>
+                            <li><strong>Core SEO Architecture:</strong> Build on a foundation of high-quality, well-structured, long-form content.</li>
+                            <li><strong>Social Engagement Overlays:</strong> Incorporate viral-style headlines, eye-catching visuals, and a direct call-to-action to share.</li>
+                            <li><strong>On-Site Technical Enablers:</strong> Use prominent social sharing buttons and consider embedding a live social feed on your site.</li>
+                        </ul>`,
+                    keywords: "shareability, viral, headlines, visuals, call to action"
+                },
+                content_repurposing_framework: {
+                    title: "Content Repurposing Framework",
+                    content: `
+                        <p>The tactical core of the unified strategy, allowing for scaled production of high-quality content.</p>
+                        <ol>
+                            <li><strong>Validate the Core Concept:</strong> Test an idea on a low-effort platform (e.g., a Twitter thread) before committing to a pillar piece.</li>
+                            <li><strong>Create Pillar Content (Video-First):</strong> A long-form video is the most versatile format, easily deconstructed into clips, audio, text, and graphics.</li>
+                            <li><strong>Atomize the Content:</strong> Break down the pillar asset into platform-specific pieces (e.g., TikTok clips, blog post from transcript, Instagram carousel from key quotes).</li>
+                            <li><strong>Distribute, Monitor, Feedback:</strong> Schedule distribution and use performance data to fuel the feedback loop.</li>
+                        </ol>`,
+                    keywords: "repurposing, atomization, pillar content, video-first"
+                },
+                measurement_and_roi: {
+                    title: "Measurement & ROI",
+                    content: "<p>Moving beyond vanity metrics to implement a robust framework that connects social activities to tangible SEO and business outcomes.</p>",
+                    keywords: "measurement, analytics, roi, kpi"
+                },
+                key_performance_indicators: {
+                    title: "Key Performance Indicators",
+                    content: `
+                        <p>Track KPIs that bridge the gap between social engagement and SEO performance.</p>
+                        <h3>Awareness KPIs (Top of Funnel)</h3>
+                        <ul>
+                            <li><strong>Social Share of Voice (SSoV):</strong> Your brand's mentions vs. competitors.</li>
+                            <li><strong>Reach & Impressions:</strong> The top of the content amplification funnel.</li>
+                        </ul>
+                        <h3>Engagement KPIs (Middle of Funnel)</h3>
+                        <ul>
+                            <li><strong>Engagement Rate:</strong> A proxy for content quality and resonance.</li>
+                        </ul>
+                        <h3>Traffic & Conversion KPIs (Bottom of Funnel)</h3>
+                        <ul>
+                            <li><strong>Referral Traffic from Social:</strong> Tracked in Google Analytics.</li>
+                            <li><strong>On-Site Behavior:</strong> Bounce rate, time on site of social referrals.</li>
+                            <li><strong>Conversions from Social Traffic:</strong> The ultimate ROI metric.</li>
+                        </ul>`,
+                    keywords: "kpi, share of voice, engagement rate, referral traffic, conversions"
+                },
+                analysts_toolkit: {
+                    title: "The Analyst's Toolkit",
+                    content: `
+                        <p>A comprehensive measurement strategy requires integrating data from several sources.</p>
+                        <ul>
+                            <li><strong>Layer 1: Web Analytics (Foundation):</strong> Google Analytics 4 (GA4) is the core for tracking traffic, behavior, and conversions. Use UTM parameters for granular tracking.</li>
+                            <li><strong>Layer 2: Platform-Native Analytics:</strong> The source of truth for platform-specific metrics like reach and engagement (e.g., Meta Business Suite, TikTok Analytics).</li>
+                            <li><strong>Layer 3: Social Media Management Platforms:</strong> Centralized dashboards for managing and analyzing multiple accounts (e.g., Sprout Social, Hootsuite).</li>
+                            <li><strong>Layer 4: Digital Intelligence Platforms:</strong> For high-level competitive analysis and benchmarking (e.g., Similarweb).</li>
+                        </ul>`,
+                    keywords: "toolkit, google analytics, ga4, utm, sprout social, hootsuite, similarweb"
+                },
+                future_of_discovery: {
+                    title: "The Future of Discovery",
+                    content: "<p>The digital landscape is shifting again, driven by AI. Brands must anticipate and adapt to the next frontier of user discovery.</p>",
+                    keywords: "future, ai, generative search, geo"
+                },
+                generative_engine_optimization: {
+                    title: "Generative Engine Optimization (GEO)",
+                    content: `
+                        <h3>The New Challenge: AI Overviews</h3>
+                        <p>The rise of AI-powered search (Google's AI Overviews/SGE) reduces the need for users to click through to websites.</p>
+                        <h3>GEO Explained</h3>
+                        <p>GEO is the practice of optimizing content to be <strong>sourced, cited, and featured</strong> by generative AI models. Social media's role becomes even more critical, as AI models use social proof, user reviews, and community discussions to validate information and build trust.</p>`,
+                    keywords: "geo, generative engine optimization, ai overviews, sge, social proof"
+                },
+                ascendancy_of_ugc: {
+                    title: "Ascendancy of UGC",
+                    content: `
+                        <h3>Google's Pivot to Community Content</h3>
+                        <p>Search results increasingly feature content from platforms like Reddit and Quora, valuing raw, first-hand experience and peer discussion.</p>
+                        <h3>Community Management as SEO</h3>
+                        <p>This elevates community management to a core SEO activity. Discussions in Facebook groups, comment sections, and subreddits are now potential ranking assets containing the natural language and authentic experiences that searchers and AI models seek.</p>`,
+                    keywords: "ugc, user generated content, community, reddit, quora"
+                },
+                strategic_imperatives_2025: {
+                    title: "Strategic Imperatives for 2025+",
+                    content: `
+                        <p>To thrive in the evolving landscape, brands must adopt a forward-looking strategy.</p>
+                        <ul>
+                            <li><strong>Embrace "Search Everywhere" Optimization:</strong> Shift from 'ranking on Google' to optimizing for discovery across all platforms where your audience seeks information.</li>
+                            <li><strong>Build a "Reputational Moat":</strong> In an AI world, reputation is the most defensible asset. Double down on generating positive social proof (reviews, communities, influencers).</li>
+                            <li><strong>Invest in Conversational & Visual Content:</strong> Focus on content that answers questions in natural language and is visually compelling.</li>
+                            <li><strong>Integrate AI into the Workflow:</strong> Use AI for content synthesis, repurposing at scale, and advanced data analysis to maintain agility.</li>
+                        </ul>`,
+                    keywords: "strategy, 2025, search everywhere, reputation, conversational content, ai workflow"
+                }
+            };
+
+            const structure = {
+                redefining_the_landscape: ['convergence_of_search_and_social', 'foundational_pillars', 'paradigm_shift'],
+                social_signals_and_rankings: ['official_stance_vs_reality', 'indirect_powerhouses'],
+                platform_specific_playbook: ['linkedin_seo', 'x_twitter_seo', 'facebook_seo', 'instagram_seo', 'pinterest_seo', 'youtube_seo'],
+                unified_content_strategy: ['content_feedback_loop', 'architecting_for_shareability', 'content_repurposing_framework'],
+                measurement_and_roi: ['key_performance_indicators', 'analysts_toolkit'],
+                future_of_discovery: ['generative_engine_optimization', 'ascendancy_of_ugc', 'strategic_imperatives_2025']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE LOGIC (DO NOT EDIT MOST OF THIS) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const mindMapContainer = document.getElementById('mind-map-container');
+            const listViewContainer = document.getElementById('list-view-container');
+            const infoModal = document.getElementById('info-modal');
+            const shareModal = document.getElementById('share-modal');
+            const aiModal = document.getElementById('ai-modal');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const themeIconLight = document.getElementById('theme-icon-light');
+            const themeIconDark = document.getElementById('theme-icon-dark');
+            const menuToggleButton = document.getElementById('menu-toggle-btn');
+            const toolbar = document.getElementById('toolbar');
+            
+            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
+            let sequentialNavigableNodes = [];
+            let highlightedNodeIndex = -1;
+            let currentNodeIdForAI = null;
+
+            // --- GEMINI API & CACHING INTEGRATION START ---
+            const aiCache = {}; // Simple object to act as a session cache
+            const aiLoader = document.getElementById('ai-loader');
+            const aiContent = document.getElementById('ai-content');
+
+            /**
+             * Calls the Gemini API to generate content, storing the result in a cache.
+             * @param {string} prompt - The prompt to send to the Gemini API.
+             * @param {string} cacheKey - The key to use for caching the result.
+             */
+            async function generateGeminiContent(prompt, cacheKey) {
+                aiContent.innerHTML = '';
+                aiLoader.style.display = 'flex';
+                aiModal.classList.add('active');
+
+                const apiKey = ""; // The environment will provide the key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: prompt }]
+                    }]
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        aiCache[cacheKey] = text; // Store the successful response in the cache
+                        aiContent.innerHTML = text; 
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
+
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    aiContent.innerHTML = `<p class="text-red-500">Sorry, there was an error generating the content. Please try again later.</p>`;
+                } finally {
+                    aiLoader.style.display = 'none';
+                }
+            }
+            
+            // Event listener for the "Explain Further" button
+            document.getElementById('ai-explain-btn').addEventListener('click', () => {
+                if (!currentNodeIdForAI) return;
+                const data = mindMapInfo[currentNodeIdForAI];
+                const cacheKey = `${currentNodeIdForAI}_explain`;
+                document.getElementById('ai-modal-title').innerText = `Explanation for: ${data.title}`;
+
+                if (aiCache[cacheKey]) {
+                    aiContent.innerHTML = aiCache[cacheKey];
+                    aiLoader.style.display = 'none';
+                    aiModal.classList.add('active');
+                    return;
+                }
+
+                const prompt = `Please elaborate on the following topic in the context of Social Media and SEO Integration. Provide a detailed explanation in well-structured HTML format (using h3, p, ul, li tags). Do not include <html> or <body> tags.
+                \n\nTopic Content to expand upon:
+                \nTitle: ${data.title}
+                \nDescription: ${data.content}`;
+                generateGeminiContent(prompt, cacheKey);
+            });
+
+            // Event listener for the "Suggest Strategies" button
+            document.getElementById('ai-strategy-btn').addEventListener('click', () => {
+                if (!currentNodeIdForAI) return;
+                const data = mindMapInfo[currentNodeIdForAI];
+                const cacheKey = `${currentNodeIdForAI}_strategy`;
+                document.getElementById('ai-modal-title').innerText = `Strategies for: ${data.title}`;
+
+                if (aiCache[cacheKey]) {
+                    aiContent.innerHTML = aiCache[cacheKey];
+                    aiLoader.style.display = 'none';
+                    aiModal.classList.add('active');
+                    return;
+                }
+
+                const prompt = `Based on the topic "${data.title}", generate a list of 3 to 5 actionable marketing strategies a business could implement. The strategies should focus on the integration of social media and SEO. Format the output as an HTML unordered list (<ul><li>...</li></ul>). Do not include <html> or <body> tags.`;
+                generateGeminiContent(prompt, cacheKey);
+            });
+
+
+            // --- GEMINI API & CACHING INTEGRATION END ---
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [], visibleLinks = [];
+                function recurse(node) {
+                    if (!node) return;
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph(callback) {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "700" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 0.7);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+
+                if (callback) {
+                    const cb = () => {
+                        callback();
+                        simulation.on('end.callback', null);
+                    };
+                    simulation.on('end.callback', cb);
+                }
+            }
+
+            function openInfoModal(nodeId) {
+                currentNodeIdForAI = nodeId; // Set current node for AI functions
+                const data = mindMapInfo[nodeId];
+                if (data && data.content) {
+                    document.getElementById('modal-title').innerHTML = data.title;
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = data.content;
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(modalBody, {
+                            delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
+                            throwOnError: false
+                        });
+                    }
+                    infoModal.classList.add('active');
+                }
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                const nodeInfo = mindMapInfo[d.id];
+                highlightNode(d.id, false);
+
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                    return;
+                }
+
+                if (d.id === ROOT_NODE_ID) {
+                    toggleAllNodes();
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                    updateGraph();
+                } else if (nodeInfo.content) {
+                    openInfoModal(d.id);
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                }
+            }
+
+            function initializeGraph() {
+                sequentialNavigableNodes = [];
+                Object.values(structure).forEach(chapter => {
+                    chapter.forEach(topicId => {
+                        const nodeData = hierarchyRoot.children.flatMap(c => c._children || []).find(n => n.id === topicId);
+                        if(nodeData) sequentialNavigableNodes.push(nodeData);
+                    });
+                });
+
+                if (listViewContainer.classList.contains('hidden')) {
+                    const width = mindMapContainer.clientWidth;
+                    const height = mindMapContainer.clientHeight;
+                    d3.select(mindMapContainer).select("svg").remove();
+                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
+                    g = svg.append("g");
+                    linkGroup = g.append("g").attr("class", "links");
+                    nodeGroup = g.append("g").attr("class", "nodes");
+                    simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
+                        .force("charge", d3.forceManyBody().strength(-800))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                        .on("tick", () => {
+                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                        });
+                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
+                    svg.call(zoom);
+                    hierarchyRoot.children.forEach(child => child.children = null);
+                    updateGraph();
+                }
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
+            function toggleAllNodes() {
+                const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                hierarchyRoot.children.forEach(child => { child.children = shouldCollapseAll ? null : (child._children || null); });
+                updateGraph();
+            }
+
+            function generateListView() {
+                let html = `<h1>${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
+                for (const catId in structure) {
+                    if (mindMapInfo[catId]) {
+                        html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2><ul>`;
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
+                        });
+                        html += '</ul>';
+                    }
+                }
+                listViewContainer.innerHTML = html;
+                listViewContainer.querySelectorAll('li, h2').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info.url) { window.open(info.url, '_blank'); } 
+                        else if (info.content) { openInfoModal(item.dataset.id); }
+                    });
+                });
+            }
+
+            function toggleListView() {
+                mindMapContainer.classList.toggle('hidden');
+                listViewContainer.classList.toggle('hidden');
+                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
+            }
+            
+            function highlightNode(nodeId, doPan = true) {
+                if (!node) return;
+                node.classed("highlight", d => d.id === nodeId);
+                if (doPan) {
+                    const targetNode = simulation.nodes().find(n => n.id === nodeId);
+                    if (targetNode && svg && zoom) {
+                        const width = mindMapContainer.clientWidth;
+                        const height = mindMapContainer.clientHeight;
+                        const t = d3.zoomTransform(svg.node());
+                        const transform = d3.zoomIdentity.translate(width / 2 - targetNode.x * t.k, height / 2 - targetNode.y * t.k).scale(t.k);
+                        svg.transition().duration(500).call(zoom.transform, transform);
+                    }
+                }
+            }
+            
+            function navigate(direction) {
+                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
+                highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
+                const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
+                const parentNode = hierarchyRoot.children.find(c => c._children.some(child => child.id === nextNode.id));
+                let needsUpdate = false;
+                if (parentNode && !parentNode.children) {
+                    parentNode.children = parentNode._children;
+                    needsUpdate = true;
+                }
+                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
+                else { highlightNode(nextNode.id); }
+            }
+
+            // --- EVENT LISTENERS ---
+            document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
+            infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
+            
+            document.getElementById('close-modal-ai').addEventListener('click', () => aiModal.classList.remove('active'));
+            aiModal.addEventListener('click', (e) => e.target === aiModal && aiModal.classList.remove('active'));
+
+            themeToggleButton.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark');
+                themeIconLight.classList.toggle('hidden', isDark);
+                themeIconDark.classList.toggle('hidden', !isDark);
+            });
+
+            document.getElementById('share-btn').addEventListener('click', () => {
+                document.getElementById('share-url').value = window.location.href;
+                shareModal.classList.add('active');
+            });
+            document.getElementById('close-modal-share').addEventListener('click', () => shareModal.classList.remove('active'));
+            shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
+            document.getElementById('copy-link-btn').addEventListener('click', () => {
+                const urlInput = document.getElementById('share-url');
+                // Use document.execCommand for compatibility in restricted environments
+                urlInput.select();
+                try {
+                    document.execCommand('copy');
+                    const feedback = document.getElementById('copy-feedback');
+                    feedback.textContent = 'Link copied!';
+                    setTimeout(() => feedback.textContent = '', 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            });
+
+            window.addEventListener('resize', initializeGraph);
+            menuToggleButton.addEventListener('click', () => toolbar.classList.toggle('expanded'));
+            document.getElementById('home-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
+            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
+            document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
+            document.getElementById('next-btn').addEventListener('click', () => navigate(1));
+            
+            window.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active') || aiModal.classList.contains('active')) return;
+                if (e.key === 'ArrowRight') navigate(1);
+                else if (e.key === 'ArrowLeft') navigate(-1);
+            });
+
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
