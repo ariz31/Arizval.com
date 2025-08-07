@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Interactive Mind Map: [YOUR TOPIC HERE]</title>
+    <title>Interactive Mind Map: Hyperbola</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
 
     <style>
         :root {
@@ -23,7 +23,7 @@
             --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
             --highlight-border-light: #ef4444; /* Red-500 */
             --highlight-border-dark: #f87171; /* Red-400 */
-            
+            
             --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
             --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
             --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
@@ -59,7 +59,7 @@
         .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
         .node.level-2 text { fill: var(--text-light); font-size: 12px; }
         .link { stroke: var(--link-light); }
-        
+        
         body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
         body.dark .node.level-0 text { fill: var(--primary-text-dark); }
         body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
@@ -72,10 +72,10 @@
 
         .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
         body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
-        
+        
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-overlay.active .modal-content { transform: scale(1); }
         body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
         .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
@@ -86,19 +86,6 @@
         .modal-content li { margin-bottom: 0.25rem; }
         .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
         body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
-        #modal-body { flex-grow: 1; }
-        .modal-footer { margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem; }
-        body.dark .modal-footer { border-top-color: var(--border-dark); }
-        .ai-button { background-color: var(--primary-light); color: var(--primary-text-light); border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
-        .ai-button:hover { background-color: #2563eb; }
-        body.dark .ai-button { background-color: var(--primary-dark); color: var(--primary-text-dark); }
-        body.dark .ai-button:hover { background-color: #93c5fd; }
-        
-        /* AI Modal Specific Styles */
-        .loader { width: 48px; height: 48px; border: 5px solid; border-color: var(--primary-light) transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
-        body.dark .loader { border-color: var(--primary-dark) transparent; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
 
         #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
         #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
@@ -126,40 +113,19 @@
 
     <div id="info-modal" class="modal-overlay">
         <div class="modal-content">
-            <div>
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="modal-title"></h2>
-                    <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">×</button>
-                </div>
-                <div id="modal-body"></div>
-            </div>
-            <div class="modal-footer">
-                <button id="ai-explain-btn" class="ai-button">✨ Explain Further</button>
-                <button id="ai-strategy-btn" class="ai-button">✨ Suggest Strategies</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="ai-modal" class="modal-overlay">
-        <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
-                <h2 id="ai-modal-title">AI Assistant</h2>
-                <button id="close-modal-ai" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">×</button>
+                <h2 id="modal-title"></h2>
+                <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
             </div>
-            <div id="ai-modal-body" class="prose dark:prose-invert max-w-none">
-                <div id="ai-loader" class="flex justify-center items-center p-8">
-                    <div class="loader"></div>
-                </div>
-                <div id="ai-content"></div>
-            </div>
+            <div id="modal-body"></div>
         </div>
     </div>
-
+    
     <div id="share-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold">Share Mind Map</h2>
-                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">×</button>
+                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
             </div>
             <div class="space-y-4">
                 <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
@@ -209,227 +175,149 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // ========= DYNAMIC CONTENT SECTION START =========
-            // THIS IS THE ONLY SECTION YOU WILL EDIT.
-            // REPLACE THE CONTENT BELOW WITH YOUR TOPIC'S DATA.
-
-            const ROOT_NODE_ID = 'analytic_geometry_hyperbola';
+            const ROOT_NODE_ID = 'hyperbola';
 
             const mindMapInfo = {
-                analytic_geometry_hyperbola: {
+                hyperbola: {
                     title: "Analytic Geometry: Hyperbola",
                     content: `
-                        <p>A hyperbola is a conic section formed by intersecting a right circular cone with a plane at an angle such that both halves of the cone are intersected. This mind map explores its definition, equations, properties, and applications through example problems.</p>
+                        <p>A hyperbola is a type of smooth curve lying in a plane, defined by its geometric properties or by equations for which it is the solution set. A hyperbola has two pieces, called connected components or branches, that are mirror images of each other and resemble two infinite bows. This mind map explores its definition, equations, and key properties.</p>
                         <h3>How to Use This Mind Map</h3>
                         <ul>
-                            <li><strong>Click Nodes:</strong> Click a category (purple) to expand or collapse its sub-topics. Click a sub-topic (white/gray) for detailed information and formulas.</li>
-                            <li><strong>Pan & Zoom:</strong> Drag the background to move the map. Use your mouse wheel or pinch gestures to zoom in and out.</li>
-                            <li><strong>Toolbar:</strong> Use the toolbar on the right to reset the view, expand all nodes, switch to a list view, and more.</li>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for detailed explanations and examples.</li>
+                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
+                            <li><strong>Toolbar:</strong> Use the floating toolbar on the right for more options:
+                                <ul>
+                                    <li><strong>Reset View:</strong> Centers the map.</li>
+                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
+                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
+                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
+                                    <li><strong>Share:</strong> Get a link to share the map.</li>
+                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
+                                </ul>
+                            </li>
                         </ul>`,
-                    keywords: "hyperbola, conic sections, analytic geometry, math, algebra"
+                    keywords: "hyperbola, analytic geometry, conic sections"
                 },
-                definition_and_core_concepts: {
-                    title: "Definition & Core Concepts",
-                    content: "<p>This section covers the fundamental geometric definition of a hyperbola and the terminology used to describe its key components.</p>",
-                    keywords: "definition, foci, vertices, axes, asymptotes, center"
-                },
-                geometric_definition: {
-                    title: "Geometric Definition",
-                    content: `<h3>Locus of Points</h3>
-                             <p>A hyperbola is the set of all points P in a plane where the <strong>absolute difference</strong> of the distances from P to two fixed points, called the <strong>foci</strong> ($F_1$ and $F_2$), is a constant, $2a$.</p>
-                             $$ |d(P, F_1) - d(P, F_2)| = 2a $$
-                             <p>This property is fundamental to understanding the shape and reflective properties of a hyperbola.</p>`,
-                    keywords: "locus, foci, constant difference, 2a, pf1, pf2"
-                },
-                key_terminology: {
-                    title: "Key Terminology",
-                    content: `<ul>
-                                <li><strong>Foci:</strong> The two fixed points ($F_1, F_2$) that define the hyperbola.</li>
-                                <li><strong>Vertices:</strong> The points where the hyperbola intersects its main axis. They are the endpoints of the transverse axis.</li>
-                                <li><strong>Center:</strong> The midpoint of the segment connecting the foci (and also the vertices).</li>
-                                <li><strong>Transverse Axis:</strong> The line segment connecting the vertices. Its length is $2a$.</li>
-                                <li><strong>Conjugate Axis:</strong> The line segment perpendicular to the transverse axis at the center. Its length is $2b$.</li>
-                                <li><strong>Asymptotes:</strong> A pair of intersecting lines that the hyperbola's branches approach but never touch.</li>
-                             </ul>`,
-                    keywords: "foci, vertices, center, transverse axis, conjugate axis, asymptotes"
-                },
-                standard_equations: {
-                    title: "Standard Equations",
-                    content: "<p>These are the simplified forms of a hyperbola's equation, depending on its orientation and center location. The key is to note which term ($x$ or $y$) is positive.</p>",
-                    keywords: "standard form, equation, horizontal, vertical, origin, center"
-                },
-                horizontal_hyperbola: {
-                    title: "Horizontal Hyperbola",
-                    content: `<h3>Opens Left and Right</h3>
-                             <p>The transverse axis is horizontal. The $x^2$ term is positive.</p>
-                             <h3>Center at Origin (0,0)</h3>
-                             $$ \frac{x^2}{a^2} - \frac{y^2}{b^2} = 1 $$
-                             <h3>Center at (h,k)</h3>
-                             $$ \frac{(x-h)^2}{a^2} - \frac{(y-k)^2}{b^2} = 1 $$`,
-                    keywords: "horizontal, x-squared, standard equation"
-                },
-                vertical_hyperbola: {
-                    title: "Vertical Hyperbola",
-                    content: `<h3>Opens Up and Down</h3>
-                             <p>The transverse axis is vertical. The $y^2$ term is positive.</p>
-                             <h3>Center at Origin (0,0)</h3>
-                             $$ \frac{y^2}{a^2} - \frac{x^2}{b^2} = 1 $$
-                             <h3>Center at (h,k)</h3>
-                             $$ \frac{(y-k)^2}{a^2} - \frac{(x-h)^2}{b^2} = 1 $$`,
-                    keywords: "vertical, y-squared, standard equation"
-                },
-                properties_and_parameters: {
-                    title: "Properties & Parameters",
-                    content: "<p>Learn how to derive the specific locations of a hyperbola's key features from the parameters $a$, $b$, and $c$ in its standard equation.</p>",
-                    keywords: "properties, parameters, vertices, foci, asymptotes, latus rectum"
-                },
-                finding_foci_c: {
-                    title: "Finding Foci (c)",
-                    content: `<h3>The Key Relationship</h3>
-                             <p>For a hyperbola, the distance from the center to each focus is denoted by $c$. It is found using a relationship similar to the Pythagorean theorem:</p>
-                             $$ c^2 = a^2 + b^2 $$
-                             <p>Therefore, $c = \sqrt{a^2 + b^2}$. Note that $c$ is always greater than $a$.</p>
-                             <ul>
-                                <li><strong>Horizontal:</strong> Foci are at $(h \pm c, k)$</li>
-                                <li><strong>Vertical:</strong> Foci are at $(h, k \pm c)$</li>
-                             </ul>`,
-                    keywords: "foci, c, c-squared, pythagorean"
-                },
-                vertices_and_asymptotes: {
-                    title: "Vertices & Asymptotes",
-                    content: `<h3>Vertices</h3>
-                             <p>The vertices are located at a distance of '$a$' from the center along the transverse axis.</p>
-                             <ul>
-                                <li><strong>Horizontal:</strong> $(h \pm a, k)$</li>
-                                <li><strong>Vertical:</strong> $(h, k \pm a)$</li>
-                             </ul>
-                             <h3>Asymptotes</h3>
-                             <p>The equations for the asymptotes always pass through the center $(h, k)$.</p>
-                             <ul>
-                                <li><strong>Horizontal:</strong> $ y - k = \pm \frac{b}{a}(x - h) $</li>
-                                <li><strong>Vertical:</strong> $ y - k = \pm \frac{a}{b}(x - h) $</li>
-                             </ul>`,
-                    keywords: "vertices, asymptotes, formula, equation, slope"
-                },
-                general_form_and_eccentricity: {
-                    title: "General Form & Eccentricity",
-                    content: "<p>This section covers the general conic form from which a hyperbola can be identified, and the concept of eccentricity which describes its shape.</p>",
-                    keywords: "general form, completing the square, eccentricity"
-                },
-                general_to_standard: {
-                    title: "General to Standard Form",
-                    content: `<h3>The General Conic Equation</h3>
-                             <p>Any conic section can be written as: $Ax^2 + By^2 + Dx + Ey + F = 0$.</p>
-                             <p>It's a hyperbola if A and B have <strong>opposite signs</strong> (one is positive, one is negative).</p>
-                             <h3>Conversion Process</h3>
-                             <p>To analyze the hyperbola, you must convert this general form to standard form by:</p>
-                             <ol>
-                                <li>Grouping the x-terms and y-terms.</li>
-                                <li>Factoring out the leading coefficients of $x^2$ and $y^2$.</li>
-                                <li><strong>Completing the square</strong> for both x and y.</li>
-                                <li>Rearranging the equation to equal 1.</li>
-                             </ol>`,
-                    keywords: "general form, conic section, completing the square, conversion"
-                },
-                eccentricity: {
-                    title: "Eccentricity (e)",
-                    content: `<h3>Measure of 'Openness'</h3>
-                             <p>Eccentricity measures how much a conic section deviates from a circle. For a hyperbola, it is defined as the ratio of the distance from the center to a focus ($c$) to the distance from the center to a vertex ($a$).</p>
-                             $$ e = \frac{c}{a} $$
-                             <p>Since $c > a$ for a hyperbola, the eccentricity is always <strong>greater than 1</strong> ($e > 1$).</p>
-                             <ul>
-                                <li>An eccentricity close to 1 means the branches are narrow.</li>
-                                <li>A large eccentricity means the branches are wide and flat.</li>
-                             </ul>`,
-                    keywords: "eccentricity, e, c/a, shape, flatness"
-                },
-                example_problems: {
-                    title: "Example Problems",
-                    content: "<p>Apply the concepts and formulas to solve typical problems involving hyperbolas. Click on a problem to see its detailed, step-by-step solution.</p>",
-                    keywords: "problems, examples, application, practice"
-                },
-                problem_find_equation: {
-                    title: "1. Find Equation from Properties",
-                    content: `<h3>Problem</h3>
-                             <p>Find the standard form of the equation for the hyperbola with <strong>vertices at (0, ±8)</strong> and <strong>foci at (0, ±10)</strong>.</p>
-                             <h3>Solution</h3>
-                             <ol>
-                                <li><strong>Center and Orientation:</strong> The vertices and foci are on the y-axis, centered at (0,0). This is a <strong>vertical</strong> hyperbola.</li>
-                                <li><strong>Find 'a':</strong> The distance from the center (0,0) to a vertex (0,8) is $a = 8$.</li>
-                                <li><strong>Find 'c':</strong> The distance from the center (0,0) to a focus (0,10) is $c = 10$.</li>
-                                <li><strong>Find 'b':</strong> Use the relation $c^2 = a^2 + b^2$.
-                                    <p>$10^2 = 8^2 + b^2$</p>
-                                    <p>$100 = 64 + b^2 \implies b^2 = 36$</p>
-                                </li>
-                                <li><strong>Write the Equation:</strong> For a vertical hyperbola at the origin:
-                                    $$ \frac{y^2}{a^2} - \frac{x^2}{b^2} = 1 $$
-                                    $$ \frac{y^2}{64} - \frac{x^2}{36} = 1 $$
-                                </li>
-                             </ol>`,
-                    keywords: "example, find equation, vertices, foci"
-                },
-                problem_find_properties: {
-                    title: "2. Find Properties from Equation",
-                    content: `<h3>Problem</h3>
-                             <p>Analyze the hyperbola given by the equation $ \frac{(x-3)^2}{144} - \frac{(y+1)^2}{25} = 1 $. Find its center, vertices, foci, and the equations of its asymptotes.</p>
-                             <h3>Solution</h3>
-                             <ol>
-                                <li><strong>Form and Center:</strong> This is a <strong>horizontal</strong> hyperbola (x-term is positive). The center $(h,k)$ is $(3, -1)$.</li>
-                                <li><strong>Parameters:</strong>
-                                    <p>$a^2 = 144 \implies a = 12$</p>
-                                    <p>$b^2 = 25 \implies b = 5$</p>
-                                </li>
-                                <li><strong>Find 'c':</strong> $c = \sqrt{a^2 + b^2} = \sqrt{144 + 25} = \sqrt{169} = 13$.</li>
-                                <li><strong>Properties:</strong>
-                                    <ul>
-                                        <li><strong>Vertices:</strong> $(h \pm a, k) \implies (3 \pm 12, -1)$. So, vertices are at $(15, -1)$ and $(-9, -1)$.</li>
-                                        <li><strong>Foci:</strong> $(h \pm c, k) \implies (3 \pm 13, -1)$. So, foci are at $(16, -1)$ and $(-10, -1)$.</li>
-                                        <li><strong>Asymptotes:</strong> $y-k = \pm \frac{b}{a}(x-h) \implies y+1 = \pm \frac{5}{12}(x-3)$.</li>
-                                    </ul>
-                                </li>
-                             </ol>`,
-                    keywords: "example, find properties, analyze equation, asymptotes"
-                },
-                problem_general_to_standard: {
-                    title: "3. General to Standard & Graph",
-                    content: `<h3>Problem</h3>
-                             <p>Convert the equation $9x^2 - 4y^2 - 72x + 8y + 176 = 0$ to standard form and identify its properties.</p>
-                             <h3>Solution</h3>
-                             <ol>
-                                <li><strong>Group terms:</strong> $(9x^2 - 72x) - (4y^2 - 8y) = -176$</li>
-                                <li><strong>Factor coefficients:</strong> $9(x^2 - 8x) - 4(y^2 - 2y) = -176$</li>
-                                <li><strong>Complete the square:</strong>
-                                    <p>For x: $(\frac{-8}{2})^2 = 16$. Add $9 \times 16 = 144$ to both sides.</p>
-                                    <p>For y: $(\frac{-2}{2})^2 = 1$. Add $-4 \times 1 = -4$ to both sides.</p>
-                                    $9(x^2 - 8x + 16) - 4(y^2 - 2y + 1) = -176 + 144 - 4$
-                                </li>
-                                <li><strong>Factor and simplify:</strong> $9(x-4)^2 - 4(y-1)^2 = -36$</li>
-                                <li><strong>Divide to equal 1:</strong> Divide by -36.
-                                    $$ \frac{9(x-4)^2}{-36} - \frac{4(y-1)^2}{-36} = \frac{-36}{-36} $$
-                                    $$ -\frac{(x-4)^2}{4} + \frac{(y-1)^2}{9} = 1 $$
-                                </li>
-                                <li><strong>Standard Form:</strong>
-                                    $$ \frac{(y-1)^2}{9} - \frac{(x-4)^2}{4} = 1 $$
-                                    <p>This is a <strong>vertical</strong> hyperbola with center $(4,1)$, $a=3$, $b=2$.</p>
-                                </li>
-                             </ol>`,
-                    keywords: "example, general form, complete the square, graph"
-                }
-
+                definition_and_elements: {
+                    title: "Definition & Elements",
+                    content: "<p>The core definition of a hyperbola and the essential components that define its shape and position.</p>",
+                    keywords: "definition, elements, parts, foci, vertices"
+                },
+                definition: {
+                    title: "Geometric Definition",
+                    content: "<p>A hyperbola is the set of all points (P) in a plane where the absolute difference of the distances from P to two fixed points (the foci, $F_1$ and $F_2$) is a constant value, $2a$.</p>$$|PF_1 - PF_2| = 2a$$",
+                    keywords: "locus, points, difference, distance, foci"
+                },
+                key_elements: {
+                    title: "Key Elements",
+                    content: "<ul><li><strong>Center (h, k):</strong> The midpoint between the foci and vertices.</li><li><strong>Foci ($F_1, F_2$):</strong> The two fixed points defining the hyperbola. The distance from the center to a focus is $c$.</li><li><strong>Vertices ($V_1, V_2$):</strong> The endpoints of the transverse axis. The distance from the center to a vertex is $a$.</li><li><strong>Transverse Axis:</strong> The line segment connecting the vertices. Its length is $2a$.</li><li><strong>Conjugate Axis:</strong> A line segment of length $2b$ perpendicular to the transverse axis at the center.</li></ul>",
+                    keywords: "center, foci, vertices, transverse axis, conjugate axis"
+                },
+                standard_equations: {
+                    title: "Standard Equations",
+                    content: "<p>The standard form of a hyperbola's equation depends on its orientation (horizontal or vertical).</p>",
+                    keywords: "standard form, equation, horizontal, vertical"
+                },
+                horizontal_hyperbola: {
+                    title: "Horizontal Hyperbola",
+                    content: "<p>The hyperbola opens left and right. The standard equation for a hyperbola with a horizontal transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$$<p>Here, the $x^2$ term is positive.</p>",
+                    keywords: "horizontal, transverse axis, left-right"
+                },
+                vertical_hyperbola: {
+                    title: "Vertical Hyperbola",
+                    content: "<p>The hyperbola opens up and down. The standard equation for a hyperbola with a vertical transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(y-k)^2}{a^2} - \\frac{(x-h)^2}{b^2} = 1$$<p>Here, the $y^2$ term is positive.</p>",
+                    keywords: "vertical, transverse axis, up-down"
+                },
+                relation_abc: {
+                    title: "Relationship of a, b, c",
+                    content: "<p>For any hyperbola, the parameters $a$, $b$, and $c$ are related by the Pythagorean-like formula:</p>$$c^2 = a^2 + b^2$$<p>Where:<br>$a$ = distance from center to vertex.<br>$b$ = half the length of the conjugate axis.<br>$c$ = distance from center to focus.</p>",
+                    keywords: "c squared, pythagorean, parameters, abc relation"
+                },
+                general_equation: {
+                    title: "General Equation",
+                    content: "<p>The general form of a conic section can be rearranged into a standard hyperbola equation by completing the square.</p>",
+                    keywords: "general form, completing the square"
+                },
+                general_form: {
+                    title: "General Form",
+                    content: "<p>The general equation of a hyperbola is an equation of the form:</p>$$Ax^2 - Cy^2 + Dx + Ey + F = 0$$<p>or</p>$$Cy^2 - Ax^2 + Dx + Ey + F = 0$$<p>The key identifier is that the coefficients of the $x^2$ and $y^2$ terms (A and C) have opposite signs.</p>",
+                    keywords: "Ax^2, Cy^2, opposite signs"
+                },
+                conversion_example: {
+                    title: "Example: General to Standard",
+                    content: "<h3>Problem</h3><p>Convert the equation $9x^2 - 4y^2 - 18x - 16y - 43 = 0$ to standard form.</p><h3>Solution</h3><ol><li><strong>Group terms:</strong> $(9x^2 - 18x) - (4y^2 + 16y) = 43$</li><li><strong>Factor coefficients:</strong> $9(x^2 - 2x) - 4(y^2 + 4y) = 43$</li><li><strong>Complete the square:</strong><br>$9(x^2 - 2x + 1) - 4(y^2 + 4y + 4) = 43 + 9(1) - 4(4)$</li><li><strong>Simplify both sides:</strong><br>$9(x-1)^2 - 4(y+2)^2 = 43 + 9 - 16$<br>$9(x-1)^2 - 4(y+2)^2 = 36$</li><li><strong>Divide by the constant term (36):</strong> $$\\frac{9(x-1)^2}{36} - \\frac{4(y+2)^2}{36} = \\frac{36}{36}$$</li><li><strong>Final Standard Form:</strong> $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</li></ol><p>This is a horizontal hyperbola centered at $(1, -2)$.</p>",
+                    keywords: "example, convert, completing the square"
+                },
+                eccentricity_and_latus_rectum: {
+                    title: "Eccentricity & Latus Rectum",
+                    content: "<p>Two key properties that describe the specific shape of a hyperbola's branches.</p>",
+                    keywords: "eccentricity, latus rectum, shape"
+                },
+                eccentricity: {
+                    title: "Eccentricity (e)",
+                    content: "<p>Eccentricity measures how 'open' the hyperbola's branches are. For any hyperbola, the eccentricity $e$ is always greater than 1 ($e > 1$).</p><p>The formula is:</p>$$e = \\frac{c}{a}$$<p>A larger value of $e$ means the branches are wider.</p>",
+                    keywords: "e, c/a, shape, width"
+                },
+                latus_rectum: {
+                    title: "Latus Rectum (LR)",
+                    content: "<p>The Latus Rectum is a line segment that passes through a focus, is perpendicular to the transverse axis, and has its endpoints on the hyperbola. Its length indicates the 'width' of the hyperbola at its focus.</p><p>The formula for its length is:</p>$$LR = \\frac{2b^2}{a}$$",
+                    keywords: "LR, 2b^2/a, focal width"
+                },
+                eccentricity_latus_rectum_example: {
+                    title: "Example: Calc e & LR",
+                    content: "<h3>Problem</h3><p>For the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$, find the eccentricity and the length of the latus rectum.</p><h3>Solution</h3><p>From the equation, we have $a^2=4 \\implies a=2$ and $b^2=9 \\implies b=3$.</p><p>First, find c: $c^2 = a^2 + b^2 = 4 + 9 = 13 \\implies c = \\sqrt{13}$.</p><p><strong>Eccentricity:</strong></p>$$e = \\frac{c}{a} = \\frac{\\sqrt{13}}{2} \\approx 1.803$$<p><strong>Latus Rectum:</strong></p>$$LR = \\frac{2b^2}{a} = \\frac{2(9)}{2} = 9$$",
+                    keywords: "example, calculation, e, LR"
+                },
+                asymptotes: {
+                    title: "Asymptotes",
+                    content: "<p>Asymptotes are the guide lines that the branches of a hyperbola approach but never touch. They are crucial for accurately sketching the graph.</p>",
+                    keywords: "asymptotes, guidelines, sketching"
+                },
+                asymptotes_definition: {
+                    title: "What are Asymptotes?",
+              _content: "<p>Asymptotes are a pair of straight lines that intersect at the center of the hyperbola. The branches of the hyperbola get closer and closer to these lines as they extend towards infinity. They form a 'guide box' or rectangle with corners at $(h \\pm a, k \\pm b)$ (for horizontal) or $(h \\pm b, k \\pm a)$ (for vertical), which helps in sketching.</p>",
+                    keywords: "lines, approach, infinity, guide box"
+                },
+                asymptotes_equation: {
+                    title: "Asymptote Equations",
+                    content: "<p>For any hyperbola centered at $(h, k)$:</p><h3>Horizontal Hyperbola</h3><p>($x^2$ term is positive)</p>$$y - k = \\pm \\frac{b}{a}(x - h)$$<h3>Vertical Hyperbola</h3><p>($y^2$ term is positive)</p>$$y - k = \\pm \\frac{a}{b}(x - h)$$<p>The slope is always related to 'rise' over 'run' from the central guide box.</p>",
+                    keywords: "equation, formula, slope, rise over run"
+                },
+                asymptotes_example: {
+                    title: "Example: Finding Asymptotes",
+                    content: "<h3>Problem</h3><p>Find the equations of the asymptotes for the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</p><h3>Solution</h3><p>This is a <strong>horizontal</strong> hyperbola with Center $(h, k) = (1, -2)$, $a^2=4 \\implies a=2$, and $b^2=9 \\implies b=3$.</p><p>We use the formula for a horizontal hyperbola: $y - k = \\pm \\frac{b}{a}(x - h)$</p>$$y - (-2) = \\pm \\frac{3}{2}(x - 1)$$$$y + 2 = \\pm \\frac{3}{2}(x - 1)$$<p>The two separate asymptote equations are:<br>1. $y + 2 = \\frac{3}{2}(x - 1) \\implies y = \\frac{3}{2}x - \\frac{7}{2}$<br>2. $y + 2 = -\\frac{3}{2}(x - 1) \\implies y = -\\frac{3}{2}x - \\frac{1}{2}$</p>",
+                    keywords: "example, finding, equations"
+                },
+                problem_solving_examples: {
+                    title: "Problem Solving Examples",
+                    content: "<p>Worked-out examples showing how to apply the formulas to common hyperbola problems.</p>",
+                    keywords: "problems, examples, application"
+                },
+                example_1_find_elements: {
+                    title: "Problem 1: Find Elements from Eq.",
+                    content: "<h3>Problem</h3><p>Given the equation $$\\frac{(y+5)^2}{16} - \\frac{(x-2)^2}{9} = 1$$, find the center, vertices, foci, and asymptotes.</p><h3>Solution</h3><ol><li><strong>Identify Type & Center:</strong> The y-term is positive, so it's a <strong>vertical</strong> hyperbola. The center is $(h, k) = (2, -5)$.</li><li><strong>Find Parameters:</strong> $a^2 = 16 \\implies a=4$. $b^2=9 \\implies b=3$.</li><li><strong>Find c:</strong> $c^2 = a^2 + b^2 = 16+9 = 25 \\implies c=5$.</li><li><strong>Vertices:</strong> Formula $(h, k \\pm a) \\rightarrow (2, -5 \\pm 4)$. Vertices are at $(2, -1)$ and $(2, -9)$.</li><li><strong>Foci:</strong> Formula $(h, k \\pm c) \\rightarrow (2, -5 \\pm 5)$. Foci are at $(2, 0)$ and $(2, -10)$.</li><li><strong>Asymptotes:</strong> Use vertical formula $y - k = \\pm \\frac{a}{b}(x-h) \\rightarrow y+5 = \\pm \\frac{4}{3}(x-2)$.</li></ol>",
+                    keywords: "find elements, problem, example"
+                },
+                example_2_find_equation: {
+                    title: "Problem 2: Find Eq. from Elements",
+                    content: "<h3>Problem</h3><p>Find the standard equation of the hyperbola with vertices at $(\\pm 4, 0)$ and foci at $(\\pm 5, 0)$.</p><h3>Solution</h3><ol><li><strong>Find Center & Orientation:</strong> The midpoint of vertices (and foci) is $(0, 0)$, so $(h,k)=(0,0)$. Since they lie on the x-axis, it's a <strong>horizontal</strong> hyperbola.</li><li><strong>Find a:</strong> The distance from the center $(0,0)$ to a vertex $(4,0)$ is $a=4$. Thus, $a^2=16$.</li><li><strong>Find c:</strong> The distance from the center $(0,0)$ to a focus $(5,0)$ is $c=5$. Thus, $c^2=25$.</li><li><strong>Find b:</strong> Use the relation $c^2 = a^2 + b^2 \\rightarrow 25 = 16 + b^2 \\implies b^2 = 9$.</li><li><strong>Write the Equation:</strong> Use the horizontal form $\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$.<br>$$\\frac{x^2}{16} - \\frac{y^2}{9} = 1$$</li></ol>",
+                    keywords: "find equation, problem, example"
+                }
             };
 
             const structure = {
-                definition_and_core_concepts: ['geometric_definition', 'key_terminology'],
-                standard_equations: ['horizontal_hyperbola', 'vertical_hyperbola'],
-                properties_and_parameters: ['finding_foci_c', 'vertices_and_asymptotes'],
-                general_form_and_eccentricity: ['general_to_standard', 'eccentricity'],
-                example_problems: ['problem_find_equation', 'problem_find_properties', 'problem_general_to_standard']
+                definition_and_elements: ['definition', 'key_elements'],
+                standard_equations: ['horizontal_hyperbola', 'vertical_hyperbola', 'relation_abc'],
+                general_equation: ['general_form', 'conversion_example'],
+                eccentricity_and_latus_rectum: ['eccentricity', 'latus_rectum', 'eccentricity_latus_rectum_example'],
+                asymptotes: ['asymptotes_definition', 'asymptotes_equation', 'asymptotes_example'],
+                problem_solving_examples: ['example_1_find_elements', 'example_2_find_equation']
             };
-
             // ========= DYNAMIC CONTENT SECTION END =========
 
 
             // --- CORE LOGIC (DO NOT EDIT) ---
-            document.title = mindMapInfo[ROOT_NODE_ID] ? `Interactive Mind Map: ${mindMapInfo[ROOT_NODE_ID].title}` : 'Interactive Mind Map';
             const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
             for (const catId in structure) {
                 if (mindMapInfo[catId]) {
@@ -444,79 +332,20 @@
                     }
                 }
             }
-            
+            
             const mindMapContainer = document.getElementById('mind-map-container');
             const listViewContainer = document.getElementById('list-view-container');
             const infoModal = document.getElementById('info-modal');
             const shareModal = document.getElementById('share-modal');
-            const aiModal = document.getElementById('ai-modal');
             const themeToggleButton = document.getElementById('theme-toggle');
             const themeIconLight = document.getElementById('theme-icon-light');
             const themeIconDark = document.getElementById('theme-icon-dark');
             const menuToggleButton = document.getElementById('menu-toggle-btn');
             const toolbar = document.getElementById('toolbar');
-            
+            
             let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
             let sequentialNavigableNodes = [];
             let highlightedNodeIndex = -1;
-            let currentNodeIdForAI = null;
-
-            async function generateGeminiContent(prompt, cacheKey) {
-                const aiLoader = document.getElementById('ai-loader');
-                const aiContent = document.getElementById('ai-content');
-                aiContent.innerHTML = '';
-                aiLoader.style.display = 'flex';
-                aiModal.classList.add('active');
-
-                const apiKey = ""; // The environment will provide the key
-                if (!apiKey) {
-                    aiContent.innerHTML = `<p class="text-red-500"><strong>API Key Not Provided.</strong><br>This feature requires a valid Google Gemini API key to be set in the script.</p>`;
-                    aiLoader.style.display = 'none';
-                    return;
-                }
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash:generateContent?key=${apiKey}`;
-                
-                const payload = { contents: [{ parts: [{ text: prompt }] }] };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
-                    const result = await response.json();
-                    
-                    if (result.candidates && result.candidates[0].content.parts[0].text) {
-                        const text = result.candidates[0].content.parts[0].text;
-                        aiContent.innerHTML = text;
-                    } else {
-                        throw new Error("Invalid response structure from API.");
-                    }
-                } catch (error) {
-                    console.error("Gemini API Error:", error);
-                    aiContent.innerHTML = `<p class="text-red-500">Sorry, there was an error generating the content. Please check the console for details.</p>`;
-                } finally {
-                    aiLoader.style.display = 'none';
-                }
-            }
-            
-            document.getElementById('ai-explain-btn').addEventListener('click', () => {
-                if (!currentNodeIdForAI) return;
-                const data = mindMapInfo[currentNodeIdForAI];
-                const topicTitle = mindMapInfo[ROOT_NODE_ID].title;
-                document.getElementById('ai-modal-title').innerText = `Explanation for: ${data.title}`;
-                const prompt = `In the context of "${topicTitle}", please elaborate on the following specific point. Provide a detailed explanation in well-structured HTML format (using h3, p, ul, li tags). Do not include <html> or <body> tags.\n\n### Point to Expand:\n**Title:** ${data.title}\n**Current Description:** ${data.content.replace(/<[^>]*>?/gm, ' ')}`;
-                generateGeminiContent(prompt);
-            });
-
-            document.getElementById('ai-strategy-btn').addEventListener('click', () => {
-                if (!currentNodeIdForAI) return;
-                const data = mindMapInfo[currentNodeIdForAI];
-                document.getElementById('ai-modal-title').innerText = `Strategies for: ${data.title}`;
-                const prompt = `Based on the topic "${data.title}", generate a list of 3 to 5 actionable strategies a business or individual could implement. Format the output as an HTML unordered list (<ul><li><strong>Strategy Name:</strong> Description...</li></ul>). Do not include <html> or <body> tags.`;
-                generateGeminiContent(prompt);
-            });
 
             function getVisibleNodesAndLinks(root) {
                 const visibleNodes = [], visibleLinks = [];
@@ -536,16 +365,6 @@
 
             function updateGraph(callback) {
                 const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
-                
-                // Dynamically adjust forces based on graph size
-                const nodeCount = currentNodes.length;
-                const chargeStrength = Math.max(-2000, -150 * nodeCount); // More repulsion for more nodes
-                simulation.force("charge").strength(chargeStrength);
-                simulation.force("link").distance(d => {
-                    if (d.source.level === 0) return Math.max(180, 15 * (d.source.children?.length || 5)); // Push categories further out if many
-                    return 100;
-                }).strength(1);
-
                 const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
                 currentNodes.forEach(n => {
                     const textEl = tempSvg.append("text")
@@ -570,11 +389,10 @@
                             nodeEnter.append("text");
                             return nodeEnter;
                         },
-      _x000D_
                         update => update,
                         exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
                     );
-                
+                
                 node.classed("collapsed", d => d._children && !d.children);
                 node.select("rect").transition().duration(300)
                     .attr("width", d => d.width).attr("height", d => d.height)
@@ -591,18 +409,18 @@
 
                 simulation.nodes(currentNodes);
                 simulation.force("link").links(currentLinks);
-                simulation.alpha(1).restart();
+                simulation.alpha(0.8).restart();
 
                 if (callback) {
-                    simulation.on('end.callback', () => {
+                    const cb = () => {
                         callback();
                         simulation.on('end.callback', null);
-                    });
+                    };
+                    simulation.on('end.callback', cb);
                 }
             }
 
             function openInfoModal(nodeId) {
-                currentNodeIdForAI = nodeId;
                 const data = mindMapInfo[nodeId];
                 if (data && data.content) {
                     document.getElementById('modal-title').innerHTML = data.title;
@@ -622,7 +440,16 @@
                 if (event.defaultPrevented) return;
                 const nodeInfo = mindMapInfo[d.id];
                 highlightNode(d.id, false);
-                if (d.level === 1) { // Category node
+
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                    return;
+                }
+
+                if (d.id === ROOT_NODE_ID) {
+                    toggleAllNodes();
+                } else if (d._children && d._children.length > 0) {
                     d.children = d.children ? null : d._children;
                     updateGraph();
                 } else if (nodeInfo.content) {
@@ -635,14 +462,12 @@
                 sequentialNavigableNodes = [];
                 Object.values(structure).forEach(chapter => {
                     chapter.forEach(topicId => {
-                        const parent = Object.keys(structure).find(key => structure[key].includes(topicId));
-                        const parentNode = hierarchyRoot.children.find(c => c.id === parent);
-                        const nodeData = parentNode?._children.find(n => n.id === topicId);
+                        const nodeData = hierarchyRoot.children.flatMap(c => c._children || []).find(n => n.id === topicId);
                         if(nodeData) sequentialNavigableNodes.push(nodeData);
                     });
                 });
 
-                if (!mindMapContainer.classList.contains('hidden')) {
+                if (listViewContainer.classList.contains('hidden')) {
                     const width = mindMapContainer.clientWidth;
                     const height = mindMapContainer.clientHeight;
                     d3.select(mindMapContainer).select("svg").remove();
@@ -650,25 +475,22 @@
                     g = svg.append("g");
                     linkGroup = g.append("g").attr("class", "links");
                     nodeGroup = g.append("g").attr("class", "nodes");
-                    
                     simulation = d3.forceSimulation()
-                        .force("link", d3.forceLink().id(d => d.id))
-                        .force("charge", d3.forceManyBody())
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
+                        .force("charge", d3.forceManyBody().strength(-800))
                         .force("center", d3.forceCenter(width / 2, height / 2))
                         .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
                         .on("tick", () => {
                             if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                             if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
                         });
-
                     zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
                     svg.call(zoom);
-                    
-                    hierarchyRoot.children.forEach(child => child.children = null); // Start with all collapsed
+                    hierarchyRoot.children.forEach(child => child.children = null);
                     updateGraph();
                 }
             }
-            
+            
             function drag(simulation) {
                 function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
                 function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
@@ -677,7 +499,6 @@
             }
 
             function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
-            
             function toggleAllNodes() {
                 const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
                 hierarchyRoot.children.forEach(child => { child.children = shouldCollapseAll ? null : (child._children || null); });
@@ -690,7 +511,7 @@
                     if (mindMapInfo[catId]) {
                         html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2><ul>`;
                         structure[catId].forEach(topicId => {
-                            if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
+      _                     if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
                         });
                         html += '</ul>';
                     }
@@ -698,25 +519,24 @@
                 listViewContainer.innerHTML = html;
                 listViewContainer.querySelectorAll('li, h2').forEach(item => {
                     item.addEventListener('click', () => {
-                        openInfoModal(item.dataset.id);
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info.url) { window.open(info.url, '_blank'); } 
+                        else if (info.content) { openInfoModal(item.dataset.id); }
                     });
-          _x000D_
                 });
             }
 
             function toggleListView() {
                 mindMapContainer.classList.toggle('hidden');
                 listViewContainer.classList.toggle('hidden');
-                document.getElementById('list-view-btn').classList.toggle('active');
                 if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
             }
-            
+            
             function highlightNode(nodeId, doPan = true) {
                 if (!node) return;
                 node.classed("highlight", d => d.id === nodeId);
                 if (doPan) {
                     const targetNode = simulation.nodes().find(n => n.id === nodeId);
-        _x000D_
                     if (targetNode && svg && zoom) {
                         const width = mindMapContainer.clientWidth;
                         const height = mindMapContainer.clientHeight;
@@ -726,32 +546,25 @@
                     }
                 }
             }
-            
+            
             function navigate(direction) {
-                if (sequentialNavigableNodes.length === 0 || !mindMapContainer.classList.contains('hidden') === false) return;
+                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
                 highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
                 const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
-                
-                const parentId = Object.keys(structure).find(key => structure[key].includes(nextNode.id));
-                const parentNode = hierarchyRoot.children.find(c => c.id === parentId);
-
+                const parentNode = hierarchyRoot.children.find(c => c._children.some(child => child.id === nextNode.id));
                 let needsUpdate = false;
                 if (parentNode && !parentNode.children) {
                     parentNode.children = parentNode._children;
                     needsUpdate = true;
                 }
-                
-                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
+                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
                 else { highlightNode(nextNode.id); }
             }
 
             // --- EVENT LISTENERS ---
             document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
             infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
-            
-            document.getElementById('close-modal-ai').addEventListener('click', () => aiModal.classList.remove('active'));
-            aiModal.addEventListener('click', (e) => e.target === aiModal && aiModal.classList.remove('active'));
-
+            
             themeToggleButton.addEventListener('click', () => {
                 const isDark = document.body.classList.toggle('dark');
                 themeIconLight.classList.toggle('hidden', isDark);
@@ -766,15 +579,11 @@
             shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
             document.getElementById('copy-link-btn').addEventListener('click', () => {
                 const urlInput = document.getElementById('share-url');
-                urlInput.select();
-                try {
-                    document.execCommand('copy');
+                navigator.clipboard.writeText(urlInput.value).then(() => {
                     const feedback = document.getElementById('copy-feedback');
                     feedback.textContent = 'Link copied!';
                     setTimeout(() => feedback.textContent = '', 2000);
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                }
+                });
             });
 
             window.addEventListener('resize', initializeGraph);
@@ -784,9 +593,9 @@
             document.getElementById('list-view-btn').addEventListener('click', toggleListView);
             document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
             document.getElementById('next-btn').addEventListener('click', () => navigate(1));
-            
+            
             window.addEventListener('keydown', (e) => {
-                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active') || aiModal.classList.contains('active')) return;
+                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active')) return;
                 if (e.key === 'ArrowRight') navigate(1);
                 else if (e.key === 'ArrowLeft') navigate(-1);
             });
