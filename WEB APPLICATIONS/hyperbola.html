@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Hyperbola Grapher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .slider-label {
+            min-width: 100px;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .detail-title {
+            font-weight: 600;
+            color: #111827; /* gray-900 */
+        }
+        .detail-value {
+            font-family: monospace;
+            color: #4f46e5; /* indigo-600 */
+            background-color: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        /* Card Flip Styles */
+        .card {
+            background-color: transparent;
+            height: 100px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+            border-radius: 0.75rem;
+        }
+        .card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+        .card-front {
+            background-color: #f9fafb;
+            color: black;
+        }
+        .card-back {
+            background-color: #f0f9ff; /* sky-50 */
+            color: #111827;
+            transform: rotateY(180deg);
+        }
+        .card-front .general-equation {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        /* Custom toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:focus + .slider { box-shadow: 0 0 1px #4f46e5; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
+
+        .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; color: white; transition: background-color 0.2s; }
+        .btn-indigo { background-color: #4f46e5; }
+        .btn-indigo:hover { background-color: #4338ca; }
+        .btn-gray { background-color: #6b7280; }
+        .btn-gray:hover { background-color: #4b5563; }
+        input:disabled, button:disabled { cursor: not-allowed; opacity: 0.6; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Interactive Hyperbola Grapher</h1>
+            <p class="text-lg text-gray-600 mt-2">Adjust the parameters to see the graph and its properties change in real time.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Controls Section -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 border-b pb-3">Controls</h2>
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-gray-700">Orientation</span>
+                        <div class="flex items-center space-x-3">
+                            <span id="orientation-label" class="text-indigo-600 font-semibold">Horizontal</span>
+                            <label class="switch"><input type="checkbox" id="orientation"><span class="slider round"></span></label>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label for="a" class="slider-label font-medium text-gray-700">a = <span id="a-value">2</span></label>
+                        <input type="range" id="a" min="0.5" max="10" value="2" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label for="b" class="slider-label font-medium text-gray-700">b = <span id="b-value">1.5</span></label>
+                        <input type="range" id="b" min="0.5" max="10" value="1.5" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label for="h" class="slider-label font-medium text-gray-700">h = <span id="h-value">0</span></label>
+                        <input type="range" id="h" min="-10" max="10" value="0" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label for="k" class="slider-label font-medium text-gray-700">k = <span id="k-value">0</span></label>
+                        <input type="range" id="k" min="-10" max="10" value="0" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+                <div class="mt-8 pt-6 border-t flex items-center justify-center space-x-4">
+                    <button id="lockButton" class="btn btn-indigo">Lock Graph</button>
+                    <button id="resetButton" class="btn btn-gray">Reset</button>
+                </div>
+            </div>
+
+            <!-- Canvas Section -->
+            <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-lg flex justify-center items-center">
+                <canvas id="graphCanvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-3">Details & Equations</h2>
+            <div id="details" class="details-grid">
+                <!-- Flippable cards will be populated by JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM element references ---
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const aSlider = document.getElementById('a');
+        const bSlider = document.getElementById('b');
+        const hSlider = document.getElementById('h');
+        const kSlider = document.getElementById('k');
+        const orientationToggle = document.getElementById('orientation');
+        const detailsDiv = document.getElementById('details');
+        const lockButton = document.getElementById('lockButton');
+        const resetButton = document.getElementById('resetButton');
+        
+        const aValueSpan = document.getElementById('a-value');
+        const bValueSpan = document.getElementById('b-value');
+        const hValueSpan = document.getElementById('h-value');
+        const kValueSpan = document.getElementById('k-value');
+        const orientationLabel = document.getElementById('orientation-label');
+
+        const INITIAL_A = 2;
+        const INITIAL_B = 1.5;
+        const INITIAL_H = 0;
+        const INITIAL_K = 0;
+        const INITIAL_ORIENTATION = false;
+        
+        let canvasWidth, canvasHeight;
+        const scale = 25;
+        let isLocked = false;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 32, window.innerHeight * 0.6);
+            canvas.width = size;
+            canvas.height = size;
+            canvasWidth = canvas.width;
+            canvasHeight = canvas.height;
+            draw();
+        }
+
+        const toCanvasX = (x) => canvasWidth / 2 + x * scale;
+        const toCanvasY = (y) => canvasHeight / 2 - y * scale;
+
+        function drawGridAndAxes() {
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            const xMin = -canvasWidth / (2 * scale);
+            const xMax = canvasWidth / (2 * scale);
+            const yMin = -canvasHeight / (2 * scale);
+            const yMax = canvasHeight / (2 * scale);
+
+            for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+                ctx.beginPath();
+                ctx.moveTo(toCanvasX(x), 0);
+                ctx.lineTo(toCanvasX(x), canvasHeight);
+                ctx.stroke();
+            }
+            for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, toCanvasY(y));
+                ctx.lineTo(canvasWidth, toCanvasY(y));
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvasHeight / 2);
+            ctx.lineTo(canvasWidth, canvasHeight / 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvasWidth / 2, 0);
+            ctx.lineTo(canvasWidth / 2, canvasHeight);
+            ctx.stroke();
+        }
+        
+        function drawPoint(x, y, color, label) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(toCanvasX(x), toCanvasY(y), 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '12px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, toCanvasX(x), toCanvasY(y) - 10);
+        }
+
+        function draw() {
+            const a = parseFloat(aSlider.value);
+            const b = parseFloat(bSlider.value);
+            const h = parseFloat(hSlider.value);
+            const k = parseFloat(kSlider.value);
+            const isVertical = orientationToggle.checked;
+
+            aValueSpan.textContent = a.toFixed(1);
+            bValueSpan.textContent = b.toFixed(1);
+            hValueSpan.textContent = h.toFixed(1);
+            kValueSpan.textContent = k.toFixed(1);
+            orientationLabel.textContent = isVertical ? 'Vertical' : 'Horizontal';
+
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            drawGridAndAxes();
+
+            const c = Math.sqrt(a * a + b * b);
+            const xMin = -canvasWidth / (2 * scale);
+            const xMax = canvasWidth / (2 * scale);
+
+            ctx.strokeStyle = 'rgba(251, 146, 60, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            if (isVertical) {
+                 ctx.strokeRect(toCanvasX(h - b), toCanvasY(k + a), b * 2 * scale, a * 2 * scale);
+            } else {
+                 ctx.strokeRect(toCanvasX(h - a), toCanvasY(k + b), a * 2 * scale, b * 2 * scale);
+            }
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            const slope = isVertical ? a / b : b / a;
+            ctx.moveTo(toCanvasX(xMin), toCanvasY(k + slope * (xMin - h)));
+            ctx.lineTo(toCanvasX(xMax), toCanvasY(k + slope * (xMax - h)));
+            ctx.moveTo(toCanvasX(xMin), toCanvasY(k - slope * (xMin - h)));
+            ctx.lineTo(toCanvasX(xMax), toCanvasY(k - slope * (xMax - h)));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const step = 0.05;
+            if (isVertical) {
+                ctx.moveTo(toCanvasX(xMin), toCanvasY(k + a * Math.sqrt(1 + Math.pow(xMin - h, 2) / (b * b))));
+                for (let x = xMin; x <= xMax; x += step) {
+                    ctx.lineTo(toCanvasX(x), toCanvasY(k + a * Math.sqrt(1 + Math.pow(x - h, 2) / (b * b))));
+                }
+                ctx.moveTo(toCanvasX(xMin), toCanvasY(k - a * Math.sqrt(1 + Math.pow(xMin - h, 2) / (b * b))));
+                for (let x = xMin; x <= xMax; x += step) {
+                    ctx.lineTo(toCanvasX(x), toCanvasY(k - a * Math.sqrt(1 + Math.pow(x - h, 2) / (b * b))));
+                }
+            } else {
+                ctx.moveTo(toCanvasX(h + a), toCanvasY(k));
+                for (let x = h + a; x <= xMax; x += step) {
+                    const term = Math.pow(x - h, 2) / (a * a) - 1;
+                    if (term >= 0) ctx.lineTo(toCanvasX(x), toCanvasY(k + b * Math.sqrt(term)));
+                }
+                ctx.moveTo(toCanvasX(h + a), toCanvasY(k));
+                for (let x = h + a; x <= xMax; x += step) {
+                    const term = Math.pow(x - h, 2) / (a * a) - 1;
+                    if (term >= 0) ctx.lineTo(toCanvasX(x), toCanvasY(k - b * Math.sqrt(term)));
+                }
+                ctx.moveTo(toCanvasX(h - a), toCanvasY(k));
+                for (let x = h - a; x >= xMin; x -= step) {
+                    const term = Math.pow(x - h, 2) / (a * a) - 1;
+                    if (term >= 0) ctx.lineTo(toCanvasX(x), toCanvasY(k + b * Math.sqrt(term)));
+                }
+                ctx.moveTo(toCanvasX(h - a), toCanvasY(k));
+                for (let x = h - a; x >= xMin; x -= step) {
+                    const term = Math.pow(x - h, 2) / (a * a) - 1;
+                    if (term >= 0) ctx.lineTo(toCanvasX(x), toCanvasY(k - b * Math.sqrt(term)));
+                }
+            }
+            ctx.stroke();
+
+            drawPoint(h, k, '#10b981', 'Center');
+            
+            let detailsHTML = '';
+            const f = (n) => n.toFixed(2).replace('.00', '');
+
+            const equationValue = isVertical ?
+                `<sup>(y - ${f(k)})<sup>2</sup></sup>&frasl;<sub>${f(a*a)}</sub> - <sup>(x - ${f(h)})<sup>2</sup></sup>&frasl;<sub>${f(b*b)}</sub> = 1` :
+                `<sup>(x - ${f(h)})<sup>2</sup></sup>&frasl;<sub>${f(a*a)}</sub> - <sup>(y - ${f(k)})<sup>2</sup></sup>&frasl;<sub>${f(b*b)}</sub> = 1`;
+            const equationGeneral = isVertical ? `(y-k)²/a² - (x-h)²/b² = 1` : `(x-h)²/a² - (y-k)²/b² = 1`;
+
+            detailsHTML += createDetailCard('Equation', equationGeneral, equationValue);
+            detailsHTML += createDetailCard('Center', '(h, k)', `(${f(h)}, ${f(k)})`);
+
+            if (isVertical) {
+                drawPoint(h, k + a, '#3b82f6', 'V1');
+                drawPoint(h, k - a, '#3b82f6', 'V2');
+                drawPoint(h, k + c, '#8b5cf6', 'F1');
+                drawPoint(h, k - c, '#8b5cf6', 'F2');
+                detailsHTML += createDetailCard('Vertices', '(h, k&pm;a)', `(${f(h)}, ${f(k-a)}) & (${f(h)}, ${f(k+a)})`);
+                detailsHTML += createDetailCard('Foci', '(h, k&pm;c)', `(${f(h)}, ${f(k-c)}) & (${f(h)}, ${f(k+c)})`);
+                detailsHTML += createDetailCard('Asymptotes', 'y=k&pm;(a/b)(x-h)', `y = ${f(k)} &pm; ${f(a/b)}(x - ${f(h)})`);
+            } else {
+                drawPoint(h + a, k, '#3b82f6', 'V1');
+                drawPoint(h - a, k, '#3b82f6', 'V2');
+                drawPoint(h + c, k, '#8b5cf6', 'F1');
+                drawPoint(h - c, k, '#8b5cf6', 'F2');
+                detailsHTML += createDetailCard('Vertices', '(h&pm;a, k)', `(${f(h-a)}, ${f(k)}) & (${f(h+a)}, ${f(k)})`);
+                detailsHTML += createDetailCard('Foci', '(h&pm;c, k)', `(${f(h-c)}, ${f(k)}) & (${f(h+c)}, ${f(k)})`);
+                detailsHTML += createDetailCard('Asymptotes', 'y=k&pm;(b/a)(x-h)', `y = ${f(k)} &pm; ${f(b/a)}(x - ${f(h)})`);
+            }
+            
+            detailsDiv.innerHTML = detailsHTML;
+        }
+        
+        function createDetailCard(title, generalContent, specificValue) {
+            return `
+                <div class="card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <h3 class="detail-title">${title}</h3>
+                            <p class="general-equation mt-2">${generalContent}</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="detail-title">${title}</h3>
+                            <p class="detail-value mt-2">${specificValue}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function resetControls() {
+            aSlider.value = INITIAL_A;
+            bSlider.value = INITIAL_B;
+            hSlider.value = INITIAL_H;
+            kSlider.value = INITIAL_K;
+            orientationToggle.checked = INITIAL_ORIENTATION;
+            draw();
+        }
+        
+        function toggleLock() {
+            isLocked = !isLocked;
+            const controls = [aSlider, bSlider, hSlider, kSlider, orientationToggle];
+            controls.forEach(el => el.disabled = isLocked);
+            lockButton.textContent = isLocked ? 'Unlock Graph' : 'Lock Graph';
+            lockButton.classList.toggle('btn-indigo', !isLocked);
+            lockButton.classList.toggle('btn-gray', isLocked);
+            resetButton.disabled = isLocked;
+        }
+
+        // --- Event listeners ---
+        [aSlider, bSlider, hSlider, kSlider, orientationToggle].forEach(el => {
+            el.addEventListener('input', draw);
+        });
+        
+        // Event delegation for card flips
+        detailsDiv.addEventListener('click', (event) => {
+            const cardInner = event.target.closest('.card-inner');
+            if (cardInner) {
+                cardInner.classList.toggle('is-flipped');
+            }
+        });
+
+        lockButton.addEventListener('click', toggleLock);
+        resetButton.addEventListener('click', resetControls);
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Initial call ---
+        resizeCanvas();
+
+    </script>
+</body>
+</html>
