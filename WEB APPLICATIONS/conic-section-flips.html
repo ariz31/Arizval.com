@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conic Sections: Flipping Formula Sheet</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuration for Tailwind's dark mode to be class-based
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+
+    <!-- Custom Styles for Card Flip & Dark Mode -->
+    <style>
+        /* Base body styles and transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Styles for the 3D card scene */
+        .card-scene {
+            perspective: 1200px;
+            min-height: 180px;
+        }
+        /* Styles for the flippable card container */
+        .formula-card {
+            width: 100%;
+            height: 100%;
+            min-height: 180px;
+            position: relative;
+            transition: transform 0.7s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .formula-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        /* Common styles for front and back faces of the card */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* For Safari */
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        /* Styles for the back face of the card */
+        .card-back {
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            text-align: left;
+            align-items: flex-start;
+            overflow-y: auto; /* Enable scrolling for overflow content */
+        }
+        /* Custom scrollbar for Webkit browsers (Chrome, Safari) */
+        .card-back::-webkit-scrollbar {
+            width: 8px;
+        }
+        .card-back::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        html.dark .card-back::-webkit-scrollbar-thumb {
+            background-color: #404040; /* dark: zinc-700 */
+            border-radius: 10px;
+            border: 2px solid #18181b; /* dark: zinc-900 */
+        }
+        html:not(.dark) .card-back::-webkit-scrollbar-thumb {
+            background-color: #d4d4d8; /* zinc-300 */
+            border-radius: 10px;
+            border: 2px solid #fafafa; /* zinc-50 */
+        }
+        /* Non-color styles moved here to avoid conflicts with Tailwind */
+        .click-indicator {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.7rem;
+        }
+        .card-title-text {
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .card-back .card-title-text {
+             width: 100%;
+             padding-bottom: 0.5rem;
+        }
+        .formula-display {
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .prop-list {
+            font-size: 0.875rem;
+            list-style-position: inside;
+            width: 100%;
+            padding-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body class="bg-white dark:bg-black p-4 sm:p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 relative">
+            <div class="text-center">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">Conic Sections</h1>
+                <p class="text-lg text-slate-600 dark:text-slate-300">Flipping Formula Sheet</p>
+            </div>
+            <!-- Dark Mode Toggle -->
+            <button id="theme-toggle" type="button" class="absolute top-0 right-0 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+                <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </header>
+
+        <!-- Main Grid for Formulas -->
+        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 text-black dark:text-white">
+
+            <!-- Circle: Standard Form -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Circle: Standard Form</h2>
+                        <div class="formula-display">$$ (x-h)^2 + (y-k)^2 = r^2 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Center $(h, k)$:</strong> The fixed point from which all points on the circle are equidistant.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Radius $r$:</strong> The distance from the center to any point on the circle.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Circle: Properties -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Circle: Properties</h2>
+                        <div class="formula-display">$$ A = \pi r^2 $$ $$ C = 2\pi r $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Definitions</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Area (A):</strong> The space enclosed by the circle.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Circumference (C):</strong> The distance around the circle.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Diameter (d):</strong> A line segment through the center, with endpoints on the circle. $d=2r$.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parabola: Vertical Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Parabola: Vertical Axis</h2>
+                        <div class="formula-display">$$ (x-h)^2 = 4p(y-k) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertex $(h,k)$:</strong> The turning point of the parabola.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Focus:</strong> $(h, k+p)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Directrix:</strong> $y = k-p$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> Opens up if $p>0$, down if $p<0$.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parabola: Horizontal Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Parabola: Horizontal Axis</h2>
+                        <div class="formula-display">$$ (y-k)^2 = 4p(x-h) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertex $(h,k)$:</strong> The turning point.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Focus:</strong> $(h+p, k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Directrix:</strong> $x = h-p$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> Opens right if $p>0$, left if $p<0$.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ellipse: Horizontal Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Ellipse: Horizontal Axis</h2>
+                        <div class="formula-display">$$ \frac{(x-h)^2}{a^2} + \frac{(y-k)^2}{b^2} = 1 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Center:</strong> $(h,k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertices:</strong> $(h \pm a, k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Foci:</strong> $(h \pm c, k)$</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ellipse: Vertical Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Ellipse: Vertical Axis</h2>
+                        <div class="formula-display">$$ \frac{(x-h)^2}{b^2} + \frac{(y-k)^2}{a^2} = 1 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Center:</strong> $(h,k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertices:</strong> $(h, k \pm a)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Foci:</strong> $(h, k \pm c)$</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ellipse: Relationships -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Ellipse: Relationships</h2>
+                        <div class="formula-display">$$ c^2 = a^2 - b^2 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Definitions</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$a$:</strong> Distance from center to a vertex.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$b$:</strong> Distance from center to a co-vertex.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$c$:</strong> Distance from center to a focus.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Eccentricity:</strong> $e = c/a$, where $0 < e < 1$. It measures how 'squashed' the ellipse is. A value of 0 is a perfect circle.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hyperbola: Horizontal Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Hyperbola: Horizontal Axis</h2>
+                        <div class="formula-display">$$ \frac{(x-h)^2}{a^2} - \frac{(y-k)^2}{b^2} = 1 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Center:</strong> $(h,k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertices:</strong> $(h \pm a, k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Asymptotes:</strong> $y-k = \pm \frac{b}{a}(x-h)$</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hyperbola: Vertical Axis -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Hyperbola: Vertical Axis</h2>
+                        <div class="formula-display">$$ \frac{(y-k)^2}{a^2} - \frac{(x-h)^2}{b^2} = 1 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Center:</strong> $(h,k)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Vertices:</strong> $(h, k \pm a)$</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Asymptotes:</strong> $y-k = \pm \frac{a}{b}(x-h)$</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hyperbola: Relationships -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Hyperbola: Relationships</h2>
+                        <div class="formula-display">$$ c^2 = a^2 + b^2 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Definitions</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$a$:</strong> Distance from center to a vertex.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$c$:</strong> Distance from center to a focus.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Eccentricity:</strong> $e = c/a$, where $e > 1$. It measures how 'open' the hyperbola's branches are.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identification Card -->
+            <div class="card-scene">
+                 <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Identifying Conics</h2>
+                        <div class="formula-display">$$ B^2 - 4AC $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Using the Discriminant</h2>
+                         <p class="text-xs text-center w-full mb-2">From $Ax^2+Bxy+Cy^2+Dx+Ey+F=0$</p>
+                         <ul class="prop-list text-slate-700 dark:text-slate-300">
+                             <li>If $B^2 - 4AC < 0 \rightarrow$ Ellipse or Circle</li>
+                             <li>If $B^2 - 4AC = 0 \rightarrow$ Parabola</li>
+                             <li>If $B^2 - 4AC > 0 \rightarrow$ Hyperbola</li>
+                         </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-slate-500 dark:text-slate-400 mt-8">
+            <p class="text-xs">© 2025 www.arizval.com A.M. Review Notes</p>
+        </footer>
+    </div>
+
+    <script>
+        // This script handles the card flipping and dark mode toggle functionality.
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Card Flipping Logic ---
+            const cards = document.querySelectorAll('.formula-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('is-flipped');
+                });
+            });
+
+            // --- Dark Mode Toggle Logic ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+            // Function to set the theme based on stored preference or system setting
+            const applyTheme = () => {
+                const isDarkMode = localStorage.getItem('color-theme') === 'dark' || 
+                                   (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+                document.documentElement.classList.toggle('dark', isDarkMode);
+                themeToggleLightIcon.classList.toggle('hidden', !isDarkMode);
+                themeToggleDarkIcon.classList.toggle('hidden', isDarkMode);
+            };
+            
+            // Apply the theme when the page loads
+            applyTheme();
+
+            // Add click listener to the toggle button
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+                applyTheme(); // Re-apply theme to ensure icon state is correct
+            });
+        });
+    </script>
+</body>
+</html>
