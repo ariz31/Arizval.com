@@ -1,607 +1,622 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Interactive Mind Map: Hyperbola</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Hyperbola</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
 
-    <style>
-        :root {
-            --bg-light: #f8fafc; --bg-dark: #0b1120;
-            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
-            --text-light: #1e293b; --text-dark: #e2e8f0;
-            --border-light: #cbd5e1; --border-dark: #475569;
-            --link-light: #94a3b8; --link-dark: #64748b;
-            --primary-light: #3b82f6; --primary-dark: #60a5fa;
-            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
-            --highlight-border-light: #ef4444; /* Red-500 */
-            --highlight-border-dark: #f87171; /* Red-400 */
-            
-            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
-            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
-            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
-            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
-        }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; font-family: 'Inter', sans-serif;
-            background-color: var(--bg-light); transition: background-color 0.3s ease;
-        }
-        body.dark { background-color: var(--bg-dark); }
-        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; box-sizing: border-box; }
-        #mind-map-container { cursor: grab; }
-        #mind-map-container:active { cursor: grabbing; }
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            --highlight-border-light: #ef4444; /* Red-500 */
+            --highlight-border-dark: #f87171; /* Red-400 */
+            
+            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
+            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
+            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
+            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; box-sizing: border-box; }
+        #mind-map-container { cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
 
-        .node { cursor: pointer; }
-        .node rect {
-            stroke-width: 2.5px; rx: 8; ry: 8;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
-            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
-        }
-        .node:hover rect { transform: scale(1.05); }
-        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
-        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
-        .katex { font-size: 1.1em; }
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+        .katex { font-size: 1.1em; }
 
-        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
-        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
-        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
-        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
-        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
-        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
-        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
-        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
-        .link { stroke: var(--link-light); }
-        
-        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
-        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
-        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
-        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
-        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
-        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
-        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
-        body.dark .node.level-2 text { fill: var(--text-dark); }
-        body.dark .link { stroke: var(--link-dark); }
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
 
-        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
-        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
-        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
-        body.dark .modal-content h2 { color: var(--primary-dark); }
-        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
-        body.dark .modal-content h3 { color: var(--primary-dark); }
-        .modal-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
-        .modal-content li { margin-bottom: 0.25rem; }
-        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
-        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
+        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .modal-content li { margin-bottom: 0.25rem; }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
 
-        #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
-        #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
-        body.dark #toolbar.expanded { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(71, 85, 105, 0.5); }
-        #toolbar-tools { display: flex; flex-direction: column; gap: 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1), padding 0.5s ease; }
-        #toolbar.expanded #toolbar-tools { max-height: 500px; }
-        .toolbar-divider { width: 80%; height: 1px; margin: 0.25rem auto; background-color: #e2e8f0; }
-        body.dark .toolbar-divider { background-color: #475569; }
+        #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
+        body.dark #toolbar.expanded { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(71, 85, 105, 0.5); }
+        #toolbar-tools { display: flex; flex-direction: column; gap: 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1), padding 0.5s ease; }
+        #toolbar.expanded #toolbar-tools { max-height: 500px; }
+        .toolbar-divider { width: 80%; height: 1px; margin: 0.25rem auto; background-color: #e2e8f0; }
+        body.dark .toolbar-divider { background-color: #475569; }
 
-        #list-view-container { padding: 2rem; overflow-y: auto; background-color: var(--bg-light); color: var(--text-light); box-sizing: border-box; height: 100%; }
-        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
-        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
-        body.dark #list-view-container h1 { color: var(--primary-dark); }
-        #list-view-container h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
-        body.dark #list-view-container h2 { border-bottom-color: var(--border-dark); }
-        #list-view-container ul { list-style: none; padding-left: 1rem; }
-        #list-view-container li { padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
-        #list-view-container li:hover { background-color: rgba(0,0,0,0.05); }
-        body.dark #list-view-container li:hover { background-color: rgba(255,255,255,0.05); }
-    </style>
+        #list-view-container { padding: 2rem; overflow-y: auto; background-color: var(--bg-light); color: var(--text-light); box-sizing: border-box; height: 100%; }
+        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
+        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark #list-view-container h1 { color: var(--primary-dark); }
+        #list-view-container h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
+        body.dark #list-view-container h2 { border-bottom-color: var(--border-dark); }
+        #list-view-container ul { list-style: none; padding-left: 1rem; }
+        #list-view-container li { padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        #list-view-container li:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark #list-view-container li:hover { background-color: rgba(255,255,255,0.05); }
+    </style>
 </head>
 <body>
-    <div id="mind-map-container"></div>
-    <div id="list-view-container" class="hidden"></div>
+    <div id="mind-map-container"></div>
+    <div id="list-view-container" class="hidden"></div>
 
-    <div id="info-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="modal-title"></h2>
-                <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
-            </div>
-            <div id="modal-body"></div>
-        </div>
-    </div>
-    
-    <div id="share-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold">Share Mind Map</h2>
-                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
-            </div>
-            <div class="space-y-4">
-                <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
-                <div class="relative">
-                    <input id="share-url" type="text" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
-                    <button id="copy-link-btn" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    </button>
-                </div>
-                <p id="copy-feedback" class="text-sm text-green-600 dark:text-green-400 h-4 text-center"></p>
-            </div>
-        </div>
-    </div>
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Share Mind Map</h2>
+                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
+                <div class="relative">
+                    <input id="share-url" type="text" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
+                    <button id="copy-link-btn" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                </div>
+                <p id="copy-feedback" class="text-sm text-green-600 dark:text-green-400 h-4 text-center"></p>
+            </div>
+        </div>
+    </div>
 
-    <div id="toolbar">
-        <button id="menu-toggle-btn" title="Toggle Menu" class="p-3 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </button>
-        <div id="toolbar-tools">
-            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            </button>
-            <button id="toggle-all-btn" title="Expand/Collapse All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4" /></svg>
-            </button>
-            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-            </button>
-            <div class="toolbar-divider"></div>
-            <button id="prev-btn" title="Previous Topic (Left Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <button id="next-btn" title="Next Topic (Right Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-            </button>
-            <div class="toolbar-divider"></div>
-            <button id="share-btn" title="Share" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
-            </button>
-            <button id="theme-toggle" title="Toggle Dark Mode" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-            </button>
-        </div>
-    </div>
+    <div id="toolbar">
+        <button id="menu-toggle-btn" title="Toggle Menu" class="p-3 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div id="toolbar-tools">
+            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+            <button id="toggle-all-btn" title="Expand/Collapse All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4" /></svg>
+            </button>
+            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="prev-btn" title="Previous Topic (Left Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button id="next-btn" title="Next Topic (Right Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="share-btn" title="Share" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
+            </button>
+            <button id="theme-toggle" title="Toggle Dark Mode" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // ========= DYNAMIC CONTENT SECTION START =========
-            const ROOT_NODE_ID = 'hyperbola';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'hyperbola';
 
-            const mindMapInfo = {
-                hyperbola: {
-                    title: "Analytic Geometry: Hyperbola",
-                    content: `
-                        <p>A hyperbola is a type of smooth curve lying in a plane, defined by its geometric properties or by equations for which it is the solution set. A hyperbola has two pieces, called connected components or branches, that are mirror images of each other and resemble two infinite bows. This mind map explores its definition, equations, and key properties.</p>
-                        <h3>How to Use This Mind Map</h3>
-                        <ul>
-                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for detailed explanations and examples.</li>
-                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
-                            <li><strong>Toolbar:</strong> Use the floating toolbar on the right for more options:
-                                <ul>
-                                    <li><strong>Reset View:</strong> Centers the map.</li>
-                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
-                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
-                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
-                                    <li><strong>Share:</strong> Get a link to share the map.</li>
-                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
-                                </ul>
-                            </li>
-                        </ul>`,
-                    keywords: "hyperbola, analytic geometry, conic sections"
-                },
-                definition_and_elements: {
-                    title: "Definition & Elements",
-                    content: "<p>The core definition of a hyperbola and the essential components that define its shape and position.</p>",
-                    keywords: "definition, elements, parts, foci, vertices"
-                },
-                definition: {
-                    title: "Geometric Definition",
-                    content: "<p>A hyperbola is the set of all points (P) in a plane where the absolute difference of the distances from P to two fixed points (the foci, $F_1$ and $F_2$) is a constant value, $2a$.</p>$$|PF_1 - PF_2| = 2a$$",
-                    keywords: "locus, points, difference, distance, foci"
-                },
-                key_elements: {
-                    title: "Key Elements",
-                    content: "<ul><li><strong>Center (h, k):</strong> The midpoint between the foci and vertices.</li><li><strong>Foci ($F_1, F_2$):</strong> The two fixed points defining the hyperbola. The distance from the center to a focus is $c$.</li><li><strong>Vertices ($V_1, V_2$):</strong> The endpoints of the transverse axis. The distance from the center to a vertex is $a$.</li><li><strong>Transverse Axis:</strong> The line segment connecting the vertices. Its length is $2a$.</li><li><strong>Conjugate Axis:</strong> A line segment of length $2b$ perpendicular to the transverse axis at the center.</li></ul>",
-                    keywords: "center, foci, vertices, transverse axis, conjugate axis"
-                },
-                standard_equations: {
-                    title: "Standard Equations",
-                    content: "<p>The standard form of a hyperbola's equation depends on its orientation (horizontal or vertical).</p>",
-                    keywords: "standard form, equation, horizontal, vertical"
-                },
-                horizontal_hyperbola: {
-                    title: "Horizontal Hyperbola",
-                    content: "<p>The hyperbola opens left and right. The standard equation for a hyperbola with a horizontal transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$$<p>Here, the $x^2$ term is positive.</p>",
-                    keywords: "horizontal, transverse axis, left-right"
-                },
-                vertical_hyperbola: {
-                    title: "Vertical Hyperbola",
-                    content: "<p>The hyperbola opens up and down. The standard equation for a hyperbola with a vertical transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(y-k)^2}{a^2} - \\frac{(x-h)^2}{b^2} = 1$$<p>Here, the $y^2$ term is positive.</p>",
-                    keywords: "vertical, transverse axis, up-down"
-                },
-                relation_abc: {
-                    title: "Relationship of a, b, c",
-                    content: "<p>For any hyperbola, the parameters $a$, $b$, and $c$ are related by the Pythagorean-like formula:</p>$$c^2 = a^2 + b^2$$<p>Where:<br>$a$ = distance from center to vertex.<br>$b$ = half the length of the conjugate axis.<br>$c$ = distance from center to focus.</p>",
-                    keywords: "c squared, pythagorean, parameters, abc relation"
-                },
-                general_equation: {
-                    title: "General Equation",
-                    content: "<p>The general form of a conic section can be rearranged into a standard hyperbola equation by completing the square.</p>",
-                    keywords: "general form, completing the square"
-                },
-                general_form: {
-                    title: "General Form",
-                    content: "<p>The general equation of a hyperbola is an equation of the form:</p>$$Ax^2 - Cy^2 + Dx + Ey + F = 0$$<p>or</p>$$Cy^2 - Ax^2 + Dx + Ey + F = 0$$<p>The key identifier is that the coefficients of the $x^2$ and $y^2$ terms (A and C) have opposite signs.</p>",
-                    keywords: "Ax^2, Cy^2, opposite signs"
-                },
-                conversion_example: {
-                    title: "Example: General to Standard",
-                    content: "<h3>Problem</h3><p>Convert the equation $9x^2 - 4y^2 - 18x - 16y - 43 = 0$ to standard form.</p><h3>Solution</h3><ol><li><strong>Group terms:</strong> $(9x^2 - 18x) - (4y^2 + 16y) = 43$</li><li><strong>Factor coefficients:</strong> $9(x^2 - 2x) - 4(y^2 + 4y) = 43$</li><li><strong>Complete the square:</strong><br>$9(x^2 - 2x + 1) - 4(y^2 + 4y + 4) = 43 + 9(1) - 4(4)$</li><li><strong>Simplify both sides:</strong><br>$9(x-1)^2 - 4(y+2)^2 = 43 + 9 - 16$<br>$9(x-1)^2 - 4(y+2)^2 = 36$</li><li><strong>Divide by the constant term (36):</strong> $$\\frac{9(x-1)^2}{36} - \\frac{4(y+2)^2}{36} = \\frac{36}{36}$$</li><li><strong>Final Standard Form:</strong> $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</li></ol><p>This is a horizontal hyperbola centered at $(1, -2)$.</p>",
-                    keywords: "example, convert, completing the square"
-                },
-                eccentricity_and_latus_rectum: {
-                    title: "Eccentricity & Latus Rectum",
-                    content: "<p>Two key properties that describe the specific shape of a hyperbola's branches.</p>",
-                    keywords: "eccentricity, latus rectum, shape"
-                },
-                eccentricity: {
-                    title: "Eccentricity (e)",
-                    content: "<p>Eccentricity measures how 'open' the hyperbola's branches are. For any hyperbola, the eccentricity $e$ is always greater than 1 ($e > 1$).</p><p>The formula is:</p>$$e = \\frac{c}{a}$$<p>A larger value of $e$ means the branches are wider.</p>",
-                    keywords: "e, c/a, shape, width"
-                },
-                latus_rectum: {
-                    title: "Latus Rectum (LR)",
-                    content: "<p>The Latus Rectum is a line segment that passes through a focus, is perpendicular to the transverse axis, and has its endpoints on the hyperbola. Its length indicates the 'width' of the hyperbola at its focus.</p><p>The formula for its length is:</p>$$LR = \\frac{2b^2}{a}$$",
-                    keywords: "LR, 2b^2/a, focal width"
-                },
-                eccentricity_latus_rectum_example: {
-                    title: "Example: Calc e & LR",
-                    content: "<h3>Problem</h3><p>For the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$, find the eccentricity and the length of the latus rectum.</p><h3>Solution</h3><p>From the equation, we have $a^2=4 \\implies a=2$ and $b^2=9 \\implies b=3$.</p><p>First, find c: $c^2 = a^2 + b^2 = 4 + 9 = 13 \\implies c = \\sqrt{13}$.</p><p><strong>Eccentricity:</strong></p>$$e = \\frac{c}{a} = \\frac{\\sqrt{13}}{2} \\approx 1.803$$<p><strong>Latus Rectum:</strong></p>$$LR = \\frac{2b^2}{a} = \\frac{2(9)}{2} = 9$$",
-                    keywords: "example, calculation, e, LR"
-                },
-                asymptotes: {
-                    title: "Asymptotes",
-                    content: "<p>Asymptotes are the guide lines that the branches of a hyperbola approach but never touch. They are crucial for accurately sketching the graph.</p>",
-                    keywords: "asymptotes, guidelines, sketching"
-                },
-                asymptotes_definition: {
-                    title: "What are Asymptotes?",
-              _content: "<p>Asymptotes are a pair of straight lines that intersect at the center of the hyperbola. The branches of the hyperbola get closer and closer to these lines as they extend towards infinity. They form a 'guide box' or rectangle with corners at $(h \\pm a, k \\pm b)$ (for horizontal) or $(h \\pm b, k \\pm a)$ (for vertical), which helps in sketching.</p>",
-                    keywords: "lines, approach, infinity, guide box"
-                },
-                asymptotes_equation: {
-                    title: "Asymptote Equations",
-                    content: "<p>For any hyperbola centered at $(h, k)$:</p><h3>Horizontal Hyperbola</h3><p>($x^2$ term is positive)</p>$$y - k = \\pm \\frac{b}{a}(x - h)$$<h3>Vertical Hyperbola</h3><p>($y^2$ term is positive)</p>$$y - k = \\pm \\frac{a}{b}(x - h)$$<p>The slope is always related to 'rise' over 'run' from the central guide box.</p>",
-                    keywords: "equation, formula, slope, rise over run"
-                },
-                asymptotes_example: {
-                    title: "Example: Finding Asymptotes",
-                    content: "<h3>Problem</h3><p>Find the equations of the asymptotes for the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</p><h3>Solution</h3><p>This is a <strong>horizontal</strong> hyperbola with Center $(h, k) = (1, -2)$, $a^2=4 \\implies a=2$, and $b^2=9 \\implies b=3$.</p><p>We use the formula for a horizontal hyperbola: $y - k = \\pm \\frac{b}{a}(x - h)$</p>$$y - (-2) = \\pm \\frac{3}{2}(x - 1)$$$$y + 2 = \\pm \\frac{3}{2}(x - 1)$$<p>The two separate asymptote equations are:<br>1. $y + 2 = \\frac{3}{2}(x - 1) \\implies y = \\frac{3}{2}x - \\frac{7}{2}$<br>2. $y + 2 = -\\frac{3}{2}(x - 1) \\implies y = -\\frac{3}{2}x - \\frac{1}{2}$</p>",
-                    keywords: "example, finding, equations"
-                },
-                problem_solving_examples: {
-                    title: "Problem Solving Examples",
-                    content: "<p>Worked-out examples showing how to apply the formulas to common hyperbola problems.</p>",
-                    keywords: "problems, examples, application"
-                },
-                example_1_find_elements: {
-                    title: "Problem 1: Find Elements from Eq.",
-                    content: "<h3>Problem</h3><p>Given the equation $$\\frac{(y+5)^2}{16} - \\frac{(x-2)^2}{9} = 1$$, find the center, vertices, foci, and asymptotes.</p><h3>Solution</h3><ol><li><strong>Identify Type & Center:</strong> The y-term is positive, so it's a <strong>vertical</strong> hyperbola. The center is $(h, k) = (2, -5)$.</li><li><strong>Find Parameters:</strong> $a^2 = 16 \\implies a=4$. $b^2=9 \\implies b=3$.</li><li><strong>Find c:</strong> $c^2 = a^2 + b^2 = 16+9 = 25 \\implies c=5$.</li><li><strong>Vertices:</strong> Formula $(h, k \\pm a) \\rightarrow (2, -5 \\pm 4)$. Vertices are at $(2, -1)$ and $(2, -9)$.</li><li><strong>Foci:</strong> Formula $(h, k \\pm c) \\rightarrow (2, -5 \\pm 5)$. Foci are at $(2, 0)$ and $(2, -10)$.</li><li><strong>Asymptotes:</strong> Use vertical formula $y - k = \\pm \\frac{a}{b}(x-h) \\rightarrow y+5 = \\pm \\frac{4}{3}(x-2)$.</li></ol>",
-                    keywords: "find elements, problem, example"
-                },
-                example_2_find_equation: {
-                    title: "Problem 2: Find Eq. from Elements",
-                    content: "<h3>Problem</h3><p>Find the standard equation of the hyperbola with vertices at $(\\pm 4, 0)$ and foci at $(\\pm 5, 0)$.</p><h3>Solution</h3><ol><li><strong>Find Center & Orientation:</strong> The midpoint of vertices (and foci) is $(0, 0)$, so $(h,k)=(0,0)$. Since they lie on the x-axis, it's a <strong>horizontal</strong> hyperbola.</li><li><strong>Find a:</strong> The distance from the center $(0,0)$ to a vertex $(4,0)$ is $a=4$. Thus, $a^2=16$.</li><li><strong>Find c:</strong> The distance from the center $(0,0)$ to a focus $(5,0)$ is $c=5$. Thus, $c^2=25$.</li><li><strong>Find b:</strong> Use the relation $c^2 = a^2 + b^2 \\rightarrow 25 = 16 + b^2 \\implies b^2 = 9$.</li><li><strong>Write the Equation:</strong> Use the horizontal form $\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$.<br>$$\\frac{x^2}{16} - \\frac{y^2}{9} = 1$$</li></ol>",
-                    keywords: "find equation, problem, example"
-                }
-            };
+            const mindMapInfo = {
+                hyperbola: {
+                    title: "Analytic Geometry: Hyperbola",
+                    content: `
+                        <p>A hyperbola is a type of smooth curve lying in a plane, defined by its geometric properties or by equations for which it is the solution set. A hyperbola has two pieces, called connected components or branches, that are mirror images of each other and resemble two infinite bows. This mind map explores its definition, equations, and key properties with detailed examples.</p>
+                        <h3>How to Use This Mind Map</h3>
+                        <ul>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for detailed explanations and examples.</li>
+                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
+                            <li><strong>Toolbar:</strong> Use the floating toolbar on the right for more options:
+                                <ul>
+                                    <li><strong>Reset View:</strong> Centers the map.</li>
+                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
+                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
+                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
+                                    <li><strong>Share:</strong> Get a link to share the map.</li>
+                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
+                                </ul>
+                            </li>
+                        </ul>`,
+                    keywords: "hyperbola, analytic geometry, conic sections"
+                },
+                definition_and_elements: {
+                    title: "Definition & Elements",
+                    content: "<p>The core definition of a hyperbola and the essential components that define its shape and position.</p>",
+                    keywords: "definition, elements, parts, foci, vertices"
+                },
+                definition: {
+                    title: "Geometric Definition",
+                    content: "<p>A hyperbola is the set of all points (P) in a plane where the absolute difference of the distances from P to two fixed points (the foci, $F_1$ and $F_2$) is a constant value, $2a$.</p>$$|PF_1 - PF_2| = 2a$$",
+                    keywords: "locus, points, difference, distance, foci"
+                },
+                key_elements: {
+                    title: "Key Elements",
+                    content: "<ul><li><strong>Center (h, k):</strong> The midpoint between the foci and vertices.</li><li><strong>Foci ($F_1, F_2$):</strong> The two fixed points defining the hyperbola. The distance from the center to a focus is $c$.</li><li><strong>Vertices ($V_1, V_2$):</strong> The endpoints of the transverse axis. The distance from the center to a vertex is $a$.</li><li><strong>Transverse Axis:</strong> The line segment connecting the vertices. Its length is $2a$.</li><li><strong>Conjugate Axis:</strong> A line segment of length $2b$ perpendicular to the transverse axis at the center.</li></ul>",
+                    keywords: "center, foci, vertices, transverse axis, conjugate axis"
+                },
+                standard_equations: {
+                    title: "Standard Equations",
+                    content: "<p>The standard form of a hyperbola's equation depends on its orientation (horizontal or vertical).</p>",
+                    keywords: "standard form, equation, horizontal, vertical"
+                },
+                horizontal_hyperbola: {
+                    title: "Horizontal Hyperbola",
+                    content: "<p>The hyperbola opens left and right. The standard equation for a hyperbola with a horizontal transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$$<p>Here, the $x^2$ term is positive.</p>",
+                    keywords: "horizontal, transverse axis, left-right"
+                },
+                vertical_hyperbola: {
+                    title: "Vertical Hyperbola",
+                    content: "<p>The hyperbola opens up and down. The standard equation for a hyperbola with a vertical transverse axis, centered at $(h, k)$, is:</p>$$\\frac{(y-k)^2}{a^2} - \\frac{(x-h)^2}{b^2} = 1$$<p>Here, the $y^2$ term is positive.</p>",
+                    keywords: "vertical, transverse axis, up-down"
+                },
+                relation_abc: {
+                    title: "Relationship of a, b, c",
+                    content: "<p>For any hyperbola, the parameters $a$, $b$, and $c$ are related by the Pythagorean-like formula:</p>$$c^2 = a^2 + b^2$$<p>Where:<br>$a$ = distance from center to vertex.<br>$b$ = half the length of the conjugate axis.<br>$c$ = distance from center to focus.</p>",
+                    keywords: "c squared, pythagorean, parameters, abc relation"
+                },
+                general_equation: {
+                    title: "General Equation",
+                    content: "<p>The general form of a conic section can be rearranged into a standard hyperbola equation by completing the square.</p>",
+                    keywords: "general form, completing the square"
+                },
+                general_form: {
+                    title: "General Form",
+                    content: "<p>The general equation of a hyperbola is an equation of the form:</p>$$Ax^2 - Cy^2 + Dx + Ey + F = 0$$<p>or</p>$$Cy^2 - Ax^2 + Dx + Ey + F = 0$$<p>The key identifier is that the coefficients of the $x^2$ and $y^2$ terms (A and C) have opposite signs.</p>",
+                    keywords: "Ax^2, Cy^2, opposite signs"
+                },
+                conversion_example: {
+                    title: "Example 1: General to Standard",
+                    content: "<h3>Problem</h3><p>Convert the equation $9x^2 - 4y^2 - 18x - 16y - 43 = 0$ to standard form.</p><h3>Solution</h3><ol><li><strong>Group terms:</strong> $(9x^2 - 18x) - (4y^2 + 16y) = 43$</li><li><strong>Factor coefficients:</strong> $9(x^2 - 2x) - 4(y^2 + 4y) = 43$</li><li><strong>Complete the square:</strong><br>$9(x^2 - 2x + 1) - 4(y^2 + 4y + 4) = 43 + 9(1) - 4(4)$</li><li><strong>Simplify both sides:</strong><br>$9(x-1)^2 - 4(y+2)^2 = 43 + 9 - 16$<br>$9(x-1)^2 - 4(y+2)^2 = 36$</li><li><strong>Divide by the constant term (36):</strong> $$\\frac{9(x-1)^2}{36} - \\frac{4(y+2)^2}{36} = \\frac{36}{36}$$</li><li><strong>Final Standard Form:</strong> $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</li></ol><p>This is a horizontal hyperbola centered at $(1, -2)$.</p>",
+                    keywords: "example, convert, completing the square"
+                },
+                conversion_example_2: {
+                    title: "Example 2: General to Standard",
+                    content: "<h3>Problem</h3><p>Convert $16y^2 - 9x^2 + 96y + 36x - 36 = 0$ to standard form.</p><h3>Solution</h3><ol><li><strong>Group terms:</strong> $(16y^2 + 96y) - (9x^2 - 36x) = 36$</li><li><strong>Factor coefficients:</strong> $16(y^2 + 6y) - 9(x^2 - 4x) = 36$</li><li><strong>Complete the square:</strong><br>$16(y^2 + 6y + 9) - 9(x^2 - 4x + 4) = 36 + 16(9) - 9(4)$</li><li><strong>Simplify both sides:</strong><br>$16(y+3)^2 - 9(x-2)^2 = 36 + 144 - 36$<br>$16(y+3)^2 - 9(x-2)^2 = 144$</li><li><strong>Divide by the constant term (144):</strong> $$\\frac{16(y+3)^2}{144} - \\frac{9(x-2)^2}{144} = \\frac{144}{144}$$</li><li><strong>Final Standard Form:</strong> $$\\frac{(y+3)^2}{9} - \\frac{(x-2)^2}{16} = 1$$</li></ol><p>This is a vertical hyperbola centered at $(2, -3)$.</p>",
+                    keywords: "example, convert, vertical"
+                },
+                eccentricity_and_latus_rectum: {
+                    title: "Eccentricity & Latus Rectum",
+                    content: "<p>Two key properties that describe the specific shape of a hyperbola's branches.</p>",
+                    keywords: "eccentricity, latus rectum, shape"
+                },
+                eccentricity: {
+                    title: "Eccentricity (e)",
+                    content: "<p>Eccentricity measures how 'open' the hyperbola's branches are. For any hyperbola, the eccentricity $e$ is always greater than 1 ($e > 1$).</p><p>The formula is:</p>$$e = \\frac{c}{a}$$<p>A larger value of $e$ means the branches are wider.</p>",
+                    keywords: "e, c/a, shape, width"
+                },
+                latus_rectum: {
+                    title: "Latus Rectum (LR)",
+                    content: "<p>The Latus Rectum is a line segment that passes through a focus, is perpendicular to the transverse axis, and has its endpoints on the hyperbola. Its length indicates the 'width' of the hyperbola at its focus.</p><p>The formula for its length is:</p>$$LR = \\frac{2b^2}{a}$$",
+                    keywords: "LR, 2b^2/a, focal width"
+                },
+                eccentricity_latus_rectum_example: {
+                    title: "Example: Calc e & LR",
+                    content: "<h3>Problem</h3><p>For the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$, find the eccentricity and the length of the latus rectum.</p><h3>Solution</h3><p>From the equation, we have $a^2=4 \\implies a=2$ and $b^2=9 \\implies b=3$.</p><p>First, find c: $c^2 = a^2 + b^2 = 4 + 9 = 13 \\implies c = \\sqrt{13}$.</p><p><strong>Eccentricity:</strong></p>$$e = \\frac{c}{a} = \\frac{\\sqrt{13}}{2} \\approx 1.803$$<p><strong>Latus Rectum:</strong></p>$$LR = \\frac{2b^2}{a} = \\frac{2(9)}{2} = 9$$",
+                    keywords: "example, calculation, e, LR"
+                },
+                asymptotes: {
+                    title: "Asymptotes",
+                    content: "<p>Asymptotes are the guide lines that the branches of a hyperbola approach but never touch. They are crucial for accurately sketching the graph.</p>",
+                    keywords: "asymptotes, guidelines, sketching"
+                },
+                asymptotes_equation: {
+                    title: "Asymptote Equations",
+                    content: "<p>For any hyperbola centered at $(h, k)$:</p><h3>Horizontal Hyperbola</h3><p>($x^2$ term is positive)</p>$$y - k = \\pm \\frac{b}{a}(x - h)$$<h3>Vertical Hyperbola</h3><p>($y^2$ term is positive)</p>$$y - k = \\pm \\frac{a}{b}(x - h)$$<p>The slope is always related to 'rise' over 'run' from the central guide box.</p>",
+                    keywords: "equation, formula, slope, rise over run"
+                },
+                asymptotes_example: {
+                    title: "Example: Finding Asymptotes",
+                    content: "<h3>Problem</h3><p>Find the equations of the asymptotes for the hyperbola $$\\frac{(x-1)^2}{4} - \\frac{(y+2)^2}{9} = 1$$</p><h3>Solution</h3><p>This is a <strong>horizontal</strong> hyperbola with Center $(h, k) = (1, -2)$, $a^2=4 \\implies a=2$, and $b^2=9 \\implies b=3$.</p><p>We use the formula for a horizontal hyperbola: $y - k = \\pm \\frac{b}{a}(x - h)$</p>$$y - (-2) = \\pm \\frac{3}{2}(x - 1)$$$$y + 2 = \\pm \\frac{3}{2}(x - 1)$$<p>The two separate asymptote equations are:<br>1. $y + 2 = \\frac{3}{2}(x - 1) \\implies y = \\frac{3}{2}x - \\frac{7}{2}$<br>2. $y + 2 = -\\frac{3}{2}(x - 1) \\implies y = -\\frac{3}{2}x - \\frac{1}{2}$</p>",
+                    keywords: "example, finding, equations"
+                },
+                problem_solving_examples: {
+                    title: "Problem Solving Examples",
+                    content: "<p>Worked-out examples showing how to apply the formulas to common hyperbola problems.</p>",
+                    keywords: "problems, examples, application"
+                },
+                example_1_find_elements: {
+                    title: "Problem 1: Find Elements from Eq.",
+                    content: "<h3>Problem</h3><p>Given the equation $$\\frac{(y+5)^2}{16} - \\frac{(x-2)^2}{9} = 1$$, find the center, vertices, foci, and asymptotes.</p><h3>Solution</h3><ol><li><strong>Identify Type & Center:</strong> The y-term is positive, so it's a <strong>vertical</strong> hyperbola. The center is $(h, k) = (2, -5)$.</li><li><strong>Find Parameters:</strong> $a^2 = 16 \\implies a=4$. $b^2=9 \\implies b=3$.</li><li><strong>Find c:</strong> $c^2 = a^2 + b^2 = 16+9 = 25 \\implies c=5$.</li><li><strong>Vertices:</strong> Formula $(h, k \\pm a) \\rightarrow (2, -5 \\pm 4)$. Vertices are at $(2, -1)$ and $(2, -9)$.</li><li><strong>Foci:</strong> Formula $(h, k \\pm c) \\rightarrow (2, -5 \\pm 5)$. Foci are at $(2, 0)$ and $(2, -10)$.</li><li><strong>Asymptotes:</strong> Use vertical formula $y - k = \\pm \\frac{a}{b}(x-h) \\rightarrow y+5 = \\pm \\frac{4}{3}(x-2)$.</li></ol>",
+                    keywords: "find elements, problem, example"
+                },
+                example_2_find_equation: {
+                    title: "Problem 2: Find Eq. from Elements",
+                    content: "<h3>Problem</h3><p>Find the standard equation of the hyperbola with vertices at $(\\pm 4, 0)$ and foci at $(\\pm 5, 0)$.</p><h3>Solution</h3><ol><li><strong>Find Center & Orientation:</strong> The midpoint of vertices (and foci) is $(0, 0)$, so $(h,k)=(0,0)$. Since they lie on the x-axis, it's a <strong>horizontal</strong> hyperbola.</li><li><strong>Find a:</strong> The distance from the center $(0,0)$ to a vertex $(4,0)$ is $a=4$. Thus, $a^2=16$.</li><li><strong>Find c:</strong> The distance from the center $(0,0)$ to a focus $(5,0)$ is $c=5$. Thus, $c^2=25$.</li><li><strong>Find b:</strong> Use the relation $c^2 = a^2 + b^2 \\rightarrow 25 = 16 + b^2 \\implies b^2 = 9$.</li><li><strong>Write the Equation:</strong> Use the horizontal form $\\frac{(x-h)^2}{a^2} - \\frac{(y-k)^2}{b^2} = 1$.<br>$$\\frac{x^2}{16} - \\frac{y^2}{9} = 1$$</li></ol>",
+                    keywords: "find equation, problem, example"
+                },
+                example_3_find_eq_from_asymptotes: {
+                    title: "Problem 3: Find Eq. from Asymptotes",
+                    content: "<h3>Problem</h3><p>Find the equation of the hyperbola with a vertex at $(0, 3)$ and asymptotes $y = \\pm 2x$.</p><h3>Solution</h3><ol><li><strong>Find Center & Orientation:</strong> The asymptotes intersect at $(0,0)$, so the center is $(h,k)=(0,0)$. The vertex $(0,3)$ is on the y-axis, so it's a <strong>vertical</strong> hyperbola.</li><li><strong>Find a:</strong> The distance from the center $(0,0)$ to the vertex $(0,3)$ is $a=3$. Thus, $a^2=9$.</li><li><strong>Find b:</strong> For a vertical hyperbola, the slope of the asymptotes is $\\pm \\frac{a}{b}$. We are given the slope is $\\pm 2$. So, $\\frac{a}{b} = 2 \\implies \\frac{3}{b} = 2 \\implies 2b = 3 \\implies b = \\frac{3}{2}$. Thus, $b^2 = \\frac{9}{4}$.</li><li><strong>Write the Equation:</strong> Use the vertical form $\\frac{(y-k)^2}{a^2} - \\frac{(x-h)^2}{b^2} = 1$.<br>$$\\frac{y^2}{9} - \\frac{x^2}{9/4} = 1 \\quad \\text{or} \\quad \\frac{y^2}{9} - \\frac{4x^2}{9} = 1$$</li></ol>",
+                    keywords: "find equation, asymptotes, vertex"
+                },
+                example_4_find_eq_from_foci_conjugate: {
+                    title: "Problem 4: Find Eq. from Foci & Conjugate Axis",
+                    content: "<h3>Problem</h3><p>Find the equation of the hyperbola with foci at $(1, -2 \\pm \\sqrt{10})$ and a conjugate axis of length 6.</p><h3>Solution</h3><ol><li><strong>Find Center & Orientation:</strong> The midpoint of the foci is $(1, -2)$, so $(h,k)=(1,-2)$. The foci are aligned vertically, so it's a <strong>vertical</strong> hyperbola.</li><li><strong>Find c:</strong> The distance from the center $(1,-2)$ to a focus $(1, -2+\\sqrt{10})$ is $c=\\sqrt{10}$. Thus, $c^2=10$.</li><li><strong>Find b:</strong> The length of the conjugate axis is $2b=6$, so $b=3$. Thus, $b^2=9$.</li><li><strong>Find a:</strong> Use the relation $c^2 = a^2 + b^2 \\rightarrow 10 = a^2 + 9 \\implies a^2 = 1$.</li><li><strong>Write the Equation:</strong> Use the vertical form $\\frac{(y-k)^2}{a^2} - \\frac{(x-h)^2}{b^2} = 1$.<br>$$\\frac{(y+2)^2}{1} - \\frac{(x-1)^2}{9} = 1$$</li></ol>",
+                    keywords: "find equation, foci, conjugate axis"
+                },
+                example_5_application: {
+                    title: "Problem 5: Real-World Application",
+                    content: "<h3>Problem</h3><p>Two LORAN stations are located at points A(-200, 0) and B(200, 0). A ship receives a signal from B 600 microseconds ($\mu s$) before it receives the signal from A. If the signals travel at a speed of 0.186 miles per $\mu s$, find the equation of the hyperbola on which the ship is located.</p><h3>Solution</h3><ol><li><strong>Identify the constant difference:</strong> The difference in distance is the difference in time multiplied by the speed. Constant difference $= 600 \\mu s \\times 0.186 \\text{ mi/}\\mu s = 111.6$ miles.</li><li><strong>Relate to Hyperbola Definition:</strong> This constant difference is $2a$. So, $2a = 111.6 \\implies a = 55.8$. Thus, $a^2 = 3113.64$.</li><li><strong>Identify Foci and Center:</strong> The stations are the foci, at $(\\pm 200, 0)$. The center is their midpoint, $(0,0)$. The distance from the center to a focus is $c=200$. Thus, $c^2 = 40000$.</li><li><strong>Find b:</strong> Use $c^2 = a^2 + b^2 \\rightarrow 40000 = 3113.64 + b^2 \\implies b^2 = 36886.36$.</li><li><strong>Write the Equation:</strong> The foci are on the x-axis, so it's a horizontal hyperbola.<br>$$\\frac{x^2}{3113.64} - \\frac{y^2}{36886.36} = 1$$</li></ol>",
+                    keywords: "application, LORAN, navigation, real world"
+                }
+            };
 
-            const structure = {
-                definition_and_elements: ['definition', 'key_elements'],
-                standard_equations: ['horizontal_hyperbola', 'vertical_hyperbola', 'relation_abc'],
-                general_equation: ['general_form', 'conversion_example'],
-                eccentricity_and_latus_rectum: ['eccentricity', 'latus_rectum', 'eccentricity_latus_rectum_example'],
-                asymptotes: ['asymptotes_definition', 'asymptotes_equation', 'asymptotes_example'],
-                problem_solving_examples: ['example_1_find_elements', 'example_2_find_equation']
-            };
-            // ========= DYNAMIC CONTENT SECTION END =========
+            const structure = {
+                definition_and_elements: ['definition', 'key_elements'],
+                standard_equations: ['horizontal_hyperbola', 'vertical_hyperbola', 'relation_abc'],
+                general_equation: ['general_form', 'conversion_example', 'conversion_example_2'],
+                eccentricity_and_latus_rectum: ['eccentricity', 'latus_rectum', 'eccentricity_latus_rectum_example'],
+                asymptotes: ['asymptotes_equation', 'asymptotes_example'],
+                problem_solving_examples: ['example_1_find_elements', 'example_2_find_equation', 'example_3_find_eq_from_asymptotes', 'example_4_find_eq_from_foci_conjugate', 'example_5_application']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
 
 
-            // --- CORE LOGIC (DO NOT EDIT) ---
-            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
-            for (const catId in structure) {
-                if (mindMapInfo[catId]) {
-                    const categoryNode = { id: catId, level: 1, _children: [] };
-                    hierarchyRoot.children.push(categoryNode);
-                    if (structure[catId] && structure[catId].length > 0) {
-                        structure[catId].forEach(topicId => {
-                            if (mindMapInfo[topicId]) {
-                                categoryNode._children.push({ id: topicId, level: 2 });
-                            }
-                        });
-                    }
-                }
-            }
-            
-            const mindMapContainer = document.getElementById('mind-map-container');
-            const listViewContainer = document.getElementById('list-view-container');
-            const infoModal = document.getElementById('info-modal');
-            const shareModal = document.getElementById('share-modal');
-            const themeToggleButton = document.getElementById('theme-toggle');
-            const themeIconLight = document.getElementById('theme-icon-light');
-            const themeIconDark = document.getElementById('theme-icon-dark');
-            const menuToggleButton = document.getElementById('menu-toggle-btn');
-            const toolbar = document.getElementById('toolbar');
-            
-            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
-            let sequentialNavigableNodes = [];
-            let highlightedNodeIndex = -1;
+            // --- CORE LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const mindMapContainer = document.getElementById('mind-map-container');
+            const listViewContainer = document.getElementById('list-view-container');
+            const infoModal = document.getElementById('info-modal');
+            const shareModal = document.getElementById('share-modal');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const themeIconLight = document.getElementById('theme-icon-light');
+            const themeIconDark = document.getElementById('theme-icon-dark');
+            const menuToggleButton = document.getElementById('menu-toggle-btn');
+            const toolbar = document.getElementById('toolbar');
+            
+            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
+            let sequentialNavigableNodes = [];
+            let highlightedNodeIndex = -1;
 
-            function getVisibleNodesAndLinks(root) {
-                const visibleNodes = [], visibleLinks = [];
-                function recurse(node) {
-                    if (!node) return;
-                    visibleNodes.push(node);
-                    if (node.children) {
-                        node.children.forEach(child => {
-                            visibleLinks.push({ source: node, target: child });
-                            recurse(child);
-                        });
-                    }
-                }
-                recurse(root);
-                return { nodes: visibleNodes, links: visibleLinks };
-            }
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [], visibleLinks = [];
+                function recurse(node) {
+                    if (!node) return;
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
 
-            function updateGraph(callback) {
-                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
-                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
-                currentNodes.forEach(n => {
-                    const textEl = tempSvg.append("text")
-                        .attr("class", `node level-${n.level}`)
-                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
-                        .style("font-weight", n.level < 2 ? "700" : "500")
-                        .text(mindMapInfo[n.id].title);
-                    const bbox = textEl.node().getBBox();
-                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
-                    n.height = bbox.height + 20;
-                });
-                tempSvg.remove();
+            function updateGraph(callback) {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "700" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
 
-                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
-                    .join(
-                        enter => {
-                            const nodeEnter = enter.append("g")
-                                .attr("class", d => `node level-${d.level}`)
-                                .call(drag(simulation))
-                                .on("click", handleNodeClick);
-                            nodeEnter.append("rect");
-                            nodeEnter.append("text");
-                            return nodeEnter;
-                        },
-                        update => update,
-                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
-                    );
-                
-                node.classed("collapsed", d => d._children && !d.children);
-                node.select("rect").transition().duration(300)
-                    .attr("width", d => d.width).attr("height", d => d.height)
-                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
-                node.select("text").text(d => mindMapInfo[d.id].title);
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
 
-                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
-                    .join(
-                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
-                        update => update,
-                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
-                    );
-                link.transition().duration(300).attr("stroke-opacity", 0.7);
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 0.7);
 
-                simulation.nodes(currentNodes);
-                simulation.force("link").links(currentLinks);
-                simulation.alpha(0.8).restart();
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
 
-                if (callback) {
-                    const cb = () => {
-                        callback();
-                        simulation.on('end.callback', null);
-                    };
-                    simulation.on('end.callback', cb);
-                }
-            }
+                if (callback) {
+                    const cb = () => {
+                        callback();
+                        simulation.on('end.callback', null);
+                    };
+                    simulation.on('end.callback', cb);
+                }
+            }
 
-            function openInfoModal(nodeId) {
-                const data = mindMapInfo[nodeId];
-                if (data && data.content) {
-                    document.getElementById('modal-title').innerHTML = data.title;
-                    const modalBody = document.getElementById('modal-body');
-                    modalBody.innerHTML = data.content;
-                    if (window.renderMathInElement) {
-                        window.renderMathInElement(modalBody, {
-                            delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
-                            throwOnError: false
-                        });
-                    }
-                    infoModal.classList.add('active');
-                }
-            }
+            function openInfoModal(nodeId) {
+                const data = mindMapInfo[nodeId];
+                if (data && data.content) {
+                    document.getElementById('modal-title').innerHTML = data.title;
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = data.content;
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(modalBody, {
+                            delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
+                            throwOnError: false
+                        });
+                    }
+                    infoModal.classList.add('active');
+                }
+            }
 
-            function handleNodeClick(event, d) {
-                if (event.defaultPrevented) return;
-                const nodeInfo = mindMapInfo[d.id];
-                highlightNode(d.id, false);
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                const nodeInfo = mindMapInfo[d.id];
+                highlightNode(d.id, false);
 
-                if (nodeInfo.url) {
-                    window.open(nodeInfo.url, '_blank');
-                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
-                    return;
-                }
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                    return;
+                }
 
-                if (d.id === ROOT_NODE_ID) {
-                    toggleAllNodes();
-                } else if (d._children && d._children.length > 0) {
-                    d.children = d.children ? null : d._children;
-                    updateGraph();
-                } else if (nodeInfo.content) {
-                    openInfoModal(d.id);
-                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
-                }
-            }
+                if (d.id === ROOT_NODE_ID) {
+                    toggleAllNodes();
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                    updateGraph();
+                } else if (nodeInfo.content) {
+                    openInfoModal(d.id);
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                }
+            }
 
-            function initializeGraph() {
-                sequentialNavigableNodes = [];
-                Object.values(structure).forEach(chapter => {
-                    chapter.forEach(topicId => {
-                        const nodeData = hierarchyRoot.children.flatMap(c => c._children || []).find(n => n.id === topicId);
-                        if(nodeData) sequentialNavigableNodes.push(nodeData);
-                    });
-                });
+            function initializeGraph() {
+                sequentialNavigableNodes = [];
+                Object.values(structure).forEach(chapter => {
+                    chapter.forEach(topicId => {
+                        const nodeData = hierarchyRoot.children.flatMap(c => c._children || []).find(n => n.id === topicId);
+                        if(nodeData) sequentialNavigableNodes.push(nodeData);
+                    });
+                });
 
-                if (listViewContainer.classList.contains('hidden')) {
-                    const width = mindMapContainer.clientWidth;
-                    const height = mindMapContainer.clientHeight;
-                    d3.select(mindMapContainer).select("svg").remove();
-                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
-                    g = svg.append("g");
-                    linkGroup = g.append("g").attr("class", "links");
-                    nodeGroup = g.append("g").attr("class", "nodes");
-                    simulation = d3.forceSimulation()
-                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
-                        .force("charge", d3.forceManyBody().strength(-800))
-                        .force("center", d3.forceCenter(width / 2, height / 2))
-                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
-                        .on("tick", () => {
-                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
-                        });
-                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
-                    svg.call(zoom);
-                    hierarchyRoot.children.forEach(child => child.children = null);
-                    updateGraph();
-                }
-            }
-            
-            function drag(simulation) {
-                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
-                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
-                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
-            }
+                if (listViewContainer.classList.contains('hidden')) {
+                    const width = mindMapContainer.clientWidth;
+                    const height = mindMapContainer.clientHeight;
+                    d3.select(mindMapContainer).select("svg").remove();
+                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
+                    g = svg.append("g");
+                    linkGroup = g.append("g").attr("class", "links");
+                    nodeGroup = g.append("g").attr("class", "nodes");
+                    simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
+                        .force("charge", d3.forceManyBody().strength(-800))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                        .on("tick", () => {
+                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                        });
+                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
+                    svg.call(zoom);
+                    hierarchyRoot.children.forEach(child => child.children = null);
+                    updateGraph();
+                }
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
 
-            function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
-            function toggleAllNodes() {
-                const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
-                hierarchyRoot.children.forEach(child => { child.children = shouldCollapseAll ? null : (child._children || null); });
-                updateGraph();
-            }
+            function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
+            function toggleAllNodes() {
+                const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                hierarchyRoot.children.forEach(child => { child.children = shouldCollapseAll ? null : (child._children || null); });
+                updateGraph();
+            }
 
-            function generateListView() {
-                let html = `<h1>${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
-                for (const catId in structure) {
-                    if (mindMapInfo[catId]) {
-                        html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2><ul>`;
-                        structure[catId].forEach(topicId => {
-      _                     if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
-                        });
-                        html += '</ul>';
-                    }
-                }
-                listViewContainer.innerHTML = html;
-                listViewContainer.querySelectorAll('li, h2').forEach(item => {
-                    item.addEventListener('click', () => {
-                        const info = mindMapInfo[item.dataset.id];
-                        if (info.url) { window.open(info.url, '_blank'); } 
-                        else if (info.content) { openInfoModal(item.dataset.id); }
-                    });
-                });
-            }
+            function generateListView() {
+                let html = `<h1>${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
+                for (const catId in structure) {
+                    if (mindMapInfo[catId]) {
+                        html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2><ul>`;
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
+                        });
+                        html += '</ul>';
+                    }
+                }
+                listViewContainer.innerHTML = html;
+                listViewContainer.querySelectorAll('li, h2').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info.url) { window.open(info.url, '_blank'); } 
+                        else if (info.content) { openInfoModal(item.dataset.id); }
+                    });
+                });
+            }
 
-            function toggleListView() {
-                mindMapContainer.classList.toggle('hidden');
-                listViewContainer.classList.toggle('hidden');
-                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
-            }
-            
-            function highlightNode(nodeId, doPan = true) {
-                if (!node) return;
-                node.classed("highlight", d => d.id === nodeId);
-                if (doPan) {
-                    const targetNode = simulation.nodes().find(n => n.id === nodeId);
-                    if (targetNode && svg && zoom) {
-                        const width = mindMapContainer.clientWidth;
-                        const height = mindMapContainer.clientHeight;
-                        const t = d3.zoomTransform(svg.node());
-                        const transform = d3.zoomIdentity.translate(width / 2 - targetNode.x * t.k, height / 2 - targetNode.y * t.k).scale(t.k);
-                        svg.transition().duration(500).call(zoom.transform, transform);
-                    }
-                }
-            }
-            
-            function navigate(direction) {
-                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
-                highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
-                const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
-                const parentNode = hierarchyRoot.children.find(c => c._children.some(child => child.id === nextNode.id));
-                let needsUpdate = false;
-                if (parentNode && !parentNode.children) {
-                    parentNode.children = parentNode._children;
-                    needsUpdate = true;
-                }
-                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
-                else { highlightNode(nextNode.id); }
-            }
+            function toggleListView() {
+                mindMapContainer.classList.toggle('hidden');
+                listViewContainer.classList.toggle('hidden');
+                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
+            }
+            
+            function highlightNode(nodeId, doPan = true) {
+                if (!node) return;
+                node.classed("highlight", d => d.id === nodeId);
+                if (doPan) {
+                    const targetNode = simulation.nodes().find(n => n.id === nodeId);
+                    if (targetNode && svg && zoom) {
+                        const width = mindMapContainer.clientWidth;
+                        const height = mindMapContainer.clientHeight;
+                        const t = d3.zoomTransform(svg.node());
+                        const transform = d3.zoomIdentity.translate(width / 2 - targetNode.x * t.k, height / 2 - targetNode.y * t.k).scale(t.k);
+                        svg.transition().duration(500).call(zoom.transform, transform);
+                    }
+                }
+            }
+            
+            function navigate(direction) {
+                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
+                highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
+                const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
+                const parentNode = hierarchyRoot.children.find(c => c._children.some(child => child.id === nextNode.id));
+                let needsUpdate = false;
+                if (parentNode && !parentNode.children) {
+                    parentNode.children = parentNode._children;
+                    needsUpdate = true;
+                }
+                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
+                else { highlightNode(nextNode.id); }
+            }
 
-            // --- EVENT LISTENERS ---
-            document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
-            infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
-            
-            themeToggleButton.addEventListener('click', () => {
-                const isDark = document.body.classList.toggle('dark');
-                themeIconLight.classList.toggle('hidden', isDark);
-                themeIconDark.classList.toggle('hidden', !isDark);
-            });
+            // --- EVENT LISTENERS ---
+            document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
+            infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
+            
+            themeToggleButton.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark');
+                themeIconLight.classList.toggle('hidden', isDark);
+                themeIconDark.classList.toggle('hidden', !isDark);
+            });
 
-            document.getElementById('share-btn').addEventListener('click', () => {
-                document.getElementById('share-url').value = window.location.href;
-                shareModal.classList.add('active');
-            });
-            document.getElementById('close-modal-share').addEventListener('click', () => shareModal.classList.remove('active'));
-            shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
-            document.getElementById('copy-link-btn').addEventListener('click', () => {
-                const urlInput = document.getElementById('share-url');
-                navigator.clipboard.writeText(urlInput.value).then(() => {
-                    const feedback = document.getElementById('copy-feedback');
-                    feedback.textContent = 'Link copied!';
-                    setTimeout(() => feedback.textContent = '', 2000);
-                });
-            });
+            document.getElementById('share-btn').addEventListener('click', () => {
+                document.getElementById('share-url').value = window.location.href;
+                shareModal.classList.add('active');
+            });
+            document.getElementById('close-modal-share').addEventListener('click', () => shareModal.classList.remove('active'));
+            shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
+            document.getElementById('copy-link-btn').addEventListener('click', () => {
+                const urlInput = document.getElementById('share-url');
+                navigator.clipboard.writeText(urlInput.value).then(() => {
+                    const feedback = document.getElementById('copy-feedback');
+                    feedback.textContent = 'Link copied!';
+                    setTimeout(() => feedback.textContent = '', 2000);
+                });
+            });
 
-            window.addEventListener('resize', initializeGraph);
-            menuToggleButton.addEventListener('click', () => toolbar.classList.toggle('expanded'));
-            document.getElementById('home-btn').addEventListener('click', resetView);
-            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
-            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
-            document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
-            document.getElementById('next-btn').addEventListener('click', () => navigate(1));
-            
-            window.addEventListener('keydown', (e) => {
-                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active')) return;
-                if (e.key === 'ArrowRight') navigate(1);
-                else if (e.key === 'ArrowLeft') navigate(-1);
-            });
+            window.addEventListener('resize', initializeGraph);
+            menuToggleButton.addEventListener('click', () => toolbar.classList.toggle('expanded'));
+            document.getElementById('home-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
+            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
+            document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
+            document.getElementById('next-btn').addEventListener('click', () => navigate(1));
+            
+            window.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active')) return;
+                if (e.key === 'ArrowRight') navigate(1);
+                else if (e.key === 'ArrowLeft') navigate(-1);
+            });
 
-            initializeGraph();
-        });
-    </script>
+            initializeGraph();
+        });
+    </script>
 </body>
 </html>
