@@ -1,0 +1,696 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundamentals of Surveying: Comprehensive Formula Sheet</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuration for Tailwind's dark mode to be class-based
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+
+    <style>
+        /* Base body styles and transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Styles for the 3D card scene */
+        .card-scene {
+            perspective: 1200px;
+            min-height: 180px;
+        }
+        /* Styles for the flippable card container */
+        .formula-card {
+            width: 100%;
+            height: 100%;
+            min-height: 180px;
+            position: relative;
+            transition: transform 0.7s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .formula-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        /* Common styles for front and back faces of the card */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* For Safari */
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        /* Styles for the back face of the card */
+        .card-back {
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            text-align: left;
+            align-items: flex-start;
+            overflow-y: auto; /* Enable scrolling for overflow content */
+        }
+        /* Custom scrollbar for Webkit browsers (Chrome, Safari) */
+        .card-back::-webkit-scrollbar {
+            width: 8px;
+        }
+        .card-back::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        html.dark .card-back::-webkit-scrollbar-thumb {
+            background-color: #404040; /* dark: zinc-700 */
+            border-radius: 10px;
+            border: 2px solid #18181b; /* dark: zinc-900 */
+        }
+        html:not(.dark) .card-back::-webkit-scrollbar-thumb {
+            background-color: #d4d4d8; /* zinc-300 */
+            border-radius: 10px;
+            border: 2px solid #fafafa; /* zinc-50 */
+        }
+        /* Non-color styles moved here to avoid conflicts with Tailwind */
+        .click-indicator {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.7rem;
+        }
+        .card-title-text {
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .card-back .card-title-text {
+             width: 100%;
+             padding-bottom: 0.5rem;
+        }
+        .formula-display {
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .prop-list {
+            font-size: 0.875rem;
+            list-style-position: inside;
+            width: 100%;
+            padding-top: 0.5rem;
+        }
+    </style></head><body class="bg-white dark:bg-black p-4 sm:p-6">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 relative">
+            <div class="text-center">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">Fundamentals of Surveying</h1>
+                <p class="text-lg text-slate-600 dark:text-slate-300">Flipping Formula Sheet</p>
+            </div>
+            <button id="theme-toggle" type="button" class="absolute top-0 right-0 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+                <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </header>
+
+        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 text-black dark:text-white">
+
+            <!-- SECTION: Distance Measurement & Corrections -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Pace Factor</h2>
+                        <div class="formula-display">$$ P.F. = \frac{\text{Known Distance}}{\text{Average Paces}} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Definitions</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$P.F.$:</strong> Pace Factor, the length of one's average pace.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Known Distance:</strong> A precisely measured distance, used for calibration.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Average Paces:</strong> The average number of paces taken to walk the known distance.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Correction due to Temperature</h2>
+                        <div class="formula-display">$$ C_t = k L (T_m - T_s) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C_t$:</strong> Correction due to temperature.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$k$:</strong> Coefficient of thermal expansion of the tape material.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L$:</strong> Measured length of the line.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$T_m$:</strong> Temperature during measurement.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$T_s$:</strong> Standard temperature at which the tape is calibrated.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Correction due to Pull</h2>
+                        <div class="formula-display">$$ C_p = \frac{(P_m - P_s)L}{AE} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C_p$:</strong> Correction due to incorrect pull (tension).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$P_m$:</strong> Pull applied during measurement.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$P_s$:</strong> Standard pull for the tape.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L$:</strong> Measured length of the line.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$A$:</strong> Cross-sectional area of the tape.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$E$:</strong> Modulus of elasticity of the tape material.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Correction due to Sag</h2>
+                        <div class="formula-display">$$ C_s = -\frac{w^2 L^3}{24 P_m^2} \quad \text{or} \quad C_s = -\frac{W^2 L}{24 P_m^2} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C_s$:</strong> Correction due to sag (always negative).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$w$:</strong> Weight of tape per unit length.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$W$:</strong> Total weight of tape between supports ($W = wL$).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L$:</strong> Length of the tape between supports.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$P_m$:</strong> Pull applied during measurement.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Correction due to Slope</h2>
+                        <div class="formula-display">$$ C_{sl} = -\frac{h^2}{2s} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C_{sl}$:</strong> Correction due to slope (always negative).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$h$:</strong> Difference in elevation between the ends of the tape.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$s$:</strong> Measured slope distance.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> The true horizontal distance $d = s + C_{sl}$.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Stadia Measurement (Horizontal)</h2>
+                        <div class="formula-display">$$ H = Ks + C $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$H$:</strong> Horizontal distance from instrument to rod.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$K$:</strong> Stadia interval factor (usually 100).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$s$:</strong> Stadia intercept (Upper Hair Reading - Lower Hair Reading).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C$:</strong> Stadia constant (usually 0 for internal focusing telescopes).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Stadia Measurement (Inclined)</h2>
+                        <div class="formula-display">$$ H = Ks \cos^2\alpha + C\cos\alpha $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$H$:</strong> Horizontal distance.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$V = \frac{1}{2}Ks \sin(2\alpha) + C\sin\alpha$:</strong> Vertical distance.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$K, s, C$:</strong> Stadia factor, intercept, and constant.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\alpha$:</strong> Vertical angle of sight.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Leveling -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Differential Leveling</h2>
+                        <div class="formula-display">$$ HI = \text{Elev}_{\text{BM}} + BS $$ $$ \text{Elev}_{\text{TP}} = HI - FS $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Definitions</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$HI$:</strong> Height of Instrument. The elevation of the line of sight.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\text{Elev}_{\text{BM}}$:</strong> Elevation of a Benchmark (a point of known elevation).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$BS$:</strong> Backsight. A rod reading taken on a point of known elevation.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$FS$:</strong> Foresight. A rod reading taken on a point whose elevation is to be determined.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\text{Elev}_{\text{TP}}$:</strong> Elevation of a Turning Point or any other point.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Curvature & Refraction</h2>
+                        <div class="formula-display">$$ h_{cr} = 0.0675 K^2 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$h_{cr}$:</strong> The combined effect of Earth's curvature and atmospheric refraction, in meters.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$K$:</strong> The horizontal distance from the instrument to the rod, in kilometers.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> Curvature causes rod readings to be too high. Refraction causes them to be too low. This formula gives the net effect.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SECTION: Traverse Computations -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Latitude & Departure</h2>
+                        <div class="formula-display">$$ \text{Lat} = D \cos \alpha $$ $$ \text{Dep} = D \sin \alpha $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Lat:</strong> Latitude. The North/South component of a line. North is (+), South is (-).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Dep:</strong> Departure. The East/West component of a line. East is (+), West is (-).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$D$:</strong> The length of the traverse course.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\alpha$:</strong> The azimuth or bearing angle of the course.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Linear Error of Closure</h2>
+                        <div class="formula-display">$$ LEC = \sqrt{(\Sigma \text{Lat})^2 + (\Sigma \text{Dep})^2} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$LEC$:</strong> Linear Error of Closure. The distance by which a traverse fails to close.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma \text{Lat}$:</strong> The algebraic sum of all latitudes in the traverse. Should be 0 for a closed loop.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma \text{Dep}$:</strong> The algebraic sum of all departures in the traverse. Should be 0 for a closed loop.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Relative Error of Closure</h2>
+                        <div class="formula-display">$$ REC = \frac{LEC}{\Sigma D} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$REC$:</strong> Relative Error of Closure, or precision. Expressed as a ratio (e.g., 1:5000).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$LEC$:</strong> Linear Error of Closure.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma D$:</strong> The total perimeter of the traverse.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Compass Rule (Bowditch)</h2>
+                        <div class="formula-display">$$ c_{lat} = -(\Sigma\text{Lat})\frac{d}{D} $$ $$ c_{dep} = -(\Sigma\text{Dep})\frac{d}{D} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$c_{lat}, c_{dep}$:</strong> Correction for latitude and departure of a specific course.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma\text{Lat}, \Sigma\text{Dep}$:</strong> Total misclosure in latitude and departure.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$d$:</strong> Length of the specific course being corrected.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$D$:</strong> Total perimeter of the traverse.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Area Computations -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Area by Coordinates</h2>
+                        <div class="formula-display">$$ 2A = \Sigma [X_n(Y_{n+1} - Y_{n-1})] $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Method</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$A$:</strong> Area of the closed polygon.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$X_n, Y_n$:</strong> Coordinates of the nth vertex.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Procedure:</strong> Multiply each X-coordinate by the difference between the Y-coordinates of the following and preceding vertices. Sum the results and divide by 2.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Area by DMD</h2>
+                        <div class="formula-display">$$ 2A = \Sigma (\text{DMD} \times \text{Lat}) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">DMD Rules</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">1.</strong> DMD of first course = Departure of first course.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">2.</strong> DMD of any course = DMD of preceding course + Departure of preceding course + Departure of the course itself.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">3.</strong> DMD of last course = -Departure of last course.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Trapezoidal Rule for Area</h2>
+                        <div class="formula-display">$$ A = \frac{d}{2}(h_1+h_n+2\Sigma h_{int}) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$A$:</strong> Total area of the tract.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$d$:</strong> Common interval between offsets.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$h_1, h_n$:</strong> First and last offsets.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma h_{int}$:</strong> Sum of the intermediate offsets.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Simpson's 1/3 Rule</h2>
+                        <div class="formula-display">$$ A = \frac{d}{3}(h_1+h_n+4\Sigma h_{even}+2\Sigma h_{odd}) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> Requires an odd number of offsets (even number of intervals).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$d$:</strong> Common interval between offsets.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma h_{even}$:</strong> Sum of even-numbered offsets (h2, h4, ...).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma h_{odd}$:</strong> Sum of odd-numbered intermediate offsets (h3, h5, ...).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Horizontal Curves -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Tangent Distance (H-Curve)</h2>
+                        <div class="formula-display">$$ T = R \tan\left(\frac{\Delta}{2}\right) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$T$:</strong> Tangent Distance. Distance from PC to PI, or PI to PT.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$R$:</strong> Radius of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Delta$:</strong> Intersection angle (or central angle).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">PC:</strong> Point of Curvature.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">PI:</strong> Point of Intersection.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">PT:</strong> Point of Tangency.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Length of Curve (H-Curve)</h2>
+                        <div class="formula-display">$$ L_c = R\Delta \frac{\pi}{180^\circ} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L_c$:</strong> Length of the circular curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$R$:</strong> Radius of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Delta$:</strong> Intersection angle in decimal degrees.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Long Chord (H-Curve)</h2>
+                        <div class="formula-display">$$ C = 2R \sin\left(\frac{\Delta}{2}\right) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$C$:</strong> Long Chord. The straight-line distance from PC to PT.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$R$:</strong> Radius of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Delta$:</strong> Intersection angle.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Middle Ordinate (H-Curve)</h2>
+                        <div class="formula-display">$$ M = R\left(1 - \cos\frac{\Delta}{2}\right) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$M$:</strong> Middle Ordinate. The distance from the midpoint of the long chord to the midpoint of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$R$:</strong> Radius of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Delta$:</strong> Intersection angle.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">External Distance (H-Curve)</h2>
+                        <div class="formula-display">$$ E = R\left(\sec\frac{\Delta}{2} - 1\right) $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$E$:</strong> External Distance. The distance from the PI to the midpoint of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$R$:</strong> Radius of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Delta$:</strong> Intersection angle.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Vertical Curves -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Parabolic Curve Equation</h2>
+                        <div class="formula-display">$$ y = \text{Elev}_{BVC} + g_1 x + \frac{g_2-g_1}{2L}x^2 $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$y$:</strong> Elevation of any point on the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\text{Elev}_{BVC}$:</strong> Elevation of the Beginning of Vertical Curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$g_1, g_2$:</strong> Grades (in decimal form) of the back and forward tangents.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L$:</strong> Total horizontal length of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$x$:</strong> Horizontal distance from the BVC to the point.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Highest/Lowest Point (V-Curve)</h2>
+                        <div class="formula-display">$$ x_s = -\frac{g_1 L}{g_2 - g_1} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$x_s$:</strong> The horizontal distance from the BVC to the summit (highest point) or sag (lowest point) of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$g_1, g_2$:</strong> Grades (in decimal form) of the back and forward tangents.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$L$:</strong> Total horizontal length of the curve.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">Note:</strong> A real solution exists only if the curve is a crest or sag (i.e., $g_1$ and $g_2$ have opposite signs).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Errors & Adjustments -->
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Probable Error (Single Obs.)</h2>
+                        <div class="formula-display">$$ PE_s = \pm 0.6745 \sqrt{\frac{\Sigma v^2}{n-1}} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$PE_s$:</strong> Probable error of a single observation. Defines a range where the true value has a 50% chance of falling.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$v$:</strong> The residual for an observation (difference from the mean).</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma v^2$:</strong> Sum of the squares of the residuals.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$n$:</strong> Number of observations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Probable Error (Mean)</h2>
+                        <div class="formula-display">$$ PE_m = \frac{PE_s}{\sqrt{n}} = \pm 0.6745 \sqrt{\frac{\Sigma v^2}{n(n-1)}} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$PE_m$:</strong> Probable error of the mean. Indicates the precision of the mean value of a set of observations.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$PE_s$:</strong> Probable error of a single observation.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$n$:</strong> Number of observations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Standard Deviation</h2>
+                        <div class="formula-display">$$ \sigma = \sqrt{\frac{\Sigma v^2}{n-1}} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\sigma$:</strong> Standard Deviation. A measure of the dispersion of a set of data from its mean.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$v$:</strong> The residual for an observation.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\Sigma v^2$:</strong> Sum of the squares of the residuals.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$n$:</strong> Number of observations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-scene">
+                <div class="formula-card">
+                    <div class="card-face card-front bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400">Weighted Measurements</h2>
+                        <div class="formula-display">$$ \bar{x}_w = \frac{\Sigma(wx)}{\Sigma w} $$</div>
+                        <span class="click-indicator text-slate-500 dark:text-slate-400">Click to flip</span>
+                    </div>
+                    <div class="card-face card-back bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                        <h2 class="card-title-text font-bold text-blue-900 dark:text-blue-400 border-b-2 border-blue-100 dark:border-zinc-700">Parameters</h2>
+                        <ul class="prop-list text-slate-700 dark:text-slate-300">
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$\bar{x}_w$:</strong> The weighted mean, or most probable value.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$x$:</strong> An individual measurement.</li>
+                            <li><strong class="font-semibold text-slate-800 dark:text-slate-100">$w$:</strong> The weight assigned to that measurement. Weight is often inversely proportional to variance ($1/\sigma^2$) or proportional to the number of observations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="text-center text-slate-500 dark:text-slate-400 mt-8">
+            <p class="text-xs">© 2025 www.arizval.com A.M. Review Notes</p>
+        </footer>
+    </div>
+
+    <script>
+        // This script handles the card flipping and dark mode toggle functionality.
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Card Flipping Logic ---
+            const cards = document.querySelectorAll('.formula-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('is-flipped');
+                });
+            });
+
+            // --- Dark Mode Toggle Logic ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+            // Function to set the theme based on stored preference or system setting
+            const applyTheme = () => {
+                const isDarkMode = localStorage.getItem('color-theme') === 'dark' || 
+                                     (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+                document.documentElement.classList.toggle('dark', isDarkMode);
+                themeToggleLightIcon.classList.toggle('hidden', !isDarkMode);
+                themeToggleDarkIcon.classList.toggle('hidden', isDarkMode);
+            };
+            
+            // Apply the theme when the page loads
+            applyTheme();
+
+            // Add click listener to the toggle button
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+                applyTheme(); // Re-apply theme to ensure icon state is correct
+            });
+        });
+    </script></body></html>
