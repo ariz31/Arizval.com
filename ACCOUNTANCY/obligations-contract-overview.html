@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Obligations and Contracts (Philippines) [Detailed]</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            --highlight-border-light: #ef4444; /* Red-500 */
+            --highlight-border-dark: #f87171; /* Red-400 */
+            
+            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
+            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
+            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
+            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
+
+            --leaf-bg-light: #dcfce7; --leaf-border-light: #86efac; --leaf-text-light: #166534;
+            --leaf-bg-dark: #166534; --leaf-border-dark: #4ade80; --leaf-text-dark: #dcfce7;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; box-sizing: border-box; }
+        #mind-map-container { cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .node.level-2.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-2.collapsed text { fill: var(--cat-text-collapsed-light); }
+        
+        .node.leaf-node rect { fill: var(--leaf-bg-light); stroke: var(--leaf-border-light); }
+        .node.leaf-node text { fill: var(--leaf-text-light); font-size: 12px; }
+        
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+        
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+        
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .node.level-2.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-2.collapsed text { fill: var(--cat-text-collapsed-dark); }
+
+        body.dark .node.leaf-node rect { fill: var(--leaf-bg-dark); stroke: var(--leaf-border-dark); }
+        body.dark .node.leaf-node text { fill: var(--leaf-text-dark); }
+
+        body.dark .link { stroke: var(--link-dark); }
+
+        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
+        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .modal-content li { margin-bottom: 0.25rem; }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+
+        #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
+        body.dark #toolbar.expanded { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(71, 85, 105, 0.5); }
+        #toolbar-tools { display: flex; flex-direction: column; gap: 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1), padding 0.5s ease; }
+        #toolbar.expanded #toolbar-tools { max-height: 500px; }
+        .toolbar-divider { width: 80%; height: 1px; margin: 0.25rem auto; background-color: #e2e8f0; }
+        body.dark .toolbar-divider { background-color: #475569; }
+
+        #list-view-container { padding: 2rem; overflow-y: auto; background-color: var(--bg-light); color: var(--text-light); box-sizing: border-box; height: 100%; }
+        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
+        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark #list-view-container h1 { color: var(--primary-dark); }
+        .list-item { cursor: pointer; padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem; transition: background-color 0.2s; }
+        .list-item:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark .list-item:hover { background-color: rgba(255,255,255,0.05); }
+        #list-view-container h2.list-item { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
+        body.dark #list-view-container h2.list-item { border-bottom-color: var(--border-dark); }
+        #list-view-container ul { list-style: none; padding-left: 1rem; }
+    </style>
+</head>
+<body>
+    <div id="mind-map-container"></div>
+    <div id="list-view-container" class="hidden"></div>
+
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Share Mind Map</h2>
+                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
+                <div class="relative">
+                    <input id="share-url" type="text" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
+                    <button id="copy-link-btn" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                </div>
+                <p id="copy-feedback" class="text-sm text-green-600 dark:text-green-400 h-4 text-center"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolbar">
+        <button id="menu-toggle-btn" title="Toggle Menu" class="p-3 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div id="toolbar-tools">
+            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+            <button id="toggle-all-btn" title="Expand/Collapse All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4" /></svg>
+            </button>
+            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="prev-btn" title="Previous Topic (Left Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button id="next-btn" title="Next Topic (Right Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="share-btn" title="Share" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367-2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
+            </button>
+            <button id="theme-toggle" title="Toggle Dark Mode" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'obligations_and_contracts';
+
+            const mindMapInfo = {
+                obligations_and_contracts: {
+                    title: "Obligations & Contracts",
+                    content: `
+                        <p>This mind map provides a structured overview of the Law on Obligations and Contracts in the Philippines, based on the Civil Code.</p>
+                        <h3>How to Use This Mind Map</h3>
+                        <ul>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for details or to open its link.</li>
+                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
+                            <li><strong>Toolbar:</strong> Use the floating toolbar for more options:
+                                <ul>
+                                    <li><strong>Reset View:</strong> Centers the map.</li>
+                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
+                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
+                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
+                                    <li><strong>Share:</strong> Get a link to share the map.</li>
+                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
+                                </ul>
+                            </li>
+                        </ul>`,
+                    keywords: "law, civil code, philippines, oblicon"
+                },
+                obligations: {
+                    title: "I. Obligations",
+                    content: "<p>Title I of Book IV of the Civil Code. It covers the definition, sources, nature, effects, kinds, and extinguishment of obligations.</p>",
+                    keywords: "obligations, juridical necessity"
+                },
+                definition_of_obligation: {
+                    title: "Definition (Art. 1156)",
+                    content: "<h3>Article 1156</h3><p>An obligation is a juridical necessity to give, to do, or not to do.</p><h3>Essential Requisites:</h3><ul><li><strong>Passive Subject (Debtor/Obligor):</strong> The person who is bound to the fulfillment of the obligation.</li><li><strong>Active Subject (Creditor/Obligee):</strong> The person who is entitled to demand the fulfillment of the obligation.</li><li><strong>Object or Prestation:</strong> The conduct required to be observed by the debtor (giving, doing, or not doing).</li><li><strong>Juridical or Legal Tie (Vinculum Juris):</strong> That which binds or connects the parties to the obligation.</li></ul>",
+                    keywords: "art 1156, definition, requisites, debtor, creditor, prestation"
+                },
+                sources_of_obligations: {
+                    title: "Sources (Art. 1157)",
+                    content: "<h3>Article 1157</h3><p>Obligations arise from:</p><ul><li><strong>(1) Law:</strong> When they are imposed by law itself. (e.g., obligation to pay taxes).</li><li><strong>(2) Contracts:</strong> When they arise from the stipulation of the parties (Art. 1305).</li><li><strong>(3) Quasi-contracts:</strong> When they arise from lawful, voluntary and unilateral acts which are enforceable to the end that no one shall be unjustly enriched at the expense of another (Art. 2142).</li><li><strong>(4) Acts or omissions punished by law (Delicts):</strong> When they arise from civil liability which is the consequence of a criminal offense (Art. 1161).</li><li><strong>(5) Quasi-delicts (Torts):</strong> When they arise from damage caused to another through an act or omission, there being fault or negligence, but no contractual relation exists between the parties (Art. 2176).</li></ul>",
+                    keywords: "art 1157, sources, law, contracts, quasi-contracts, delicts, quasi-delicts"
+                },
+                nature_and_effect_of_obligations: {
+                    title: "Nature & Effect",
+                    content: "<h3>Nature and Effect of Obligations (Arts. 1163-1178)</h3><p>This covers the duties of the debtor, the rights and remedies of the creditor, and the grounds for liability in case of breach.</p>",
+                    keywords: "breach, fraud, negligence, delay, dolo, culpa, mora, fortuitous event"
+                },
+                duties_of_debtor: {
+                    title: "Duties of Debtor",
+                    content: "<h3>Duties in an Obligation to Give</h3><ul><li><strong>Determinate Thing:</strong><ol><li>To preserve the thing with the diligence of a good father of a family (Art. 1163).</li><li>To deliver the fruits of the thing (Art. 1164).</li><li>To deliver its accessions and accessories (Art. 1166).</li><li>To deliver the thing itself.</li></ol></li><li><strong>Generic Thing:</strong><ol><li>To deliver a thing which is of the quality intended by the parties.</li><li>To be liable for damages in case of breach.</li></ol></li></ul><h3>Duties in Obligations to Do or Not to Do</h3><ul><li><strong>To Do:</strong> To do it. If he fails to do it or does it in contravention of the tenor, it will be executed at his cost (Art. 1167).</li><li><strong>Not to Do:</strong> Not to do what has been forbidden. What has been done in violation may be ordered undone at his expense (Art. 1168).</li></ul>",
+                    keywords: "duties, determinate, generic, diligence"
+                },
+                breach_of_obligation: {
+                    title: "Breach of Obligation",
+                    content: "<h3>Grounds for Liability (Art. 1170)</h3><p>Those who in the performance of their obligations are guilty of <strong>fraud, negligence, or delay</strong>, and those who in any manner <strong>contravene the tenor</strong> thereof, are liable for damages.</p><h3>Types of Breach:</h3><ul><li><strong>Voluntary:</strong> The debtor is liable for damages. (Fraud, Negligence, Delay, Contravention of Tenor).</li><li><strong>Involuntary:</strong> The debtor is unable to perform due to a fortuitous event. General rule: debtor is not liable.</li></ul>",
+                    keywords: "breach, art 1170, voluntary, involuntary"
+                },
+                fraud_dolo: {
+                    title: "Fraud (Dolo)",
+                    content: "<h3>Fraud (Art. 1171)</h3><p>The deliberate or intentional evasion of the normal fulfillment of an obligation. Responsibility arising from fraud is demandable in all obligations. Any waiver of an action for future fraud is void.</p><ul><li><strong>Dolo Incidente (Incidental Fraud):</strong> Committed in the performance of an obligation already existing. The party guilty is liable for damages.</li><li><strong>Dolo Causante (Causal Fraud):</strong> Fraud employed at the time of the execution of a contract in order to secure consent. This is a ground for annulment of the contract.</li></ul>",
+                    keywords: "dolo, incidental fraud, causal fraud, dolo incidente, dolo causante"
+                },
+                negligence_culpa: {
+                    title: "Negligence (Culpa)",
+                    content: "<h3>Negligence (Art. 1172)</h3><p>Any voluntary act or omission, there being no bad faith or malice, which prevents the normal fulfillment of an obligation. Responsibility arising from negligence may be regulated by the courts, according to the circumstances.</p><h3>Kinds of Negligence:</h3><ul><li><strong>Culpa Contractual (Contractual Negligence):</strong> Negligence in contracts resulting in their breach.</li><li><strong>Culpa Aquiliana (Civil Negligence / Tort):</strong> Negligence which by itself is the source of an obligation between the parties not so related before by any pre-existing contract.</li><li><strong>Culpa Criminal (Criminal Negligence):</strong> Negligence resulting in the commission of a crime.</li></ul>",
+                    keywords: "culpa, contractual, aquiliana, criminal"
+                },
+                delay_mora: {
+                    title: "Delay (Mora)",
+                    content: "<h3>Delay (Mora)</h3><p>The failure to perform an obligation on time which constitutes a breach of the obligation.</p><h3>Kinds of Delay:</h3><ul><li><strong>Mora Solvendi:</strong> Delay on the part of the debtor to fulfill his obligation.</li><li><strong>Mora Accipiendi:</strong> Delay on the part of the creditor to accept the performance of the obligation.</li><li><strong>Compensatio Morae:</strong> Delay of the obligors in reciprocal obligations.</li></ul><p><strong>General Rule:</strong> No demand, no delay (<em>Unusquisque debitorum, interpellatus, moram facit</em>).</p>",
+                    keywords: "mora, mora solvendi, mora accipiendi, compensatio morae, demand"
+                },
+                fortuitous_event: {
+                    title: "Fortuitous Event (Art. 1174)",
+                    content: "<h3>Fortuitous Event (Caso Fortuito)</h3><p>An event which could not be foreseen, or which, though foreseen, was inevitable.</p><p><strong>General Rule:</strong> No person shall be responsible for those events which could not be foreseen, or which, though foreseen, were inevitable.</p><h3>Exceptions (Liability exists despite fortuitous event):</h3><ol><li>When expressly specified by law (e.g., delay, promise to deliver same thing to two or more persons).</li><li>When declared by stipulation.</li><li>When the nature of the obligation requires the assumption of risk.</li></ol>",
+                    keywords: "caso fortuito, act of god, force majeure"
+                },
+                kinds_of_obligations: {
+                    title: "Kinds of Obligations",
+                    content: "<h3>Primary Classifications of Obligations</h3><p>This section details the various kinds of obligations under the Civil Code.</p>",
+                    keywords: "pure, conditional, period, alternative, joint, solidary, divisible, penal clause"
+                },
+                pure_and_conditional: {
+                    title: "Pure & Conditional",
+                    content: "<h3>Pure vs Conditional Obligations</h3><ul><li><strong>Pure Obligation (Art. 1179):</strong> One which is not subject to any condition and no specific date is mentioned for its fulfillment; it is immediately demandable.</li><li><strong>Conditional Obligation:</strong> One whose consequences are subject in one way or another to the fulfillment of a condition.</li></ul><h3>Types of Conditions:</h3><ul><li><strong>Suspensive:</strong> The fulfillment of the condition will give rise to an obligation.</li><li><strong>Resolutory:</strong> The fulfillment of the condition will extinguish an obligation already existing.</li></ul>",
+                    keywords: "pure, conditional, suspensive, resolutory"
+                },
+                obligation_with_a_period: {
+                    title: "With a Period",
+                    content: "<h3>Obligation with a Period (Art. 1193)</h3><p>One whose effects or consequences are subjected in one way or another to the expiration or arrival of said period or term.</p><ul><li><strong>Suspensive Period (Ex Die):</strong> The obligation begins only from a day certain upon the arrival of the period.</li><li><strong>Resolutory Period (In Diem):</strong> The obligation is valid up to a day certain and terminates upon the arrival of the period.</li></ul>",
+                    keywords: "period, term, ex die, in diem"
+                },
+                alternative_and_facultative: {
+                    title: "Alternative & Facultative",
+                    content: "<h3>Alternative vs Facultative</h3><ul><li><strong>Alternative Obligation (Art. 1199):</strong> Several prestations are due but the performance of one is sufficient. The right of choice generally belongs to the debtor.</li><li><strong>Facultative Obligation (Art. 1206):</strong> Only one prestation is due but the debtor may substitute another.</li></ul>",
+                    keywords: "alternative, facultative, prestation, choice"
+                },
+                joint_and_solidary: {
+                    title: "Joint & Solidary",
+                    content: "<h3>Joint vs Solidary Obligations</h3><ul><li><strong>Joint Obligation (Art. 1207):</strong> The whole obligation is to be paid or fulfilled proportionately by the different debtors and/or is to be demanded proportionately by the different creditors. (Presumed by law).</li><li><strong>Solidary Obligation:</strong> Each one of the debtors is bound to render, and/or each one of the creditors has a right to demand from any of the debtors, the entire compliance with the prestation. Solidarity exists only when: (1) the obligation expressly so states; (2) the law requires solidarity; or (3) the nature of the obligation requires solidarity.</li></ul>",
+                    keywords: "joint, solidary, proportionate, entire"
+                },
+                divisible_and_indivisible: {
+                    title: "Divisible & Indivisible",
+                    content: "<h3>Divisible vs Indivisible Obligations (Art. 1223)</h3><ul><li><strong>Divisible:</strong> The object of the obligation, in its delivery or performance, is capable of partial fulfillment.</li><li><strong>Indivisible:</strong> The object of the obligation, in its delivery or performance, is not capable of partial fulfillment.</li></ul><p>The divisibility or indivisibility is determined by the purpose of the obligation or the intention of the parties, not the possibility of partially performing the prestation itself.</p>",
+                    keywords: "divisible, indivisible, partial fulfillment"
+                },
+                with_a_penal_clause: {
+                    title: "With a Penal Clause",
+                    content: "<h3>Obligation with a Penal Clause (Art. 1226)</h3><p>One which contains an accessory undertaking to pay a previously stipulated indemnity in case of non-performance. The penalty shall substitute the indemnity for damages and the payment of interests in case of noncompliance, if there is no stipulation to the contrary.</p>",
+                    keywords: "penal clause, penalty, indemnity"
+                },
+                extinguishment_of_obligations: {
+                    title: "Extinguishment (Art. 1231)",
+                    content: "<h3>Article 1231</h3><p>Obligations are extinguished by:</p><ul><li>Payment or performance</li><li>Loss of the thing due</li><li>Condonation or remission of the debt</li><li>Confusion or merger of the rights of creditor and debtor</li><li>Compensation</li><li>Novation</li></ul><p>Other causes include annulment, rescission, fulfillment of a resolutory condition, and prescription.</p>",
+                    keywords: "art 1231, extinguishment, payment, loss, condonation, confusion, compensation, novation"
+                },
+                payment_or_performance: {
+                    title: "Payment or Performance",
+                    content: "<h3>Payment or Performance (Art. 1232)</h3><p>Payment means not only the delivery of money but also the performance, in any other manner, of an obligation.</p><h3>Special Forms of Payment:</h3><ul><li><strong>Dation in Payment (Art. 1245):</strong> Property is alienated to the creditor in satisfaction of a debt in money.</li><li><strong>Application of Payments (Art. 1252):</strong> Designation of the debt to which payment should be applied when the debtor has various debts of the same kind in favor of one and the same creditor.</li><li><strong>Payment by Cession (Art. 1255):</strong> The debtor abandons all of his property for the benefit of his creditors in order that the latter may sell the same and apply the proceeds thereof to the satisfaction of their credits.</li><li><strong>Tender of Payment and Consignation (Art. 1256):</strong> Tender of payment is the act of offering the creditor what is due him. Consignation is the act of depositing the thing due with the court or judicial authorities whenever the creditor refuses without just cause to accept payment.</li></ul>",
+                    keywords: "payment, dation, cession, consignation"
+                },
+                loss_of_the_thing_due: {
+                    title: "Loss of Thing Due",
+                    content: "<h3>Loss of the Thing Due (Art. 1262)</h3><p>A thing is lost when it perishes, goes out of commerce, or disappears in such a way that its existence is unknown or it cannot be recovered. An obligation which consists in the delivery of a determinate thing shall be extinguished if it should be lost or destroyed without the fault of the debtor, and before he has incurred in delay.</p>",
+                    keywords: "loss, perishes, fault, delay"
+                },
+                condonation_or_remission: {
+                    title: "Condonation or Remission",
+                    content: "<h3>Condonation or Remission (Art. 1270)</h3><p>The gratuitous abandonment by the creditor of his right against the debtor. It is essentially a donation.</p>",
+                    keywords: "condonation, remission, gratuitous, donation"
+                },
+                confusion_or_merger: {
+                    title: "Confusion or Merger",
+                    content: "<h3>Confusion or Merger (Art. 1275)</h3><p>The meeting in one person of the qualities of creditor and debtor with respect to the same obligation. The obligation is extinguished from the time the characters of creditor and debtor are merged in the same person.</p>",
+                    keywords: "confusion, merger, creditor, debtor"
+                },
+                compensation: {
+                    title: "Compensation",
+                    content: "<h3>Compensation (Art. 1278)</h3><p>The extinguishment to the concurrent amount, of the debts of two persons who, in their own right, are debtors and creditors of each other.</p><h3>Kinds:</h3><ul><li><strong>Legal:</strong> By operation of law.</li><li><strong>Conventional:</strong> By agreement of the parties.</li><li><strong>Judicial:</strong> By order from a court.</li></ul>",
+                    keywords: "compensation, concurrent amount, legal, conventional"
+                },
+                novation: {
+                    title: "Novation",
+                    content: "<h3>Novation (Art. 1291)</h3><p>The total or partial extinction of an obligation through the creation of a new one which substitutes it.</p><h3>Kinds:</h3><ul><li><strong>Objective/Real:</strong> Changing the object or principal conditions.</li><li><strong>Subjective/Personal:</strong> Substituting the person of the debtor (expromision or delegacion) or subrogating a third person in the rights of the creditor.</li></ul>",
+                    keywords: "novation, substitution, subrogation, expromision, delegacion"
+                },
+                contracts: {
+                    title: "II. Contracts",
+                    content: "<p>Title II of Book IV of the Civil Code. It deals with the general provisions on contracts, their essential requisites, form, interpretation, and defective types.</p>",
+                    keywords: "contracts, agreements, stipulations"
+                },
+                definition_of_contract: {
+                    title: "Definition & Principles",
+                    content: "<h3>Definition (Art. 1305)</h3><p>A contract is a meeting of minds between two persons whereby one binds himself, with respect to the other, to give something or to render some service.</p><h3>Basic Principles:</h3><ul><li><strong>Autonomy (Art. 1306):</strong> Parties may establish such stipulations, clauses, terms and conditions as they may deem convenient, provided they are not contrary to law, morals, good customs, public order, or public policy.</li><li><strong>Mutuality (Art. 1308):</strong> The contract must bind both contracting parties; its validity or compliance cannot be left to the will of one of them.</li><li><strong>Relativity (Art. 1311):</strong> Contracts take effect only between the parties, their assigns and heirs. Exception: Stipulation pour autrui.</li><li><strong>Consensuality (Art. 1315):</strong> Contracts are perfected by mere consent.</li><li><strong>Obligatory Force (Art. 1159):</strong> Obligations arising from contracts have the force of law between the contracting parties and should be complied with in good faith.</li></ul>",
+                    keywords: "art 1305, definition, autonomy, mutuality, relativity, consensuality"
+                },
+                essential_requisites: {
+                    title: "Requisites (Art. 1318)",
+                    content: "<h3>Article 1318</h3><p>There is no contract unless the following requisites concur: (1) Consent, (2) Object, and (3) Cause.</p>",
+                    keywords: "art 1318, consent, object, cause, requisites"
+                },
+                consent: {
+                    title: "Consent",
+                    content: "<h3>Consent (Art. 1319)</h3><p>Manifested by the meeting of the offer and the acceptance upon the thing and the cause which are to constitute the contract.</p><h3>Elements:</h3><ul><li>Plurality of subjects</li><li>Capacity</li><li>Intelligent and free will</li><li>Express or tacit manifestation of will</li><li>Meeting of the offer and acceptance</li></ul><h3>Vices of Consent (Art. 1330):</h3><ul><li>Mistake</li><li>Violence</li><li>Intimidation</li><li>Undue Influence</li><li>Fraud (Dolo Causante)</li></ul>",
+                    keywords: "consent, offer, acceptance, vices of consent"
+                },
+                object_of_contract: {
+                    title: "Object",
+                    content: "<h3>Object of Contract (Art. 1347)</h3><p>The subject matter of the contract. It can be things, rights, or services.</p><h3>Requisites:</h3><ul><li>Must be within the commerce of men.</li><li>Must not be impossible, legally or physically.</li><li>Must be in existence or capable of coming into existence.</li><li>Must be determinate or determinable.</li></ul>",
+                    keywords: "object, subject matter, commerce of men"
+                },
+                cause_of_contract: {
+                    title: "Cause",
+                    content: "<h3>Cause of Obligation (Art. 1350)</h3><p>The essential reason or purpose which the contracting parties have in view at the time of entering into the contract.</p><h3>Types:</h3><ul><li><strong>Onerous:</strong> The prestation or promise of a thing or service by the other.</li><li><strong>Remuneratory:</strong> The service or benefit which is remunerated.</li><li><strong>Gratuitous:</strong> The mere liberality of the benefactor.</li></ul>",
+                    keywords: "cause, purpose, onerous, gratuitous"
+                },
+                forms_of_contracts: {
+                    title: "Forms of Contracts",
+                    content: "<h3>General Rule & Exceptions</h3><p><strong>General Rule (Art. 1356):</strong> Contracts shall be obligatory, in whatever form they may have been entered into, provided all the essential requisites for their validity are present.</p><p><strong>Exceptions:</strong> When the law requires that a contract be in some form in order that it may be valid (for validity) or enforceable (for enforceability, e.g., Statute of Frauds).</p>",
+                    keywords: "art 1356, form, statute of frauds"
+                },
+                reformation_of_instruments: {
+                    title: "Reformation",
+                    content: "<h3>Reformation of Instruments (Art. 1359)</h3><p>A remedy in equity by means of which a written instrument is made or construed so as to express or conform to the real intention of the parties when some error or mistake has been committed.</p><p><strong>Requisites:</strong> (1) Meeting of the minds; (2) True intention is not expressed in the instrument; (3) Failure due to mistake, fraud, inequitable conduct, or accident.</p>",
+                    keywords: "art 1359, reformation, mistake, fraud"
+                },
+                interpretation_of_contracts: {
+                    title: "Interpretation",
+                    content: "<h3>Interpretation of Contracts (Art. 1370)</h3><p>The determination of the meaning of the terms or words used by the parties in their written contract.</p><p><strong>Primary Rule:</strong> If the terms are clear, the literal meaning controls (<em>in claris non fit interpretatio</em>). If there is a conflict between the words and the evident intention of the parties, the intention shall prevail.</p>",
+                    keywords: "art 1370, interpretation, literal meaning, intention"
+                },
+                defective_contracts: {
+                    title: "Defective Contracts",
+                    content: "<h3>Four Kinds of Defective Contracts</h3><p>Contracts can be defective in four ways, in increasing order of invalidity.</p>",
+                    keywords: "rescissible, voidable, unenforceable, void, inexistent, defective"
+                },
+                rescissible_contracts: {
+                    title: "Rescissible Contracts",
+                    content: "<h3>Rescissible Contracts (Art. 1380)</h3><p>Those validly agreed upon but, by reason of lesion or economic prejudice to one of the parties or to a third person, may be rescinded. They are valid until rescinded.</p><h3>Grounds (Art. 1381):</h3><ul><li>Those entered into by guardians whenever the wards suffer lesion by more than 1/4 of the value of the things.</li><li>Those agreed upon in representation of absentees, if the latter suffer the lesion stated above.</li><li>Those undertaken in fraud of creditors.</li><li>Those which refer to things under litigation.</li><li>All other contracts specially declared by law to be subject to rescission.</li></ul>",
+                    keywords: "rescissible, lesion, fraud of creditors"
+                },
+                voidable_contracts: {
+                    title: "Voidable Contracts",
+                    content: "<h3>Voidable Contracts (Art. 1390)</h3><p>Those which possess all the essential requisites of a valid contract but one of the parties is incapable of giving consent, or consent is vitiated by mistake, violence, intimidation, undue influence, or fraud. They are valid until annulled.</p>",
+                    keywords: "voidable, annullable, vice of consent"
+                },
+                unenforceable_contracts: {
+                    title: "Unenforceable Contracts",
+                    content: "<h3>Unenforceable Contracts (Art. 1403)</h3><p>Those that cannot be enforced or given effect in a court of law or sued upon by reason of certain defects provided by law until and unless they are ratified.</p><h3>Kinds:</h3><ul><li>Those entered into in the name of another by one without or acting in excess of authority.</li><li>Those that do not comply with the Statute of Frauds.</li><li>Those where both parties are incapable of giving consent.</li></ul>",
+                    keywords: "unenforceable, statute of frauds, ratification"
+                },
+                void_contracts: {
+                    title: "Void or Inexistent",
+                    content: "<h3>Void or Inexistent Contracts (Art. 1409)</h3><p>Those which, because of certain defects, generally produce no effect at all. They are considered inexistent from the very beginning.</p><h3>Grounds:</h3><ul><li>Those whose cause, object or purpose is contrary to law, morals, good customs, public order or public policy.</li><li>Those which are absolutely simulated or fictitious.</li><li>Those whose cause or object did not exist at the time of the transaction.</li><li>Those whose object is outside the commerce of men.</li><li>Those which contemplate an impossible service.</li><li>Those where the intention of the parties relative to the principal object of the contract cannot be ascertained.</li><li>Those expressly prohibited or declared void by law.</li></ul>",
+                    keywords: "void, inexistent, no effect"
+                }
+            };
+
+            const structure = {
+                obligations_and_contracts: ['obligations', 'contracts'],
+                obligations: ['definition_of_obligation', 'sources_of_obligations', 'nature_and_effect_of_obligations', 'kinds_of_obligations', 'extinguishment_of_obligations'],
+                nature_and_effect_of_obligations: ['duties_of_debtor', 'breach_of_obligation', 'fortuitous_event'],
+                breach_of_obligation: ['fraud_dolo', 'negligence_culpa', 'delay_mora'],
+                kinds_of_obligations: ['pure_and_conditional', 'obligation_with_a_period', 'alternative_and_facultative', 'joint_and_solidary', 'divisible_and_indivisible', 'with_a_penal_clause'],
+                extinguishment_of_obligations: ['payment_or_performance', 'loss_of_the_thing_due', 'condonation_or_remission', 'confusion_or_merger', 'compensation', 'novation'],
+                contracts: ['definition_of_contract', 'essential_requisites', 'forms_of_contracts', 'reformation_of_instruments', 'interpretation_of_contracts', 'defective_contracts'],
+                essential_requisites: ['consent', 'object_of_contract', 'cause_of_contract'],
+                defective_contracts: ['rescissible_contracts', 'voidable_contracts', 'unenforceable_contracts', 'void_contracts']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE LOGIC (DO NOT EDIT) ---
+            let hierarchyRoot;
+            const allNodes = new Map();
+            let sequentialNavigableNodes = [];
+
+            function buildHierarchy(nodeId, level) {
+                const childrenIds = structure[nodeId] || [];
+                const node = { 
+                    id: nodeId, 
+                    level, 
+                    _children: [],
+                    isLeaf: childrenIds.length === 0
+                };
+                allNodes.set(nodeId, node);
+
+                if (node.isLeaf) {
+                    sequentialNavigableNodes.push(node);
+                } else {
+                    childrenIds.forEach(childId => {
+                        node._children.push(buildHierarchy(childId, level + 1));
+                    });
+                }
+                return node;
+            }
+            
+            hierarchyRoot = buildHierarchy(ROOT_NODE_ID, 0);
+
+            const mindMapContainer = document.getElementById('mind-map-container');
+            const listViewContainer = document.getElementById('list-view-container');
+            const infoModal = document.getElementById('info-modal');
+            const shareModal = document.getElementById('share-modal');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const themeIconLight = document.getElementById('theme-icon-light');
+            const themeIconDark = document.getElementById('theme-icon-dark');
+            const menuToggleButton = document.getElementById('menu-toggle-btn');
+            const toolbar = document.getElementById('toolbar');
+            
+            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
+            let highlightedNodeIndex = -1;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [], visibleLinks = [];
+                function recurse(node) {
+                    if (!node) return;
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph(callback) {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level === 0 ? "700" : n.level === 1 ? "600" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level <= 1 ? 40 : 30);
+                    n.height = bbox.height + (n.level <=1 ? 24 : 20);
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.attr("class", d => {
+                    const isCollapsed = d._children && d._children.length > 0 && !d.children;
+                    const isLeaf = d.isLeaf;
+                    return `node level-${d.level} ${isCollapsed ? 'collapsed' : ''} ${isLeaf ? 'leaf-node' : ''}`;
+                });
+
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 0.7);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+
+                if (callback) {
+                    const cb = () => {
+                        callback();
+                        simulation.on('end.callback', null);
+                    };
+                    simulation.on('end.callback', cb);
+                }
+            }
+
+            function openInfoModal(nodeId) {
+                const data = mindMapInfo[nodeId];
+                if (data && data.content) {
+                    document.getElementById('modal-title').innerHTML = data.title;
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = data.content;
+                    if (window.renderMathInElement) {
+                        renderMathInElement(modalBody, {
+                            delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
+                            throwOnError: false
+                        });
+                    }
+                    infoModal.classList.add('active');
+                }
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                const nodeInfo = mindMapInfo[d.id];
+                highlightNode(d.id, false);
+
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                    return;
+                }
+
+                if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                    updateGraph();
+                } else if (nodeInfo.content) {
+                    openInfoModal(d.id);
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                }
+            }
+
+            function initializeGraph() {
+                if (listViewContainer.classList.contains('hidden')) {
+                    const width = mindMapContainer.clientWidth;
+                    const height = mindMapContainer.clientHeight;
+                    d3.select(mindMapContainer).select("svg").remove();
+                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
+                    g = svg.append("g");
+                    linkGroup = g.append("g").attr("class", "links");
+                    nodeGroup = g.append("g").attr("class", "nodes");
+                    simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level * 80) + 40).strength(0.8))
+                        .force("charge", d3.forceManyBody().strength(-900))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 20).strength(1))
+                        .on("tick", () => {
+                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                        });
+                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
+                    svg.call(zoom);
+                    
+                    function collapse(node) {
+                        if (node._children && node._children.length > 0) {
+                            node.children = null;
+                            node._children.forEach(collapse);
+                        }
+                    }
+                    hierarchyRoot.children = hierarchyRoot._children;
+                    hierarchyRoot.children.forEach(collapse);
+                    
+                    updateGraph();
+                }
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
+            function toggleAllNodes() {
+                const shouldCollapseAll = hierarchyRoot._children.some(c => c.children);
+                function toggle(node) {
+                    if (node._children && node._children.length > 0) {
+                        node.children = shouldCollapseAll ? null : node._children;
+                        if(node.children) node.children.forEach(toggle);
+                    }
+                }
+                hierarchyRoot._children.forEach(toggle);
+                updateGraph();
+            }
+
+            function generateListView() {
+                let html = `<h1 class="list-item">${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
+                function buildList(node, level) {
+                    const children = structure[node.id] || [];
+                    if (children.length > 0) {
+                        html += `<ul style="padding-left: ${level * 20}px;">`;
+                        children.forEach(childId => {
+                            if (mindMapInfo[childId]) {
+                                const childNode = allNodes.get(childId);
+                                const hasChildren = (structure[childId] || []).length > 0;
+                                const tag = hasChildren ? `h${Math.min(level + 2, 6)}` : 'li';
+                                html += `<${tag} data-id="${childId}" class="list-item">${mindMapInfo[childId].title}</${tag}>`;
+                                if(hasChildren) buildList(childNode, level + 1);
+                            }
+                        });
+                        html += '</ul>';
+                    }
+                }
+                
+                const rootChildren = structure[ROOT_NODE_ID] || [];
+                rootChildren.forEach(childId => {
+                    html += `<h2 data-id="${childId}" class="list-item">${mindMapInfo[childId].title}</h2>`;
+                    buildList(allNodes.get(childId), 2);
+                });
+
+
+                listViewContainer.innerHTML = html;
+                listViewContainer.querySelectorAll('.list-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info && info.url) { window.open(info.url, '_blank'); } 
+                        else if (info && info.content) { openInfoModal(item.dataset.id); }
+                    });
+                });
+            }
+
+            function toggleListView() {
+                mindMapContainer.classList.toggle('hidden');
+                listViewContainer.classList.toggle('hidden');
+                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
+            }
+            
+            function highlightNode(nodeId, doPan = true) {
+                if (!node) return;
+                node.classed("highlight", d => d.id === nodeId);
+                if (doPan) {
+                    const targetNode = simulation.nodes().find(n => n.id === nodeId);
+                    if (targetNode && svg && zoom) {
+                        const width = mindMapContainer.clientWidth;
+                        const height = mindMapContainer.clientHeight;
+                        const t = d3.zoomTransform(svg.node());
+                        const transform = d3.zoomIdentity.translate(width / 2 - targetNode.x * t.k, height / 2 - targetNode.y * t.k).scale(t.k);
+                        svg.transition().duration(500).call(zoom.transform, transform);
+                    }
+                }
+            }
+            
+            function navigate(direction) {
+                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
+                highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
+                const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
+                
+                const path = [];
+                function findPath(startNode, targetId) {
+                    if (startNode.id === targetId) {
+                        path.unshift(startNode);
+                        return true;
+                    }
+                    if (startNode._children) {
+                        for (const child of startNode._children) {
+                            if (findPath(child, targetId)) {
+                                path.unshift(startNode);
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+                
+                findPath(hierarchyRoot, nextNode.id);
+                let needsUpdate = false;
+                path.forEach(p => {
+                    if (p._children && !p.children) {
+                        p.children = p._children;
+                        needsUpdate = true;
+                    }
+                });
+
+                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
+                else { highlightNode(nextNode.id); }
+            }
+
+            // --- EVENT LISTENERS ---
+            document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
+            infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
+            
+            themeToggleButton.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark');
+                themeIconLight.classList.toggle('hidden', isDark);
+                themeIconDark.classList.toggle('hidden', !isDark);
+            });
+
+            document.getElementById('share-btn').addEventListener('click', () => {
+                document.getElementById('share-url').value = window.location.href;
+                shareModal.classList.add('active');
+            });
+            document.getElementById('close-modal-share').addEventListener('click', () => shareModal.classList.remove('active'));
+            shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
+            document.getElementById('copy-link-btn').addEventListener('click', () => {
+                const urlInput = document.getElementById('share-url');
+                navigator.clipboard.writeText(urlInput.value).then(() => {
+                    const feedback = document.getElementById('copy-feedback');
+                    feedback.textContent = 'Link copied!';
+                    setTimeout(() => feedback.textContent = '', 2000);
+                });
+            });
+
+            window.addEventListener('resize', initializeGraph);
+            menuToggleButton.addEventListener('click', () => toolbar.classList.toggle('expanded'));
+            document.getElementById('home-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
+            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
+            document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
+            document.getElementById('next-btn').addEventListener('click', () => navigate(1));
+            
+            window.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active')) return;
+                if (e.key === 'ArrowRight') navigate(1);
+                else if (e.key === 'ArrowLeft') navigate(-1);
+            });
+
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
