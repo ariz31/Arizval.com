@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Interactive Mind Map: Algebraic Curves</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckDMOe6bvJOiFnO4IMUYLz3G92BIUKEp5nA7C8MFFKSSJTI" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-light: #f8fafc; --bg-dark: #0b1120;
+            --node-bg-light: #ffffff; --node-bg-dark: #1e293b;
+            --text-light: #1e293b; --text-dark: #e2e8f0;
+            --border-light: #cbd5e1; --border-dark: #475569;
+            --link-light: #94a3b8; --link-dark: #64748b;
+            --primary-light: #3b82f6; --primary-dark: #60a5fa;
+            --primary-text-light: #ffffff; --primary-text-dark: #0b1120;
+            --highlight-border-light: #ef4444; /* Red-500 */
+            --highlight-border-dark: #f87171; /* Red-400 */
+            
+            --cat-bg-expanded-light: #e0e7ff; --cat-border-expanded-light: #a5b4fc; --cat-text-expanded-light: #3730a3;
+            --cat-bg-collapsed-light: #e5e7eb; --cat-border-collapsed-light: #9ca3af; --cat-text-collapsed-light: #4b5563;
+            --cat-bg-expanded-dark: #312e81; --cat-border-expanded-dark: #818cf8; --cat-text-expanded-dark: #e0e7ff;
+            --cat-bg-collapsed-dark: #374151; --cat-border-collapsed-dark: #6b7280; --cat-text-collapsed-dark: #d1d5db;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light); transition: background-color 0.3s ease;
+        }
+        body.dark { background-color: var(--bg-dark); }
+        #mind-map-container, #list-view-container { width: 100%; height: 100%; position: relative; box-sizing: border-box; }
+        #mind-map-container { cursor: grab; }
+        #mind-map-container:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node rect {
+            stroke-width: 2.5px; rx: 8; ry: 8;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+            transition: fill 0.3s ease, stroke 0.3s ease, transform 0.2s ease, stroke-width 0.2s ease;
+        }
+        .node:hover rect { transform: scale(1.05); }
+        .node text { pointer-events: none; text-anchor: middle; dominant-baseline: central; font-weight: 500; transition: fill 0.3s ease; }
+        .link { stroke-opacity: 0.7; transition: stroke 0.3s ease; }
+        .katex { font-size: 1.1em; }
+
+        .node.level-0 rect { fill: var(--primary-light); stroke: var(--primary-light); }
+        .node.level-0 text { fill: var(--primary-text-light); font-size: 16px; font-weight: 700; }
+        .node.level-1 rect { fill: var(--cat-bg-expanded-light); stroke: var(--cat-border-expanded-light); }
+        .node.level-1 text { fill: var(--cat-text-expanded-light); font-size: 14px; font-weight: 600; }
+        .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-light); stroke: var(--cat-border-collapsed-light); }
+        .node.level-1.collapsed text { fill: var(--cat-text-collapsed-light); }
+        .node.level-2 rect { fill: var(--node-bg-light); stroke: var(--border-light); }
+        .node.level-2 text { fill: var(--text-light); font-size: 12px; }
+        .link { stroke: var(--link-light); }
+        
+        body.dark .node.level-0 rect { fill: var(--primary-dark); stroke: var(--primary-dark); }
+        body.dark .node.level-0 text { fill: var(--primary-text-dark); }
+        body.dark .node.level-1 rect { fill: var(--cat-bg-expanded-dark); stroke: var(--cat-border-expanded-dark); }
+        body.dark .node.level-1 text { fill: var(--cat-text-expanded-dark); }
+        body.dark .node.level-1.collapsed rect { fill: var(--cat-bg-collapsed-dark); stroke: var(--cat-border-collapsed-dark); }
+        body.dark .node.level-1.collapsed text { fill: var(--cat-text-collapsed-dark); }
+        body.dark .node.level-2 rect { fill: var(--node-bg-dark); stroke: var(--border-dark); }
+        body.dark .node.level-2 text { fill: var(--text-dark); }
+        body.dark .link { stroke: var(--link-dark); }
+
+        .node.highlight rect { stroke: var(--highlight-border-light); stroke-width: 4px; }
+        body.dark .node.highlight rect { stroke: var(--highlight-border-dark); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--node-bg-light); color: var(--text-light); padding: 1.5rem; border-radius: 0.75rem; max-width: 90%; width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        body.dark .modal-content { background: var(--node-bg-dark); color: var(--text-dark); }
+        .modal-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark .modal-content h2 { color: var(--primary-dark); }
+        .modal-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        body.dark .modal-content h3 { color: var(--primary-dark); }
+        .modal-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .modal-content li { margin-bottom: 0.25rem; }
+        .modal-content code { background-color: #e2e8f0; color: #1e293b; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; }
+        body.dark .modal-content code { background-color: #475569; color: #e2e8f0; }
+
+        #toolbar { position: fixed; z-index: 500; top: 50%; right: 1rem; transform: translateY(-50%); transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        #toolbar.expanded { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 9999px; padding: 0.5rem; }
+        body.dark #toolbar.expanded { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(71, 85, 105, 0.5); }
+        #toolbar-tools { display: flex; flex-direction: column; gap: 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1), padding 0.5s ease; }
+        #toolbar.expanded #toolbar-tools { max-height: 500px; }
+        .toolbar-divider { width: 80%; height: 1px; margin: 0.25rem auto; background-color: #e2e8f0; }
+        body.dark .toolbar-divider { background-color: #475569; }
+
+        #list-view-container { padding: 2rem; overflow-y: auto; background-color: var(--bg-light); color: var(--text-light); box-sizing: border-box; height: 100%; }
+        body.dark #list-view-container { background-color: var(--bg-dark); color: var(--text-dark); }
+        #list-view-container h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-light); }
+        body.dark #list-view-container h1 { color: var(--primary-dark); }
+        #list-view-container h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.5rem; }
+        body.dark #list-view-container h2 { border-bottom-color: var(--border-dark); }
+        #list-view-container ul { list-style: none; padding-left: 1rem; }
+        #list-view-container li { padding: 0.5rem; margin: 0.25rem 0; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        #list-view-container li:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark #list-view-container li:hover { background-color: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+    <div id="mind-map-container"></div>
+    <div id="list-view-container" class="hidden"></div>
+
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title"></h2>
+                <button id="close-modal-info" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Share Mind Map</h2>
+                <button id="close-modal-share" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-3xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">Share this interactive mind map with others!</p>
+                <div class="relative">
+                    <input id="share-url" type="text" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" readonly>
+                    <button id="copy-link-btn" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                </div>
+                <p id="copy-feedback" class="text-sm text-green-600 dark:text-green-400 h-4 text-center"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolbar">
+        <button id="menu-toggle-btn" title="Toggle Menu" class="p-3 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div id="toolbar-tools">
+            <button id="home-btn" title="Reset View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            </button>
+            <button id="toggle-all-btn" title="Expand/Collapse All" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4m12 4V4h-4M4 16v4h4m12-4v4h-4" /></svg>
+            </button>
+            <button id="list-view-btn" title="List View" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="prev-btn" title="Previous Topic (Left Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button id="next-btn" title="Next Topic (Right Arrow)" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button id="share-btn" title="Share" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.002l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
+            </button>
+            <button id="theme-toggle" title="Toggle Dark Mode" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ========= DYNAMIC CONTENT SECTION START =========
+            const ROOT_NODE_ID = 'algebraic_curves';
+
+            const mindMapInfo = {
+                algebraic_curves: {
+                    title: "Algebraic Curves",
+                    content: `
+                        <p>An algebraic curve is the set of solutions to a polynomial equation. This field of study merges geometry with algebra, providing powerful tools to understand shapes and their properties through equations.</p>
+                        <h3>How to Use This Mind Map</h3>
+                        <ul>
+                            <li><strong>Click Nodes:</strong> Click a category to expand/collapse. Click a concept for details or to open its link.</li>
+                            <li><strong>Pan & Zoom:</strong> Drag the background to pan. Use your mouse wheel to zoom.</li>
+                            <li><strong>Toolbar:</strong> Use the floating toolbar for more options:
+                                <ul>
+                                    <li><strong>Reset View:</strong> Centers the map.</li>
+                                    <li><strong>Expand/Collapse All:</strong> Toggles all categories.</li>
+                                    <li><strong>List View:</strong> Switches to a text-based view.</li>
+                                    <li><strong>Navigate:</strong> Use arrows to cycle through topics.</li>
+                                    <li><strong>Share:</strong> Get a link to share the map.</li>
+                                    <li><strong>Theme:</strong> Switch between light/dark modes.</li>
+                                </ul>
+                            </li>
+                        </ul>`,
+                    keywords: "algebraic curves, geometry, algebra, polynomials"
+                },
+
+                // Foundations
+                foundations: {
+                    title: "Foundations",
+                    content: "<p>The basic concepts and definitions that form the bedrock of the study of algebraic curves.</p>",
+                    keywords: "foundations, basics, definitions"
+                },
+                definition: {
+                    title: "Definition",
+                    content: `
+                        <h3>Definition of an Algebraic Curve</h3>
+                        <p>An algebraic curve is the set of points $(x, y)$ in a plane whose coordinates are the roots of a polynomial equation $f(x, y) = 0$. The polynomial $f$ is defined over a specific field, typically the complex numbers $\\mathbb{C}$.</p>
+                        <p>The study focuses on the geometric properties of this set of solutions.</p>
+                        <h3>Example: A Circle</h3>
+                        <p>The unit circle is a classic example of an algebraic curve. It is defined by the polynomial equation:</p>
+                        $$x^2 + y^2 - 1 = 0$$
+                        <p>Any point $(x, y)$ on the circle, such as $(1, 0)$ or $(\\frac{\\sqrt{2}}{2}, \\frac{\\sqrt{2}}{2})$, satisfies this equation.</p>`,
+                    keywords: "definition, polynomial, equation, roots, plane curve"
+                },
+                affine_vs_projective: {
+                    title: "Affine vs. Projective",
+                    content: `
+                        <h3>Affine vs. Projective Curves</h3>
+                        <p>Curves can be studied in different geometric spaces, primarily affine space and projective space.</p>
+                        <ul>
+                            <li><strong>Affine Space ($\\mathbb{A}^2$):</strong> This is the familiar Cartesian plane. However, it's 'incomplete' because it doesn't handle points at infinity, which are crucial for theorems like Bézout's.</li>
+                            <li><strong>Projective Space ($\\mathbb{P}^2$):</strong> This space extends the affine plane by adding a 'line at infinity'. It is constructed using homogeneous coordinates $[X:Y:Z]$. An affine point $(x, y)$ corresponds to the projective point $[x:y:1]$.</li>
+                        </ul>
+                        <h3>Example: A Line</h3>
+                        <p>An affine line $y = mx + c$ becomes a homogeneous equation in projective space:</p>
+                        $$Y = mX + cZ$$
+                        <p>Parallel lines in affine space, like $y = 2x + 1$ and $y = 2x + 3$, will intersect at a point at infinity, $[1:2:0]$, in projective space. This makes the geometry more consistent.</p>`,
+                    keywords: "affine, projective, infinity, homogeneous coordinates"
+                },
+                singular_points: {
+                    title: "Singular Points",
+                    content: `
+                        <h3>Singular vs. Non-singular Points</h3>
+                        <p>A point $P$ on a curve $f(x, y) = 0$ is called <strong>non-singular</strong> or <strong>smooth</strong> if the curve has a well-defined, unique tangent line at that point. Otherwise, the point is <strong>singular</strong>.</p>
+                        <p>Mathematically, a point $P$ is singular if both partial derivatives of the defining polynomial vanish at that point:</p>
+                        $$ \\frac{\\partial f}{\\partial x}(P) = 0 \\quad \\text{and} \\quad \\frac{\\partial f}{\\partial y}(P) = 0 $$
+                        <h3>Example: A Cusp</h3>
+                        <p>Consider the curve defined by $f(x, y) = y^2 - x^3 = 0$. The partial derivatives are:</p>
+                        $$ \\frac{\\partial f}{\\partial x} = -3x^2 \\quad \\text{and} \\quad \\frac{\\partial f}{\\partial y} = 2y $$
+                        <p>Both derivatives are zero at the point $P=(0,0)$. Therefore, the origin is a singular point, known as a cusp. The curve does not have a unique tangent at this point.</p>`,
+                    keywords: "singular, non-singular, smooth, tangent, partial derivative, cusp"
+                },
+                function_fields: {
+                    title: "Function Fields",
+                    content: `
+                        <h3>Function Fields</h3>
+                        <p>To every irreducible algebraic curve $C$, we can associate an algebraic object called its <strong>function field</strong>, denoted $k(C)$. This field consists of all rational functions (ratios of polynomials) that can be defined on the curve.</p>
+                        <p>The function field captures the intrinsic algebraic and geometric properties of the curve. Two curves are considered equivalent from an algebraic standpoint (birationally equivalent) if and only if their function fields are isomorphic.</p>
+                        <h3>Example</h3>
+                        <p>For the affine line $C = \\mathbb{A}^1$ defined by the x-axis, the function field $k(C)$ is the field of rational functions in one variable, $k(x)$. For the circle $x^2 + y^2 = 1$, the function field is also isomorphic to $k(t)$ via the parametrization $x = \\frac{1-t^2}{1+t^2}, y = \\frac{2t}{1+t^2}$.</p>`,
+                    keywords: "function field, rational function, birational equivalence, isomorphism"
+                },
+
+                // Types of Curves
+                types_of_curves: {
+                    title: "Types of Curves",
+                    content: "<p>Common classes of algebraic curves, each with distinct properties and applications.</p>",
+                    keywords: "types, classes, examples"
+                },
+                plane_curves: {
+                    title: "Plane Curves",
+                    content: `
+                        <h3>Plane Curves</h3>
+                        <p>A plane curve is an algebraic curve that lies in the affine or projective plane. It is defined by a single polynomial equation in two variables, $f(x, y) = 0$.</p>
+                        <p>Most of the initial study of algebraic curves focuses on plane curves because they are the most intuitive to visualize and their properties are foundational.</p>
+                        <h3>Example: The Folium of Descartes</h3>
+                        <p>The curve defined by the equation:</p>
+                        $$x^3 + y^3 - 3axy = 0$$
+                        <p>is a famous plane curve with a loop and a singular point at the origin. Its shape depends on the parameter $a$.</p>`,
+                    keywords: "plane curve, polynomial, folium of descartes"
+                },
+                elliptic_curves: {
+                    title: "Elliptic Curves",
+                    content: `
+                        <h3>Elliptic Curves</h3>
+                        <p>An elliptic curve is a smooth, projective curve of genus one with a specified base point. In the plane, they can often be written in the Weierstrass form:</p>
+                        $$y^2 = x^3 + ax + b$$
+                        <p>where the cubic polynomial on the right has distinct roots.</p>
+                        <h3>The Group Law</h3>
+                        <p>A remarkable feature of elliptic curves is that their points form an abelian group. The group law is defined geometrically: the sum of two points $P$ and $Q$ is found by drawing a line through them, finding the third intersection point $R$ with the curve, and then reflecting $R$ across the x-axis to get $P+Q$. This property makes them central to cryptography and number theory.</p>`,
+                    keywords: "elliptic curve, weierstrass form, genus one, group law, cryptography"
+                },
+                hyperelliptic_curves: {
+                    title: "Hyperelliptic Curves",
+                    content: `
+                        <h3>Hyperelliptic Curves</h3>
+                        <p>A hyperelliptic curve is a generalization of an elliptic curve. It is a curve of genus $g > 1$ given by an equation of the form:</p>
+                        $$y^2 = f(x)$$
+                        <p>where $f(x)$ is a polynomial of degree $n = 2g+1$ or $n = 2g+2$ with no repeated roots.</p>
+                        <p>While their points also have a group-like structure (the Jacobian variety), it is more complex than the group law on an elliptic curve. They are used in more advanced forms of cryptography.</p>`,
+                    keywords: "hyperelliptic curve, genus, jacobian variety"
+                },
+                rational_curves: {
+                    title: "Rational Curves",
+                    content: `
+                        <h3>Rational Curves</h3>
+                        <p>A rational curve is any curve that is birationally equivalent to the projective line $\\mathbb{P}^1$. This means there exists a map from the line to the curve that is almost one-to-one and can be expressed by rational functions.</p>
+                        <p>Intuitively, these are the 'simplest' curves. They have genus 0 and can be fully parametrized by a single variable.</p>
+                        <h3>Example: The Parabola</h3>
+                        <p>The parabola $y = x^2$ is a rational curve. It can be parametrized by the variable $t$ as:</p>
+                        $$ (x, y) = (t, t^2) $$
+                        <p>This parametrization covers every point on the curve exactly once.</p>`,
+                    keywords: "rational curve, birational equivalence, parametrization, genus zero"
+                },
+
+                // Properties and Invariants
+                properties_and_invariants: {
+                    title: "Properties & Invariants",
+                    content: "<p>Key numerical values and concepts that describe the complexity and geometry of a curve, remaining unchanged under certain transformations.</p>",
+                    keywords: "properties, invariants, degree, genus, divisor"
+                },
+                degree: {
+                    title: "Degree",
+                    content: `
+                        <h3>Degree of a Curve</h3>
+                        <p>For a plane curve defined by a polynomial $f(x,y)=0$, the <strong>degree</strong> (often denoted $d$) is the highest total degree of any term in the polynomial.</p>
+                        <p>The degree is the most basic invariant of a curve and gives a first measure of its complexity. For example, it determines the maximum number of times a line can intersect the curve (which is exactly the degree, by Bézout's Theorem).</p>
+                        <h3>Examples</h3>
+                        <ul>
+                            <li>$2x - 3y + 1 = 0$: A line, degree 1.</li>
+                            <li>$x^2 + y^2 - 1 = 0$: A circle, degree 2 (a conic).</li>
+                            <li>$y^2 - x^3 = 0$: A cusp, degree 3 (a cubic).</li>
+                        </ul>`,
+                    keywords: "degree, polynomial, complexity, intersection"
+                },
+                genus: {
+                    title: "Genus",
+                    content: `
+                        <h3>Genus of a Curve</h3>
+                        <p>The <strong>genus</strong> (denoted $g$) is a fundamental invariant that, for curves over the complex numbers, corresponds to the number of 'holes' or 'handles' in the corresponding Riemann surface. It is a measure of the topological complexity of the curve.</p>
+                        <ul>
+                            <li>Genus 0: A sphere (rational curves).</li>
+                            <li>Genus 1: A torus/donut (elliptic curves).</li>
+                            <li>Genus > 1: A surface with multiple holes.</li>
+                        </ul>
+                        <h3>Genus Formula for Plane Curves</h3>
+                        <p>For a smooth plane curve of degree $d$, the genus can be calculated by the formula:</p>
+                        $$g = \\frac{(d-1)(d-2)}{2}$$
+                        <p>For example, a smooth cubic curve ($d=3$) has genus $g = \\frac{(2)(1)}{2} = 1$.</p>`,
+                    keywords: "genus, topology, holes, riemann surface, degree-genus formula"
+                },
+                divisors: {
+                    title: "Divisors",
+                    content: `
+                        <h3>Divisors on a Curve</h3>
+                        <p>A <strong>divisor</strong> $D$ on a curve $C$ is a formal finite sum of points on the curve with integer coefficients:</p>
+                        $$D = \\sum_{P \\in C} n_P P, \\quad n_P \\in \\mathbb{Z}$$
+                        <p>Divisors are a fundamental tool for studying maps between curves and for understanding the Riemann-Roch theorem. The <strong>degree</strong> of a divisor is the sum of its coefficients, $\\deg(D) = \\sum n_P$.</p>
+                        <h3>Example: Divisor of a Function</h3>
+                        <p>Any rational function $f$ on the curve has an associated principal divisor, $(f)$, which is the sum of its zeros minus the sum of its poles. For example, on $\\mathbb{P}^1$, the function $f(x) = \\frac{x-a}{x-b}$ has a zero at $a$ and a pole at $b$, so its divisor is $(a) - (b)$.</p>`,
+                    keywords: "divisor, formal sum, points, degree, principal divisor, zero, pole"
+                },
+                intersection_number: {
+                    title: "Intersection Number",
+                    content: `
+                        <h3>Intersection Number</h3>
+                        <p>The <strong>intersection number</strong> (or multiplicity) of two curves $C_1$ and $C_2$ at a point $P$, denoted $(C_1 \\cdot C_2)_P$, measures how many times the curves 'should' intersect at that point, taking tangency into account.</p>
+                        <p>If the curves meet transversally (with distinct tangent lines) at $P$, the intersection number is 1. If they are tangent, the number is greater than 1.</p>
+                        <h3>Example</h3>
+                        <p>Consider the parabola $C_1: y = x^2$ and the line $C_2: y = 0$. They intersect at the origin $P=(0,0)$. The line is tangent to the parabola at this point. The intersection number is $(C_1 \\cdot C_2)_P = 2$. This aligns with the algebraic fact that substituting $y=0$ into the first equation gives $x^2=0$, which has a double root at $x=0$.</p>`,
+                    keywords: "intersection number, multiplicity, tangent, transversal"
+                },
+
+                // Key Theorems
+                key_theorems: {
+                    title: "Key Theorems",
+                    content: "<p>Major theorems that provide deep insights into the structure and properties of algebraic curves.</p>",
+                    keywords: "theorems, results, bézout, riemann-roch"
+                },
+                bezouts_theorem: {
+                    title: "Bézout's Theorem",
+                    content: `
+                        <h3>Bézout's Theorem</h3>
+                        <p>Bézout's Theorem is a fundamental result in algebraic geometry. It states that in the projective plane, the number of intersection points of two plane curves of degrees $d_1$ and $d_2$ is exactly $d_1 \\times d_2$, provided the points are counted with their intersection multiplicities and the field is algebraically closed (like $\\mathbb{C}$).</p>
+                        <h3>Example</h3>
+                        <p>A circle (degree 2) and a line (degree 1) must intersect in exactly $2 \\times 1 = 2$ points. These points could be two distinct real points, a single real point with multiplicity 2 (if the line is tangent), or two complex conjugate points (if the line misses the circle in the real plane).</p>`,
+                    keywords: "bézout's theorem, intersection, degree, multiplicity"
+                },
+                riemann_roch_theorem: {
+                    title: "Riemann-Roch Theorem",
+                    content: `
+                        <h3>The Riemann-Roch Theorem</h3>
+                        <p>The Riemann-Roch theorem is one of the most important results in the theory of compact Riemann surfaces and algebraic curves. It relates the complex analysis of a curve with its topology (via the genus).</p>
+                        <p>For a divisor $D$ on a curve of genus $g$, the theorem states:</p>
+                        $$ \\ell(D) - \\ell(K-D) = \\deg(D) - g + 1 $$
+                        <p>Here, $\\ell(D)$ is the dimension of the space of rational functions $f$ whose poles are 'no worse' than specified by $D$, and $K$ is the canonical divisor. The theorem provides a powerful way to calculate the number of independent functions with prescribed zeros and poles.</p>`,
+                    keywords: "riemann-roch, divisor, genus, canonical divisor, dimension"
+                },
+                cliffords_theorem: {
+                    title: "Clifford's Theorem",
+                    content: `
+                        <h3>Clifford's Theorem</h3>
+                        <p>Clifford's Theorem provides an upper bound on the dimension $\\ell(D)$ from the Riemann-Roch theorem for a special divisor $D$. A divisor is called special if $\\ell(K-D) > 0$.</p>
+                        <p>The theorem states that for any special divisor $D$ on a curve of genus $g$, we have:</p>
+                        $$ \\ell(D) \\le \\frac{\\deg(D)}{2} + 1 $$
+                        <p>This theorem is crucial for understanding the geometry of curves, as it constrains how many functions can exist on a curve for a given degree of a divisor. The cases where equality holds correspond to very special curves (hyperelliptic curves).</p>`,
+                    keywords: "clifford's theorem, special divisor, dimension, hyperelliptic"
+                },
+                hurwitzs_formula: {
+                    title: "Hurwitz's Formula",
+                    content: `
+                        <h3>Hurwitz's Formula</h3>
+                        <p>Hurwitz's formula relates the genus of two curves when there is a map between them. Let $f: X \\to Y$ be a non-constant map of degree $n$ between two curves of genus $g_X$ and $g_Y$. The formula is:</p>
+                        $$ 2g_X - 2 = n(2g_Y - 2) + \\sum_{P \\in X} (e_P - 1) $$
+                        <p>The term $e_P$ is the ramification index at a point $P$, which measures how many points in the domain map to the same point in the codomain 'locally'. The sum is over all ramified points.</p>
+                        <p>This formula is essential for calculating the genus of a curve that is a covering of another, simpler curve like the projective line.</p>`,
+                    keywords: "hurwitz's formula, genus, covering map, ramification"
+                },
+                
+                // Applications
+                applications: {
+                    title: "Applications",
+                    content: "<p>Algebraic curves have profound applications in various fields of science and technology.</p>",
+                    keywords: "applications, cryptography, number theory, coding"
+                },
+                cryptography: {
+                    title: "Cryptography",
+                    content: `
+                        <h3>Elliptic Curve Cryptography (ECC)</h3>
+                        <p>ECC is a powerful public-key cryptosystem based on the algebraic structure of elliptic curves over finite fields.</p>
+                        <p>The security of ECC relies on the difficulty of the Elliptic Curve Discrete Logarithm Problem (ECDLP): given two points $P$ and $Q$ on an elliptic curve, it is computationally infeasible to find an integer $k$ such that $Q = kP$. The operation $kP$ is computed using the group law on the curve.</p>
+                        <p>ECC offers equivalent security to other systems like RSA but with much smaller key sizes, making it ideal for mobile and low-power devices.</p>`,
+                    keywords: "cryptography, elliptic curve, ecc, public key, discrete logarithm"
+                },
+                number_theory: {
+                    title: "Number Theory",
+                    content: `
+                        <h3>Fermat's Last Theorem</h3>
+                        <p>The proof of Fermat's Last Theorem is one of the most famous applications of algebraic curves. The theorem states that no three positive integers $a, b, c$ can satisfy the equation $a^n + b^n = c^n$ for any integer value of $n$ greater than 2.</p>
+                        <p>The proof, completed by Andrew Wiles, hinged on the Taniyama-Shimura conjecture. This conjecture connects elliptic curves to modular forms. Wiles showed that a hypothetical solution to Fermat's equation would produce a very strange elliptic curve (the Frey curve) that could not possibly be modular, thus proving that no such solution can exist.</p>`,
+                    keywords: "number theory, fermat's last theorem, elliptic curves, modularity"
+                },
+                coding_theory: {
+                    title: "Coding Theory",
+                    content: `
+                        <h3>Algebraic Geometry (Goppa) Codes</h3>
+                        <p>Algebraic geometry codes, particularly Goppa codes, are a class of error-correcting codes constructed using algebraic curves over finite fields.</p>
+                        <p>These codes are defined by choosing a curve $C$, a set of points $P_1, ..., P_n$ on the curve, and another divisor $D$. Codewords are generated by evaluating functions from a specific space (related to the divisor $D$) at the points $P_i$.</p>
+                        <p>Goppa codes are notable for having excellent parameters (high information rate and large error-correction capability), surpassing the Gilbert-Varshamov bound.</p>`,
+                    keywords: "coding theory, error correction, goppa codes, finite fields"
+                },
+                physics_string_theory: {
+                    title: "Physics (String Theory)",
+                    content: `
+                        <h3>String Theory and Worldsheets</h3>
+                        <p>In string theory, elementary particles are viewed as one-dimensional vibrating strings. As a string propagates through spacetime, it sweeps out a two-dimensional surface called a <strong>worldsheet</strong>.</p>
+                        <p>In perturbative string theory, the interactions between strings are described by summing over all possible worldsheet topologies. These worldsheets are mathematically described as Riemann surfaces, which are equivalent to smooth complex algebraic curves. The genus of the curve corresponds to the number of loops in the interaction diagram, a key component in calculating scattering amplitudes.</p>`,
+                    keywords: "physics, string theory, worldsheet, riemann surface, genus"
+                }
+
+            };
+
+            const structure = {
+                foundations: ['definition', 'affine_vs_projective', 'singular_points', 'function_fields'],
+                types_of_curves: ['plane_curves', 'elliptic_curves', 'hyperelliptic_curves', 'rational_curves'],
+                properties_and_invariants: ['degree', 'genus', 'divisors', 'intersection_number'],
+                key_theorems: ['bezouts_theorem', 'riemann_roch_theorem', 'cliffords_theorem', 'hurwitzs_formula'],
+                applications: ['cryptography', 'number_theory', 'coding_theory', 'physics_string_theory']
+            };
+            // ========= DYNAMIC CONTENT SECTION END =========
+
+
+            // --- CORE LOGIC (DO NOT EDIT) ---
+            const hierarchyRoot = { id: ROOT_NODE_ID, level: 0, children: [] };
+            for (const catId in structure) {
+                if (mindMapInfo[catId]) {
+                    const categoryNode = { id: catId, level: 1, _children: [] };
+                    hierarchyRoot.children.push(categoryNode);
+                    if (structure[catId] && structure[catId].length > 0) {
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) {
+                                categoryNode._children.push({ id: topicId, level: 2 });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            const mindMapContainer = document.getElementById('mind-map-container');
+            const listViewContainer = document.getElementById('list-view-container');
+            const infoModal = document.getElementById('info-modal');
+            const shareModal = document.getElementById('share-modal');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const themeIconLight = document.getElementById('theme-icon-light');
+            const themeIconDark = document.getElementById('theme-icon-dark');
+            const menuToggleButton = document.getElementById('menu-toggle-btn');
+            const toolbar = document.getElementById('toolbar');
+            
+            let simulation, svg, g, linkGroup, nodeGroup, link, node, zoom;
+            let sequentialNavigableNodes = [];
+            let highlightedNodeIndex = -1;
+
+            function getVisibleNodesAndLinks(root) {
+                const visibleNodes = [], visibleLinks = [];
+                function recurse(node) {
+                    if (!node) return;
+                    visibleNodes.push(node);
+                    if (node.children) {
+                        node.children.forEach(child => {
+                            visibleLinks.push({ source: node, target: child });
+                            recurse(child);
+                        });
+                    }
+                }
+                recurse(root);
+                return { nodes: visibleNodes, links: visibleLinks };
+            }
+
+            function updateGraph(callback) {
+                const { nodes: currentNodes, links: currentLinks } = getVisibleNodesAndLinks(hierarchyRoot);
+                const tempSvg = d3.select(document.body).append("svg").attr("class", "absolute -left-full");
+                currentNodes.forEach(n => {
+                    const textEl = tempSvg.append("text")
+                        .attr("class", `node level-${n.level}`)
+                        .style("font-size", n.level === 0 ? "16px" : n.level === 1 ? "14px" : "12px")
+                        .style("font-weight", n.level < 2 ? "700" : "500")
+                        .text(mindMapInfo[n.id].title);
+                    const bbox = textEl.node().getBBox();
+                    n.width = bbox.width + (n.level === 1 ? 40 : 30);
+                    n.height = bbox.height + 20;
+                });
+                tempSvg.remove();
+
+                node = nodeGroup.selectAll(".node").data(currentNodes, d => d.id)
+                    .join(
+                        enter => {
+                            const nodeEnter = enter.append("g")
+                                .attr("class", d => `node level-${d.level}`)
+                                .call(drag(simulation))
+                                .on("click", handleNodeClick);
+                            nodeEnter.append("rect");
+                            nodeEnter.append("text");
+                            return nodeEnter;
+                        },
+                        update => update,
+                        exit => exit.transition().duration(300).attr("transform", "scale(0)").remove()
+                    );
+                
+                node.classed("collapsed", d => d._children && !d.children);
+                node.select("rect").transition().duration(300)
+                    .attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => -d.width / 2).attr("y", d => -d.height / 2);
+                node.select("text").text(d => mindMapInfo[d.id].title);
+
+                link = linkGroup.selectAll(".link").data(currentLinks, d => `${d.source.id}-${d.target.id}`)
+                    .join(
+                        enter => enter.append("line").attr("class", "link").attr("stroke-opacity", 0),
+                        update => update,
+                        exit => exit.transition().duration(300).attr("stroke-opacity", 0).remove()
+                    );
+                link.transition().duration(300).attr("stroke-opacity", 0.7);
+
+                simulation.nodes(currentNodes);
+                simulation.force("link").links(currentLinks);
+                simulation.alpha(0.8).restart();
+
+                if (callback) {
+                    const cb = () => {
+                        callback();
+                        simulation.on('end.callback', null);
+                    };
+                    simulation.on('end.callback', cb);
+                }
+            }
+
+            function openInfoModal(nodeId) {
+                const data = mindMapInfo[nodeId];
+                if (data && data.content) {
+                    document.getElementById('modal-title').innerHTML = data.title;
+                    const modalBody = document.getElementById('modal-body');
+                    modalBody.innerHTML = data.content;
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(modalBody, {
+                            delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
+                            throwOnError: false
+                        });
+                    }
+                    infoModal.classList.add('active');
+                }
+            }
+
+            function handleNodeClick(event, d) {
+                if (event.defaultPrevented) return;
+                const nodeInfo = mindMapInfo[d.id];
+                highlightNode(d.id, false);
+
+                if (nodeInfo.url) {
+                    window.open(nodeInfo.url, '_blank');
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                    return;
+                }
+
+                if (d.id === ROOT_NODE_ID) {
+                    toggleAllNodes();
+                } else if (d._children && d._children.length > 0) {
+                    d.children = d.children ? null : d._children;
+                    updateGraph();
+                } else if (nodeInfo.content) {
+                    openInfoModal(d.id);
+                    highlightedNodeIndex = sequentialNavigableNodes.findIndex(n => n.id === d.id);
+                }
+            }
+
+            function initializeGraph() {
+                sequentialNavigableNodes = [];
+                Object.values(structure).forEach(chapter => {
+                    chapter.forEach(topicId => {
+                        const nodeData = hierarchyRoot.children.flatMap(c => c._children || []).find(n => n.id === topicId);
+                        if(nodeData) sequentialNavigableNodes.push(nodeData);
+                    });
+                });
+
+                if (listViewContainer.classList.contains('hidden')) {
+                    const width = mindMapContainer.clientWidth;
+                    const height = mindMapContainer.clientHeight;
+                    d3.select(mindMapContainer).select("svg").remove();
+                    svg = d3.select(mindMapContainer).append("svg").attr("viewBox", [0, 0, width, height]);
+                    g = svg.append("g");
+                    linkGroup = g.append("g").attr("class", "links");
+                    nodeGroup = g.append("g").attr("class", "nodes");
+                    simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().id(d => d.id).distance(d => (d.source.level === 0 ? 200 : 120)).strength(0.9))
+                        .force("charge", d3.forceManyBody().strength(-800))
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .force("collide", d3.forceCollide().radius(d => d.width / 2 + 15).strength(1))
+                        .on("tick", () => {
+                            if(link) link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                            if(node) node.attr("transform", d => `translate(${d.x},${d.y})`);
+                        });
+                    zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => g.attr("transform", e.transform));
+                    svg.call(zoom);
+                    hierarchyRoot.children.forEach(child => child.children = null);
+                    updateGraph();
+                }
+            }
+            
+            function drag(simulation) {
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); if (d.id !== ROOT_NODE_ID) { d.fx = null; d.fy = null; } }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            function resetView() { if (svg && zoom) { svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity); } }
+            function toggleAllNodes() {
+                const shouldCollapseAll = hierarchyRoot.children.some(c => c.children);
+                hierarchyRoot.children.forEach(child => { child.children = shouldCollapseAll ? null : (child._children || null); });
+                updateGraph();
+            }
+
+            function generateListView() {
+                let html = `<h1>${mindMapInfo[ROOT_NODE_ID].title}</h1>`;
+                for (const catId in structure) {
+                    if (mindMapInfo[catId]) {
+                        html += `<h2 data-id="${catId}">${mindMapInfo[catId].title}</h2><ul>`;
+                        structure[catId].forEach(topicId => {
+                            if (mindMapInfo[topicId]) { html += `<li data-id="${topicId}">${mindMapInfo[topicId].title}</li>`; }
+                        });
+                        html += '</ul>';
+                    }
+                }
+                listViewContainer.innerHTML = html;
+                listViewContainer.querySelectorAll('li, h2').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const info = mindMapInfo[item.dataset.id];
+                        if (info.url) { window.open(info.url, '_blank'); } 
+                        else if (info.content) { openInfoModal(item.dataset.id); }
+                    });
+                });
+            }
+
+            function toggleListView() {
+                mindMapContainer.classList.toggle('hidden');
+                listViewContainer.classList.toggle('hidden');
+                if (!listViewContainer.classList.contains('hidden') && listViewContainer.innerHTML === '') { generateListView(); }
+            }
+            
+            function highlightNode(nodeId, doPan = true) {
+                if (!node) return;
+                node.classed("highlight", d => d.id === nodeId);
+                if (doPan) {
+                    const targetNode = simulation.nodes().find(n => n.id === nodeId);
+                    if (targetNode && svg && zoom) {
+                        const width = mindMapContainer.clientWidth;
+                        const height = mindMapContainer.clientHeight;
+                        const t = d3.zoomTransform(svg.node());
+                        const transform = d3.zoomIdentity.translate(width / 2 - targetNode.x * t.k, height / 2 - targetNode.y * t.k).scale(t.k);
+                        svg.transition().duration(500).call(zoom.transform, transform);
+                    }
+                }
+            }
+            
+            function navigate(direction) {
+                if (sequentialNavigableNodes.length === 0 || listViewContainer.classList.contains('hidden') === false) return;
+                highlightedNodeIndex = (highlightedNodeIndex + direction + sequentialNavigableNodes.length) % sequentialNavigableNodes.length;
+                const nextNode = sequentialNavigableNodes[highlightedNodeIndex];
+                const parentNode = hierarchyRoot.children.find(c => c._children.some(child => child.id === nextNode.id));
+                let needsUpdate = false;
+                if (parentNode && !parentNode.children) {
+                    parentNode.children = parentNode._children;
+                    needsUpdate = true;
+                }
+                if (needsUpdate) { updateGraph(() => { highlightNode(nextNode.id); }); } 
+                else { highlightNode(nextNode.id); }
+            }
+
+            // --- EVENT LISTENERS ---
+            document.getElementById('close-modal-info').addEventListener('click', () => infoModal.classList.remove('active'));
+            infoModal.addEventListener('click', (e) => e.target === infoModal && infoModal.classList.remove('active'));
+            
+            themeToggleButton.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark');
+                themeIconLight.classList.toggle('hidden', isDark);
+                themeIconDark.classList.toggle('hidden', !isDark);
+            });
+
+            document.getElementById('share-btn').addEventListener('click', () => {
+                document.getElementById('share-url').value = window.location.href;
+                shareModal.classList.add('active');
+            });
+            document.getElementById('close-modal-share').addEventListener('click', () => shareModal.classList.remove('active'));
+            shareModal.addEventListener('click', (e) => e.target === shareModal && shareModal.classList.remove('active'));
+            document.getElementById('copy-link-btn').addEventListener('click', () => {
+                const urlInput = document.getElementById('share-url');
+                navigator.clipboard.writeText(urlInput.value).then(() => {
+                    const feedback = document.getElementById('copy-feedback');
+                    feedback.textContent = 'Link copied!';
+                    setTimeout(() => feedback.textContent = '', 2000);
+                });
+            });
+
+            window.addEventListener('resize', initializeGraph);
+            menuToggleButton.addEventListener('click', () => toolbar.classList.toggle('expanded'));
+            document.getElementById('home-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-all-btn').addEventListener('click', toggleAllNodes);
+            document.getElementById('list-view-btn').addEventListener('click', toggleListView);
+            document.getElementById('prev-btn').addEventListener('click', () => navigate(-1));
+            document.getElementById('next-btn').addEventListener('click', () => navigate(1));
+            
+            window.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'INPUT' || infoModal.classList.contains('active') || shareModal.classList.contains('active')) return;
+                if (e.key === 'ArrowRight') navigate(1);
+                else if (e.key === 'ArrowLeft') navigate(-1);
+            });
+
+            initializeGraph();
+        });
+    </script>
+</body>
+</html>
