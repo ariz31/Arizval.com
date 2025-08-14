@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Function Graphing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .touch-buttons {
+            display: none;
+        }
+        @media (max-width: 768px) and (pointer: coarse) {
+            .touch-buttons {
+                display: flex;
+            }
+        }
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary .arrow {
+            transform: rotate(90deg);
+        }
+        .info-list li {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .info-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0.5rem;
+            color: #38bdf8;
+        }
+        /* Styles for when the graph container is in fullscreen */
+        #graph-container:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background-color: #1a202c; /* bg-gray-900 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white antialiased flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
+
+    <div id="mainContainer" class="w-full max-w-5xl h-full flex flex-col bg-gray-800 rounded-2xl shadow-2xl p-3 sm:p-6 space-y-4">
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-center text-cyan-400">Advanced Graphing Calculator</h1>
+
+        <!-- Input Section -->
+        <div class="flex flex-col md:flex-row gap-4">
+            <!-- Equations Column -->
+            <div class="flex-grow space-y-2">
+                <div id="equationsContainer" class="space-y-2">
+                    <!-- Equation inputs will be dynamically added here -->
+                </div>
+                <button id="addEquationButton" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 text-sm">
+                    + Add Equation
+                </button>
+            </div>
+            <!-- Controls Column -->
+            <div class="flex flex-col space-y-4 md:w-48">
+                <div class="flex flex-col space-y-2">
+                     <button id="plotButton" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105">
+                        Plot
+                    </button>
+                    <button id="resetButton" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                        Reset View
+                    </button>
+                    <button id="showTableButton" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                        Show Table
+                    </button>
+                    <button id="popOutButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                        Pop Out Graph
+                    </button>
+                </div>
+
+                <!-- Axis Scale Controls -->
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-center text-gray-300">Axis Scale</h3>
+                    <div class="flex items-center space-x-2">
+                        <label for="scaleXInput" class="text-sm font-medium text-gray-400 w-8">X:</label>
+                        <input type="number" id="scaleXInput" value="50" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg py-1 px-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="scaleYInput" class="text-sm font-medium text-gray-400 w-8">Y:</label>
+                        <input type="number" id="scaleYInput" value="50" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg py-1 px-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="info" class="text-center text-gray-400 h-6"></div>
+
+        <div id="graph-container" class="flex-grow w-full h-96 md:h-[32rem] bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-700 relative">
+            <canvas id="calculatorCanvas" class="w-full h-full"></canvas>
+            <div id="coords" class="absolute bottom-2 right-3 text-xs text-gray-400 bg-gray-900 bg-opacity-70 px-2 py-1 rounded"></div>
+            <div id="tooltip" class="absolute hidden bg-gray-900 bg-opacity-80 text-white text-xs rounded-md p-2 shadow-lg pointer-events-none z-10"></div>
+            <button id="fullscreenButton" title="Toggle Fullscreen" class="absolute top-2 right-2 p-2 bg-gray-700 bg-opacity-50 hover:bg-opacity-75 rounded-lg text-white transition">
+                <svg id="expand-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1-1 0v2.768l-4.096-4.096a.5.5 0 0 1 0-.707m0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0-1 0v-2.768l-4.096 4.096a.5.5 0 0 0 0 .707m-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707"/></svg>
+                <svg id="collapse-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="hidden" viewBox="0 0 16 16"><path d="M5.5 0a.5.5 0 0 1 .5.5v4A.5.5 0 0 1 5 5h-4a.5.5 0 0 1 0-1h3.5V.5a.5.5 0 0 1 .5-.5m5 0a.5.5 0 0 1 .5.5v3.5h3.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5M0 10.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-3.5H.5a.5.5 0 0 1-.5-.5m10.5.5a.5.5 0 0 1 .5-.5h3.5v-3.5a.5.5 0 0 1 1 0v4a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1-.5-.5"/></svg>
+            </button>
+        </div>
+        
+        <div class="touch-buttons justify-center items-center space-x-2">
+            <span class="text-sm text-gray-400">Zoom:</span>
+            <button id="zoomInButton" class="bg-gray-700 w-12 h-12 rounded-full text-xl font-bold">&plus;</button>
+            <button id="zoomOutButton" class="bg-gray-700 w-12 h-12 rounded-full text-xl font-bold">&minus;</button>
+        </div>
+    </div>
+
+    <!-- Table Modal Popup -->
+    <div id="tableModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-cyan-400">Table of Values</h2>
+                <button id="closeTableButton" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex flex-col sm:flex-row items-end gap-4 mb-4 border-b border-gray-700 pb-4">
+                <div class="flex-1 w-full">
+                    <label for="tableStart" class="text-sm text-gray-400 block mb-1">Start X</label>
+                    <input type="number" id="tableStart" value="-10" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                </div>
+                <div class="flex-1 w-full">
+                    <label for="tableEnd" class="text-sm text-gray-400 block mb-1">End X</label>
+                    <input type="number" id="tableEnd" value="10" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                </div>
+                <div class="flex-1 w-full">
+                    <label for="tableInterval" class="text-sm text-gray-400 block mb-1">Interval</label>
+                    <input type="number" id="tableInterval" value="1" step="any" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                </div>
+                <button id="generateTableButton" class="w-full sm:w-auto bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2 px-6 rounded-md transition duration-300">Generate</button>
+            </div>
+            <div id="tableError" class="text-red-400 text-sm mb-2 hidden"></div>
+            <div class="overflow-auto">
+                <table class="w-full text-sm text-left text-gray-300">
+                    <thead id="tableHeader" class="text-xs text-cyan-300 uppercase bg-gray-700 sticky top-0">
+                        <!-- Header generated by JS -->
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Body generated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const mainContainer = document.getElementById('mainContainer');
+            const graphContainer = document.getElementById('graph-container');
+            const canvas = document.getElementById('calculatorCanvas');
+            const ctx = canvas.getContext('2d');
+            const equationsContainer = document.getElementById('equationsContainer');
+            const addEquationButton = document.getElementById('addEquationButton');
+            const plotButton = document.getElementById('plotButton');
+            const resetButton = document.getElementById('resetButton');
+            const scaleXInput = document.getElementById('scaleXInput');
+            const scaleYInput = document.getElementById('scaleYInput');
+            const infoDiv = document.getElementById('info');
+            const coordsDiv = document.getElementById('coords');
+            const tooltip = document.getElementById('tooltip');
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            const expandIcon = document.getElementById('expand-icon');
+            const collapseIcon = document.getElementById('collapse-icon');
+            const showTableButton = document.getElementById('showTableButton');
+            const popOutButton = document.getElementById('popOutButton');
+            const tableModal = document.getElementById('tableModal');
+            const closeTableButton = document.getElementById('closeTableButton');
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+            const tableStartInput = document.getElementById('tableStart');
+            const tableEndInput = document.getElementById('tableEnd');
+            const tableIntervalInput = document.getElementById('tableInterval');
+            const generateTableButton = document.getElementById('generateTableButton');
+            const tableError = document.getElementById('tableError');
+
+            // Graph state
+            let scaleX = 50, scaleY = 50;
+            let origin = { x: 0, y: 0 };
+            let isDragging = false;
+            let dragStart = { x: 0, y: 0 };
+            let functions = [];
+            const colors = ['#38BDF8', '#F472B6', '#4ADE80', '#FBBF24', '#A78BFA', '#2DD4BF', '#FB923C'];
+
+            function init() {
+                resizeCanvas();
+                addEventListeners();
+                addEquationInput('sin(x)');
+                addEquationInput('cos(x)');
+                plotFunctions();
+            }
+
+            function resizeCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                const oldGraphCenterX = (rect.width / 2 - origin.x) / scaleX;
+                const oldGraphCenterY = (origin.y - rect.height / 2) / scaleY;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                origin = {
+                    x: rect.width / 2 - oldGraphCenterX * scaleX,
+                    y: rect.height / 2 + oldGraphCenterY * scaleY
+                };
+                draw();
+            }
+
+            function resetView() {
+                const rect = canvas.getBoundingClientRect();
+                scaleX = 50; scaleY = 50;
+                scaleXInput.value = scaleX;
+                scaleYInput.value = scaleY;
+                origin = { x: rect.width / 2, y: rect.height / 2 };
+                draw();
+            }
+
+            function addEventListeners() {
+                window.addEventListener('resize', resizeCanvas);
+                plotButton.addEventListener('click', plotFunctions);
+                addEquationButton.addEventListener('click', () => addEquationInput());
+                resetButton.addEventListener('click', resetView);
+                scaleXInput.addEventListener('change', () => { scaleX = parseFloat(scaleXInput.value) || 50; draw(); });
+                scaleYInput.addEventListener('change', () => { scaleY = parseFloat(scaleYInput.value) || 50; draw(); });
+                canvas.addEventListener('mousedown', startPan);
+                canvas.addEventListener('mouseup', endPan);
+                canvas.addEventListener('mouseleave', endPan);
+                canvas.addEventListener('mousemove', pan);
+                canvas.addEventListener('wheel', zoom);
+                canvas.addEventListener('mousemove', showCoordinates);
+                canvas.addEventListener('mousemove', updateTooltip);
+                canvas.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+                fullscreenButton.addEventListener('click', toggleFullScreen);
+                document.addEventListener('fullscreenchange', handleFullscreenChange);
+                showTableButton.addEventListener('click', openTableModal);
+                generateTableButton.addEventListener('click', generateTable);
+                popOutButton.addEventListener('click', popOutGraph);
+                closeTableButton.addEventListener('click', () => tableModal.classList.replace('flex', 'hidden'));
+            }
+
+            function addEquationInput(expression = '') {
+                const equationId = `eq-${Date.now()}-${Math.random()}`;
+                const color = colors[equationsContainer.children.length % colors.length];
+                const container = document.createElement('div');
+                container.id = equationId;
+                container.className = 'flex items-center space-x-2';
+                container.innerHTML = `
+                    <div class="w-4 h-4 rounded-full" style="background-color: ${color};"></div>
+                    <span class="text-cyan-400 text-lg font-medium">y =</span>
+                    <div class="relative flex-grow">
+                        <input type="text" value="${expression}" placeholder="e.g., sin(x)" class="function-input w-full bg-gray-700 border-2 border-gray-600 rounded-lg py-2 pr-3 pl-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition">
+                        <div class="error-message text-red-400 text-xs absolute right-2 top-full mt-1"></div>
+                    </div>
+                    <button class="remove-btn text-gray-400 hover:text-white transition p-1 rounded-full bg-gray-600 hover:bg-red-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/></svg>
+                    </button>`;
+                equationsContainer.appendChild(container);
+                container.querySelector('.remove-btn').addEventListener('click', () => { container.remove(); plotFunctions(); });
+                container.querySelector('.function-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); plotFunctions(); } });
+            }
+
+            function showCoordinates(e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const graphX = (mouseX - origin.x) / scaleX;
+                const graphY = (origin.y - mouseY) / scaleY;
+                coordsDiv.textContent = `x: ${graphX.toFixed(2)}, y: ${graphY.toFixed(2)}`;
+            }
+
+            function updateTooltip(e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) {
+                    tooltip.classList.add('hidden');
+                    return;
+                }
+                const graphX = (mouseX - origin.x) / scaleX;
+                const graphY = (origin.y - mouseY) / scaleY;
+                let tooltipHTML = `<div class="font-bold">x: ${graphX.toFixed(3)}, y: ${graphY.toFixed(3)}</div>`;
+                functions.forEach(func => {
+                    try {
+                        const funcY = func.compiled.evaluate({ x: graphX });
+                        if (typeof funcY === 'number' && isFinite(funcY)) {
+                            tooltipHTML += `<div class="flex items-center space-x-2 mt-1"><div class="w-3 h-3 rounded-full" style="background-color: ${func.color};"></div><span>y = ${funcY.toFixed(3)}</span></div>`;
+                        }
+                    } catch (err) {}
+                });
+                tooltip.innerHTML = tooltipHTML;
+                tooltip.classList.remove('hidden');
+                tooltip.style.left = `${Math.min(mouseX + 15, rect.width - tooltip.offsetWidth - 5)}px`;
+                tooltip.style.top = `${Math.min(mouseY + 15, rect.height - tooltip.offsetHeight - 5)}px`;
+            }
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    graphContainer.requestFullscreen().catch(err => {
+                        console.error(`Fullscreen error: ${err.message}`);
+                        infoDiv.textContent = "Fullscreen is not allowed in this environment.";
+                        infoDiv.classList.add('text-red-400');
+                        setTimeout(() => {
+                            infoDiv.textContent = '';
+                            infoDiv.classList.remove('text-red-400');
+                        }, 3000);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            function handleFullscreenChange() {
+                const isFullscreen = !!document.fullscreenElement;
+                expandIcon.classList.toggle('hidden', isFullscreen);
+                collapseIcon.classList.toggle('hidden', !isFullscreen);
+                setTimeout(resizeCanvas, 100);
+            }
+
+            function startPan(e) {
+                e.preventDefault();
+                isDragging = true;
+                const pos = getEventPosition(e);
+                dragStart.x = pos.x - origin.x;
+                dragStart.y = pos.y - origin.y;
+                canvas.style.cursor = 'grabbing';
+            }
+
+            function endPan() {
+                isDragging = false;
+                canvas.style.cursor = 'crosshair';
+            }
+
+            function pan(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    const pos = getEventPosition(e);
+                    origin.x = pos.x - dragStart.x;
+                    origin.y = pos.y - dragStart.y;
+                    draw();
+                }
+            }
+            
+            function getEventPosition(e) {
+                const rect = canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            function zoom(e) {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = (e.clientX || rect.width / 2) - rect.left;
+                const mouseY = (e.clientY || rect.height / 2) - rect.top;
+                const zoomFactor = 1.1;
+                const wheel = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+                const graphX = (mouseX - origin.x) / scaleX;
+                const graphY = (origin.y - mouseY) / scaleY;
+                scaleX *= wheel;
+                scaleY *= wheel;
+                scaleXInput.value = scaleX.toFixed(2);
+                scaleYInput.value = scaleY.toFixed(2);
+                origin.x = mouseX - graphX * scaleX;
+                origin.y = mouseY + graphY * scaleY;
+                draw();
+            }
+
+            function plotFunctions() {
+                infoDiv.textContent = '';
+                functions = [];
+                const equationInputs = equationsContainer.querySelectorAll('.function-input');
+                const errorMessages = equationsContainer.querySelectorAll('.error-message');
+                const colorDivs = equationsContainer.querySelectorAll('.flex > div:first-child');
+                errorMessages.forEach(msg => msg.textContent = '');
+                equationInputs.forEach((input, index) => {
+                    const expression = input.value;
+                    if (!expression) return;
+                    try {
+                        const node = math.parse(expression);
+                        const compiled = node.compile();
+                        compiled.evaluate({ x: 1 }); // Test evaluation
+                        functions.push({
+                            compiled: compiled,
+                            color: colorDivs[index].style.backgroundColor,
+                            originalExpression: expression
+                        });
+                    } catch (err) {
+                        errorMessages[index].textContent = `Error: ${err.message}`;
+                    }
+                });
+                draw();
+            }
+            
+            function draw() {
+                const rect = canvas.getBoundingClientRect();
+                ctx.clearRect(0, 0, rect.width, rect.height);
+                drawGridAndAxes(rect.width, rect.height);
+                functions.forEach(func => {
+                    drawExplicitFunction(func, rect.width);
+                });
+            }
+
+            function drawGridAndAxes(width, height) {
+                ctx.strokeStyle = '#4A5568';
+                ctx.fillStyle = '#A0AEC0';
+                ctx.lineWidth = 1;
+                ctx.font = '12px Inter';
+                const gridSpacingX = calculateGridSpacing(scaleX);
+                const gridSpacingY = calculateGridSpacing(scaleY);
+                for (let i = 0; ; i++) {
+                    const x = origin.x + i * gridSpacingX * scaleX;
+                    if (x > width) break;
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                    const label = (i * gridSpacingX).toFixed(getPrecision(gridSpacingX));
+                    if(label !== '0') ctx.fillText(label, x + 4, origin.y - 4);
+                }
+                for (let i = -1; ; i--) {
+                    const x = origin.x + i * gridSpacingX * scaleX;
+                    if (x < 0) break;
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                    ctx.fillText((i * gridSpacingX).toFixed(getPrecision(gridSpacingX)), x + 4, origin.y - 4);
+                }
+                for (let i = 1; ; i++) {
+                    const y = origin.y - i * gridSpacingY * scaleY;
+                    if (y < 0) break;
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                    ctx.fillText((i * gridSpacingY).toFixed(getPrecision(gridSpacingY)), origin.x + 4, y - 4);
+                }
+                for (let i = -1; ; i--) {
+                    const y = origin.y - i * gridSpacingY * scaleY;
+                    if (y > height) break;
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                    ctx.fillText((i * gridSpacingY).toFixed(getPrecision(gridSpacingY)), origin.x + 4, y - 4);
+                }
+                ctx.strokeStyle = '#A0AEC0';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(0, origin.y); ctx.lineTo(width, origin.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(origin.x, 0); ctx.lineTo(origin.x, height); ctx.stroke();
+            }
+
+            function calculateGridSpacing(scale) {
+                const minPixelsPerGrid = 50;
+                let power = Math.floor(Math.log10(minPixelsPerGrid / scale));
+                let spacing = Math.pow(10, power);
+                if (spacing * scale < minPixelsPerGrid) spacing *= 2;
+                if (spacing * scale < minPixelsPerGrid) spacing = spacing / 2 * 5;
+                if (spacing * scale < minPixelsPerGrid) spacing *= 2;
+                return spacing;
+            }
+
+            function getPrecision(num) {
+                const s = String(num);
+                return s.includes('.') ? s.split('.')[1].length : 0;
+            }
+
+            function drawExplicitFunction(func, width) {
+                ctx.strokeStyle = func.color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                let lastY = null;
+                for (let px = 0; px <= width; px++) {
+                    const x = (px - origin.x) / scaleX;
+                    let y;
+                    try { y = func.compiled.evaluate({ x: x }); } catch (e) { lastY = null; continue; }
+                    if (typeof y !== 'number' || !isFinite(y)) { lastY = null; continue; }
+                    const py = origin.y - y * scaleY;
+                    if (lastY !== null) {
+                        if (Math.abs(py - lastY) < canvas.getBoundingClientRect().height * 2) ctx.lineTo(px, py);
+                        else ctx.moveTo(px, py);
+                    } else {
+                        ctx.moveTo(px, py);
+                    }
+                    lastY = py;
+                }
+                ctx.stroke();
+            }
+
+            function openTableModal() {
+                const rect = canvas.getBoundingClientRect();
+                const xMin = (-origin.x / scaleX).toFixed(2);
+                const xMax = ((rect.width - origin.x) / scaleX).toFixed(2);
+                const interval = ((xMax - xMin) / 20).toFixed(2);
+                
+                tableStartInput.value = xMin;
+                tableEndInput.value = xMax;
+                tableIntervalInput.value = interval > 0 ? interval : 1;
+                
+                tableHeader.innerHTML = '';
+                tableBody.innerHTML = '';
+                tableError.classList.add('hidden');
+                
+                tableModal.classList.replace('hidden', 'flex');
+            }
+
+            function generateTable() {
+                const start = parseFloat(tableStartInput.value);
+                const end = parseFloat(tableEndInput.value);
+                const interval = parseFloat(tableIntervalInput.value);
+
+                tableError.classList.add('hidden');
+                if (isNaN(start) || isNaN(end) || isNaN(interval)) {
+                    tableError.textContent = "All inputs must be valid numbers.";
+                    tableError.classList.remove('hidden');
+                    return;
+                }
+                if (interval <= 0) {
+                    tableError.textContent = "Interval must be greater than zero.";
+                    tableError.classList.remove('hidden');
+                    return;
+                }
+                if (start >= end) {
+                    tableError.textContent = "Start X must be less than End X.";
+                    tableError.classList.remove('hidden');
+                    return;
+                }
+                if ((end - start) / interval > 500) {
+                    tableError.textContent = "Too many steps. Please increase the interval or reduce the range.";
+                    tableError.classList.remove('hidden');
+                    return;
+                }
+                
+                if (functions.length === 0) {
+                    tableError.textContent = "No functions to tabulate.";
+                    tableError.classList.remove('hidden');
+                    return;
+                }
+
+                // Generate Header
+                tableHeader.innerHTML = '';
+                let headerRow = '<tr><th scope="col" class="px-6 py-3">x</th>';
+                functions.forEach(func => {
+                    headerRow += `<th scope="col" class="px-6 py-3"><div class="flex items-center"><div class="w-3 h-3 rounded-full mr-2" style="background-color:${func.color}"></div>f(x)</div></th>`;
+                });
+                headerRow += '</tr>';
+                tableHeader.innerHTML = headerRow;
+
+                // Generate Body
+                tableBody.innerHTML = '';
+                for (let x = start; x <= end; x += interval) {
+                    let rowHTML = `<tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4 font-medium whitespace-nowrap">${x.toFixed(4)}</td>`;
+                    functions.forEach(func => {
+                        try {
+                            const y = func.compiled.evaluate({x: x});
+                            rowHTML += `<td class="px-6 py-4">${(typeof y === 'number' && isFinite(y)) ? y.toFixed(4) : 'N/A'}</td>`;
+                        } catch (e) {
+                            rowHTML += `<td class="px-6 py-4">Error</td>`;
+                        }
+                    });
+                    rowHTML += '</tr>';
+                    tableBody.innerHTML += rowHTML;
+                }
+            }
+            
+            function popOutGraph() {
+                const graphWindow = window.open('', 'Graph', 'width=800,height=600');
+                if (!graphWindow) {
+                    infoDiv.textContent = "Pop-up blocked. Please allow pop-ups for this site.";
+                    infoDiv.classList.add('text-red-400');
+                    setTimeout(() => {
+                        infoDiv.textContent = '';
+                        infoDiv.classList.remove('text-red-400');
+                    }, 3000);
+                    return;
+                }
+
+                const serializedState = JSON.stringify({
+                    functions: functions.map(f => ({
+                        expression: f.originalExpression,
+                        color: f.color
+                    })),
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    origin: origin
+                });
+
+                const popoutScript = `
+                    // All the drawing and interaction logic is now self-contained here.
+                    // This creates a fully interactive copy of the main graph.
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const canvas = document.getElementById('popoutCanvas');
+                        const ctx = canvas.getContext('2d');
+                        const tooltip = document.getElementById('tooltip');
+                        const initialState = JSON.parse('${serializedState}');
+
+                        let scaleX = initialState.scaleX;
+                        let scaleY = initialState.scaleY;
+                        let origin = initialState.origin;
+                        let isDragging = false;
+                        let dragStart = { x: 0, y: 0 };
+                        let functions = initialState.functions.map(f => ({
+                            compiled: math.parse(f.expression).compile(),
+                            color: f.color
+                        }));
+
+                        function resizeCanvas() {
+                            const dpr = window.devicePixelRatio || 1;
+                            const rect = canvas.getBoundingClientRect();
+                             const oldGraphCenterX = (rect.width / 2 - origin.x) / scaleX;
+                            const oldGraphCenterY = (origin.y - rect.height / 2) / scaleY;
+                            canvas.width = rect.width * dpr;
+                            canvas.height = rect.height * dpr;
+                            ctx.scale(dpr, dpr);
+                            origin = {
+                                x: rect.width / 2 - oldGraphCenterX * scaleX,
+                                y: rect.height / 2 + oldGraphCenterY * scaleY
+                            };
+                            draw();
+                        }
+
+                        function draw() {
+                            const rect = canvas.getBoundingClientRect();
+                            ctx.clearRect(0, 0, rect.width, rect.height);
+                            drawGridAndAxes(rect.width, rect.height);
+                            functions.forEach(func => drawExplicitFunction(func, rect.width));
+                        }
+
+                        function startPan(e) { e.preventDefault(); isDragging = true; const pos = getEventPosition(e); dragStart.x = pos.x - origin.x; dragStart.y = pos.y - origin.y; canvas.style.cursor = 'grabbing'; }
+                        function endPan() { isDragging = false; canvas.style.cursor = 'crosshair'; }
+                        function pan(e) { if (isDragging) { e.preventDefault(); const pos = getEventPosition(e); origin.x = pos.x - dragStart.x; origin.y = pos.y - dragStart.y; draw(); } }
+                        function getEventPosition(e) { const rect = canvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+                        
+                        function zoom(e) {
+                            e.preventDefault();
+                            const rect = canvas.getBoundingClientRect();
+                            const mouseX = (e.clientX || rect.width / 2) - rect.left;
+                            const mouseY = (e.clientY || rect.height / 2) - rect.top;
+                            const zoomFactor = 1.1;
+                            const wheel = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+                            const graphX = (mouseX - origin.x) / scaleX;
+                            const graphY = (origin.y - mouseY) / scaleY;
+                            scaleX *= wheel;
+                            scaleY *= wheel;
+                            origin.x = mouseX - graphX * scaleX;
+                            origin.y = mouseY + graphY * scaleY;
+                            draw();
+                        }
+                        
+                        function updateTooltip(e) {
+                            const rect = canvas.getBoundingClientRect();
+                            const mouseX = e.clientX - rect.left;
+                            const mouseY = e.clientY - rect.top;
+                            if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) { tooltip.classList.add('hidden'); return; }
+                            const graphX = (mouseX - origin.x) / scaleX;
+                            const graphY = (origin.y - mouseY) / scaleY;
+                            let tooltipHTML = '<div class="font-bold">x: ' + graphX.toFixed(3) + ', y: ' + graphY.toFixed(3) + '</div>';
+                            functions.forEach(func => {
+                                try {
+                                    const funcY = func.compiled.evaluate({ x: graphX });
+                                    if (typeof funcY === 'number' && isFinite(funcY)) {
+                                        tooltipHTML += '<div class="flex items-center space-x-2 mt-1"><div class="w-3 h-3 rounded-full" style="background-color: ' + func.color + ';"></div><span>y = ' + funcY.toFixed(3) + '</span></div>';
+                                    }
+                                } catch (err) {}
+                            });
+                            tooltip.innerHTML = tooltipHTML;
+                            tooltip.classList.remove('hidden');
+                            tooltip.style.left = Math.min(mouseX + 15, rect.width - tooltip.offsetWidth - 5) + 'px';
+                            tooltip.style.top = Math.min(mouseY + 15, rect.height - tooltip.offsetHeight - 5) + 'px';
+                        }
+
+                        // Copy drawing functions
+                        const calculateGridSpacing = ${calculateGridSpacing.toString()};
+                        const getPrecision = ${getPrecision.toString()};
+                        const drawGridAndAxes = ${drawGridAndAxes.toString()};
+                        const drawExplicitFunction = ${drawExplicitFunction.toString()};
+
+                        // Add event listeners for the popout window
+                        window.addEventListener('resize', resizeCanvas);
+                        canvas.addEventListener('mousedown', startPan);
+                        canvas.addEventListener('mouseup', endPan);
+                        canvas.addEventListener('mouseleave', endPan);
+                        canvas.addEventListener('mousemove', pan);
+                        canvas.addEventListener('wheel', zoom);
+                        canvas.addEventListener('mousemove', updateTooltip);
+                        canvas.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+
+                        // Initial setup
+                        resizeCanvas();
+                    });
+                `;
+
+                graphWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <title>Graph Viewer</title>
+                        <script src="https://cdn.tailwindcss.com"><\/script>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.js"><\/script>
+                        <style>
+                            body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; background-color: #1a202c; }
+                            canvas { display: block; cursor: crosshair; width: 100%; height: 100%;}
+                        </style>
+                    </head>
+                    <body>
+                        <div id="graph-container" class="w-screen h-screen relative">
+                            <canvas id="popoutCanvas"></canvas>
+                             <div id="tooltip" class="absolute hidden bg-gray-900 bg-opacity-80 text-white text-xs rounded-md p-2 shadow-lg pointer-events-none z-10"></div>
+                        </div>
+                        <script>${popoutScript}<\/script>
+                    </body>
+                    </html>
+                `);
+                graphWindow.document.close();
+            }
+            
+            init();
+        });
+    </script>
+</body>
+</html>
